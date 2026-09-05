@@ -99,10 +99,13 @@ class TestConflicts:
 
 class TestUnverifiedIsUnmissable:
     def test_matrix_reports_exactly_the_unverified_packs(self, result):
-        """bsi-de has been verified against the primary PDF; the rest have not.
-        The warning must narrow as verification proceeds, not stay blanket."""
+        """The warning must narrow as verification proceeds, not stay blanket.
+
+        anssi-fr is here because one of its six rules (the 2027 certification
+        date) is not in the primary document. cnsa-2.0 is here because NSA's
+        servers refuse automated access -- see docs/policy-sources.md."""
         matrix, _, _ = result
-        assert set(matrix.unverified_packs) == {"anssi-fr", "asd-au", "cnsa-2.0"}
+        assert set(matrix.unverified_packs) == {"anssi-fr", "cnsa-2.0"}
 
     def test_text_output_carries_the_banner(self, result):
         matrix, conflicts, _ = result

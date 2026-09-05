@@ -1,69 +1,158 @@
 id: eu-roadmap
 name: "EU Coordinated Implementation Roadmap"
-authority: "NIS Cooperation Group / European Commission"
+authority: "NIS Cooperation Group, EU PQC Workstream"
 jurisdiction: EU
-pack_version: "0.1.0"
+pack_version: "0.2.0"
 applicability: >-
-  A Commission Recommendation and a Member State planning roadmap — non-binding
-  on operators by definition (TFEU Art. 288). Every rule here caps at WARN. If
-  NIS2 or DORA pull these dates into binding obligations for in-scope entities,
-  that warrants a separate pack rather than a change here.
-notes: "STUB. Roadmap published 2025-06-23."
+  A coordinated Member State planning roadmap, not a Regulation. Its language
+  is "it is recommended"; a Commission Recommendation is non-binding on
+  operators under TFEU Art. 288. Every rule here caps at WARN. If NIS2 or DORA
+  pull these dates into binding obligations for in-scope entities, that
+  warrants a separate pack rather than a change here.
+notes: >-
+  VERIFIED 2026-09-06 against the primary PDF, "A Coordinated Implementation
+  Roadmap for the Transition to Post-Quantum Cryptography", Part 1, Version 1.1,
+  dated 11.06.2025. A companion FAQ (NIS CG, 15.04.2026) also exists and is not
+  yet mined. Risk tiers (high / medium / low) are not derivable from a CBOM and
+  must be declared as system_category.
 
 rules:
   - id: eu-high-risk-2030
     description: >-
-      High-risk use cases — critical infrastructure, utilities, telecom,
-      finance, government — secured with PQC as soon as possible and no later
-      than end of 2030.
+      §"Recommended Timeline": "high-risk use cases should be transitioned to
+      PQC as soon as possible, no later than the end of 2030." Elaborated later:
+      "For high-risk use cases, quantum-vulnerable public-key mechanisms shall
+      not be used stand-alone after the end of 2030."
     binding: guideline_recommendation
-    status: needs_verification
+    status: verified
     source_url: "https://digital-strategy.ec.europa.eu/en/library/coordinated-implementation-roadmap-transition-post-quantum-cryptography"
-    source_title: "A Coordinated Implementation Roadmap for the Transition to Post-Quantum Cryptography"
-    source_edition: "2025-06-23"
-    last_verified: 2026-09-05
+    source_title: "A Coordinated Implementation Roadmap for the Transition to Post-Quantum Cryptography, Part 1 §Recommended Timeline"
+    source_edition: "Part 1, Version 1.1, 11.06.2025"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
     deadline: 2030-12-31
     deadline_state: complete
     applies_to:
       purpose: [key-agreement, encryption, signature]
       quantum_status: [broken-by-shor]
       system_category: ["high-risk"]
+    hybrid: recommended
+    rationale: harvest_now_decrypt_later
+    migration_target: { kem: "ML-KEM-768", signature: "ML-DSA-65", construction: hybrid }
+    verdict: warn
+
+  - id: eu-medium-risk-2035
+    description: >-
+      "For high-risk use cases, quantum-vulnerable public-key mechanisms shall
+      not be used stand-alone after the end of 2030, analogously after the end
+      of 2035 for medium-risk use cases."
+    binding: guideline_recommendation
+    status: verified
+    source_url: "https://digital-strategy.ec.europa.eu/en/library/coordinated-implementation-roadmap-transition-post-quantum-cryptography"
+    source_title: "EU Coordinated Implementation Roadmap Part 1, §Hybrid solutions"
+    source_edition: "Part 1, Version 1.1, 11.06.2025"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    deadline: 2035-12-31
+    deadline_state: complete
+    applies_to:
+      purpose: [key-agreement, encryption, signature]
+      quantum_status: [broken-by-shor]
+      system_category: ["medium-risk"]
+    hybrid: recommended
     rationale: unstated
     verdict: warn
-    open_question: >-
-      Confirm the roadmap's own sector list so the config enum matches. Like the
-      CNSA categories, 'high-risk use case' is not CBOM-derivable — undeclared
-      means INDETERMINATE, not a pass.
+
+  - id: eu-hybrid-recommended
+    description: >-
+      "…it is recommended to use standardised and tested hybrid solutions,
+      whenever feasible and suitable. In particular, whenever a
+      quantum-vulnerable public-key cryptographic mechanism, such as RSA or any
+      discrete logarithm based mechanism, is currently used, replacing it by a
+      standardized hybrid combination which includes PQC should be considered."
+    binding: guideline_recommendation
+    status: verified
+    source_url: "https://digital-strategy.ec.europa.eu/en/library/coordinated-implementation-roadmap-transition-post-quantum-cryptography"
+    source_title: "EU Coordinated Implementation Roadmap Part 1, §Hybrid solutions"
+    source_edition: "Part 1, Version 1.1, 11.06.2025"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    applies_to:
+      purpose: [key-agreement, encryption, signature]
+      quantum_status: [pq-secure, broken-by-shor]
+    hybrid: recommended
+    rationale: unstated
+    rationale_note: >-
+      The roadmap gives no explicit reason for preferring hybrids, unlike BSI
+      and ANSSI which both cite scheme immaturity. Recorded as `unstated`
+      rather than assumed to match them.
+    migration_target: { construction: hybrid }
+    verdict: warn
 
   - id: eu-transition-start-2026
-    description: "Member States should start transitioning by end of 2026."
+    description: >-
+      "it is recommended that all Member States initiate a national PQC
+      transition strategy following First Steps by the end of 2026 and
+      coordinate their efforts at the EU level."
     binding: guideline_recommendation
-    status: needs_verification
+    status: verified
     source_url: "https://digital-strategy.ec.europa.eu/en/library/coordinated-implementation-roadmap-transition-post-quantum-cryptography"
-    source_title: "EU Coordinated Implementation Roadmap"
-    last_verified: 2026-09-05
+    source_title: "EU Coordinated Implementation Roadmap Part 1, §Executive Summary"
+    source_edition: "Part 1, Version 1.1, 11.06.2025"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
     deadline: 2026-12-31
     deadline_state: transition_start
     applies_to:
       quantum_status: [broken-by-shor]
     rationale: unstated
     verdict: info
-    open_question: "Confirm whether this binds Member States only, or operators too."
 
   - id: eu-remainder-2035
     description: >-
-      Transition completed for as many systems as practically feasible by 2035.
+      "By 2035, the transition should be completed for as many systems as
+      practically feasible."
     binding: guideline_recommendation
-    status: needs_verification
+    status: verified
     source_url: "https://digital-strategy.ec.europa.eu/en/library/coordinated-implementation-roadmap-transition-post-quantum-cryptography"
-    source_title: "EU Coordinated Implementation Roadmap"
-    last_verified: 2026-09-05
+    source_title: "EU Coordinated Implementation Roadmap Part 1, §Executive Summary"
+    source_edition: "Part 1, Version 1.1, 11.06.2025"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
     deadline: 2035-12-31
     deadline_state: complete
     applies_to:
+      purpose: [key-agreement, encryption, signature]
       quantum_status: [broken-by-shor]
     rationale: unstated
+    rationale_note: >-
+      "as many systems as practically feasible" is not a hard deadline. WARN,
+      never FAIL.
     verdict: warn
-    open_question: >-
-      'As far as feasible' is not a hard deadline. Confirm the wording before
-      this ever produces a blocking verdict.
+
+  - id: eu-firmware-upgrade-signatures
+    description: >-
+      "products entering the market with an expected lifetime beyond 2030
+      should be upgradable to PQC and … the upgrade mechanism for software and
+      firmware upgrades should incorporate post-quantum signature schemes for
+      integrity and authenticity."
+    binding: guideline_recommendation
+    status: verified
+    source_url: "https://digital-strategy.ec.europa.eu/en/library/coordinated-implementation-roadmap-transition-post-quantum-cryptography"
+    source_title: "EU Coordinated Implementation Roadmap Part 1, §Recommended Timeline"
+    source_edition: "Part 1, Version 1.1, 11.06.2025"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    deadline: 2030-12-31
+    deadline_state: complete
+    applies_to:
+      purpose: [signature]
+      quantum_status: [broken-by-shor]
+      system_category: ["firmware-signing", "software-firmware-signing"]
+    rationale: unstated
+    rationale_note: >-
+      Primary-source support for the long-lived-verification carve-out in our
+      scoring: firmware signing is the case where a signature's trust horizon,
+      not the data's confidentiality horizon, drives urgency.
+    migration_target: { signature: "ML-DSA-65" }
+    verdict: warn

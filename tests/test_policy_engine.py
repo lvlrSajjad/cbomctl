@@ -49,15 +49,16 @@ class TestPacksAreHonest:
         it has reached, so a pack cannot quietly claim verification it has not
         earned -- and so the reverse (a rule regressing) is also caught."""
         fully = {p for p in ALL_PACKS if load_pack(p).is_verified}
-        assert fully == {"bsi-de", "us-eo14412", "nist-ir8547"}
+        assert fully == {"bsi-de", "us-eo14412", "nist-ir8547", "eu-roadmap",
+                         "asd-au"}
 
         partial = {p: (len(load_pack(p).rules) - len(load_pack(p).unverified_rules),
                        len(load_pack(p).rules))
                    for p in ALL_PACKS}
         assert partial["anssi-fr"] == (5, 6)   # 2027 cert date not in the source
-        assert partial["asd-au"] == (0, 3)
+        assert partial["asd-au"] == (6, 6)
         assert partial["cnsa-2.0"] == (0, 5)
-        assert partial["eu-roadmap"] == (0, 3)
+        assert partial["eu-roadmap"] == (6, 6)
 
     @pytest.mark.parametrize("pid", ALL_PACKS)
     def test_every_pack_declares_who_it_binds(self, pid):
@@ -84,7 +85,8 @@ class TestBindingDecidesSeverity:
         assert any(r.effective_verdict is Verdict.FAIL for r in eo.rules)
 
     def test_eu_roadmap_never_fails(self):
-        """A Commission Recommendation is non-binding (TFEU Art. 288)."""
+        """The roadmap's language is "it is recommended"; a Commission
+        Recommendation is non-binding on operators under TFEU Art. 288."""
         for rule in load_pack("eu-roadmap").rules:
             assert rule.effective_verdict is not Verdict.FAIL
 
@@ -181,6 +183,26 @@ class TestHybridIsPerPurpose:
         assert cell.verdict is Verdict.WARN
 
 
+class TestEuropeanAlignment:
+    """Verified from three primary sources: the European position on hybrid is
+    consistent, and it is the opposite of ASD's."""
+
+    def test_all_three_european_packs_recommend_hybrid(self):
+        from cbomctl.models import HybridStance
+
+        for pid in ("bsi-de", "anssi-fr", "eu-roadmap"):
+            stances = {r.hybrid for r in load_pack(pid).rules if r.hybrid}
+            assert HybridStance.RECOMMENDED in stances, pid
+
+    def test_eu_roadmap_is_not_silent_on_hybrid(self):
+        """The stub had this as `silent`. The primary text recommends hybrid
+        explicitly, so silence was an assumption and it was wrong."""
+        from cbomctl.models import HybridStance
+
+        stances = {r.hybrid for r in load_pack("eu-roadmap").rules if r.hybrid}
+        assert stances == {HybridStance.RECOMMENDED}
+
+
 class TestScope:
     """A pack that demonstrably does not reach an asset says so."""
 
@@ -197,6 +219,29 @@ class TestScope:
         cell = evaluate(load_pack("us-eo14412"), asset(),
                         system_category="high-value-asset")
         assert cell.verdict is Verdict.FAIL
+
+    def test_a_satisfied_rule_beats_out_of_scope(self):
+        """N/A means "this pack never reached you". If a rule applied and was
+        satisfied, the pack did reach you and was happy: that is PASS."""
+        from cbomctl.models import Construction, QuantumStatus
+
+        hybrid = asset(construction=Construction.HYBRID,
+                       status=QuantumStatus.PQ_SECURE, name="X25519MLKEM768")
+        cell = evaluate(load_pack("eu-roadmap"), hybrid, system_category="web-cloud")
+        assert cell.verdict is Verdict.PASS
+
+    def test_indeterminate_outranks_an_informational_rule(self):
+        """An unscoped INFO rule must not mask "I cannot tell what this key is
+        for". INDETERMINATE outranks PASS and INFO, but never FAIL or WARN."""
+        cell = evaluate(load_pack("eu-roadmap"), asset(purpose=Purpose.AMBIGUOUS))
+        assert cell.verdict is Verdict.INDETERMINATE
+
+    def test_indeterminate_does_not_mask_a_real_warning(self):
+        """The converse: a determinable WARN survives alongside an
+        unevaluable rule, because it is more actionable than INDET alone."""
+        cell = evaluate(load_pack("bsi-de"), asset())
+        assert cell.verdict is Verdict.WARN
+        assert cell.note  # the unevaluable rule is still reported
 
     def test_no_rule_has_an_empty_selector(self):
         """A rule with no selector fires on every asset and masks real

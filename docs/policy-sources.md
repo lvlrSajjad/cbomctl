@@ -1,9 +1,12 @@
 # Policy sources, corrections, and open questions
 
-**Verified: `bsi-de`, `us-eo14412`, `nist-ir8547` (as a draft), and `anssi-fr`
-(5 of 6 rules). Not verified: `asd-au`, `eu-roadmap`, and `cnsa-2.0` — the last
-because NSA's servers refuse automated access, which needs a human with a
-browser rather than more effort.**
+**Verified from primary sources: `bsi-de`, `asd-au`, `eu-roadmap`,
+`us-eo14412`, `nist-ir8547` (as a draft), and `anssi-fr` (5 of 6 rules).**
+
+**Not verified: `cnsa-2.0`** — nsa.gov and media.defense.gov refuse automated
+access (HTTP 403) and the PDF will not render in a browser pane. That one needs
+a human with a browser, not more effort. One `anssi-fr` rule also remains
+unverified because the date it asserts is not in the primary document.
 
 Everything here was assembled from secondary reporting — vendor blogs, law-firm
 summaries, consultancy explainers — which is frequently wrong about exactly the
@@ -312,76 +315,141 @@ same exception is a good sign the reading is right.
   follow-up does describe FrodoKEM as "a more conservative variant of
   CRYSTALS-Kyber" but states no preference ordering, so F6 is not encoded.
 
-## 5. `asd-au` — Australia, ASD / ACSC
+## 5. `asd-au` — Australia, ASD / ACSC ✅ VERIFIED
 
-**Primary sources**
-- ASD *Information Security Manual*, Guidelines for Cryptography (current
-  monthly release) — <https://www.cyber.gov.au/resources-business-and-government/essential-cybersecurity/ism>
-- ACSC, *Planning for post-quantum cryptography* —
-  <https://www.cyber.gov.au/business-government/secure-design/quantum/planning-for-post-quantum-cryptography>
-
-The ISM is revised roughly monthly, so a rule citing it must record the
-**release month**. This pack goes stale faster than the others.
-
-**What the pack asserts** — `hybrid: not_recommended`
+**Verified 2026-09-06 by Sadjad Asadi** against the ISM *Guidelines for
+Cryptography* on cyber.gov.au, page last updated **03 September 2026** (controls
+dated to Sep-26). `curl` is refused by that host; read via a browser.
 
 | # | claim | status |
 |---|---|---|
-| A1 | Cease traditional asymmetric cryptography (RSA, DH, ECDH, ECDSA) by **end of 2030** | `needs_verification` |
-| A2 | Hybrid schemes **"not recommended"** — discouraged, **not prohibited** | `needs_verification` |
-| A3 | **ML-KEM-1024** and **ML-DSA-87**; ML-KEM-768 acceptable only until **2030** | `needs_verification` |
-| A4 | Staged: plan by end 2026, commenced by end 2028, complete by end 2030 | `needs_verification` |
+| A1 | RSA, DH, ECDH, ECDSA each "will not be approved beyond 2030" | ✅ verified |
+| A2 | Hybrid schemes **"not recommended; however, it is not prohibited"** | ✅ verified |
+| A3 | ML-KEM-768 not approved beyond 2030; ML-KEM-1024 preferred | ✅ verified |
+| A4 | **ML-DSA-65** not approved beyond 2030; ML-DSA-87 preferred | ✅ verified (new) |
+| A5 | **SHA-224/256, AES-128/192, HMAC-SHA256** not approved beyond 2030 | ✅ verified (new) |
+| A6 | New equipment must support ML-DSA-87, ML-KEM-1024, SHA-384/512, AES-256 by 2030 | ✅ verified |
 
-The review confirmed this pack as designed. Still unverified against the ISM
-itself.
+### A2 verbatim, and why it matters
 
-**Open questions**
+> "The use of post-quantum traditional hybrid schemes is not recommended;
+> however, it is not prohibited."
 
-1. **A2 is half the flagship conflict.** Get the literal sentence. "Not
-   recommended but not prohibited" is what makes the verdict `WARN` rather than
-   `FAIL`, and a satisfies-all target possible at a documented cost.
-2. **A1** — exact ISM control number and whether the algorithm list is
-   exhaustive (Ed25519? X25519? finite-field DH separately?).
-3. **A3's ML-KEM-768 sunset** interacts with CNSA's -1024 requirement and BSI's
-   reported -768 acceptance. Three positions on one parameter.
-4. **Applicability** — Australian government entities and suppliers, or general
-   guidance? Determines the banner and arguably the `binding` value.
-5. Record the ISM release month; open a recurring re-verification issue.
+That is exactly the wording the conflict analysis needs: **discouraged, not
+forbidden**, which is why the cell is WARN and why a satisfies-all target
+still exists at a documented cost.
 
-## 6. `eu-roadmap` — European Union, NIS Cooperation Group
+### ASD is not disagreeing about facts — it is pricing the same trade differently
 
-**Primary sources**
-- NIS Cooperation Group, *"A Coordinated Implementation Roadmap for the
-  Transition to Post-Quantum Cryptography"* (**June 23 2025**) —
-  <https://digital-strategy.ec.europa.eu/en/library/coordinated-implementation-roadmap-transition-post-quantum-cryptography>
-- Commission Recommendation (EU) 2024/1101, 11 April 2024 —
-  <https://eur-lex.europa.eu/eli/reco/2024/1101/oj>
+This is the most useful thing the primary read produced, and it changes the
+launch article. ASD **grants the European premise**:
 
-**What the pack asserts** — `binding: guideline_recommendation`
+> "Generally, such schemes have the advantage of the security offered by the
+> traditional cryptographic algorithm if the post-quantum cryptographic
+> algorithm is vulnerable to an implementation flaw or new attack."
+
+That is precisely BSI's and ANSSI's argument. ASD then weighs it against
+"increased complexity, making maintenance, analysis and secure implementation
+more difficult, as well as having greater computational and bandwidth
+overheads", and adds a point the Europeans do not address:
+
+> "in the presence of a CRQC, the security of such schemes is reduced to that
+> provided by the post-quantum cryptographic algorithm. As such, there is no
+> practical value in the use of such schemes in the presence of a CRQC."
+
+So the dispute is a **cost-benefit judgement on agreed facts**, not a factual
+disagreement. Encoded as `rationale: algorithm_maturity` on the ASD rule too —
+same axis, opposite conclusion. An article that frames this as "Australia
+thinks hybrids are unsafe" would be wrong.
+
+### A5 is stricter than anyone else, and explicitly not a quantum argument
+
+ASD sunsets SHA-256, AES-128 and HMAC-SHA256 by 2030 "for interoperability and
+maintainability reasons", while stating plainly:
+
+> "The impact of quantum attacks on hashing algorithms and symmetric
+> cryptographic algorithms, such as SHA-2 and AES, is unlikely to be felt for
+> some time."
+
+Our scorer bands these `low` on quantum risk, which stays correct — the ASD
+deadline is real, and the quantum urgency is not. Two different things, and the
+matrix shows both without conflating them.
+
+### Still open
+
+- **Staleness is a live risk here.** The ISM is revised roughly monthly.
+  `source_edition` pins 2026-09-03; re-verify quarterly.
+- Whether ISM controls bind non-government Australian entities, which would
+  change `binding` from `guideline_recommendation` to something stronger for
+  that population.
+
+## 6. `eu-roadmap` — European Union, NIS Cooperation Group ✅ VERIFIED
+
+**Verified 2026-09-06 by Sadjad Asadi against the primary PDF:** *"A Coordinated
+Implementation Roadmap for the Transition to Post-Quantum Cryptography"*,
+**Part 1, Version 1.1, dated 11.06.2025** —
+<https://digital-strategy.ec.europa.eu/en/library/coordinated-implementation-roadmap-transition-post-quantum-cryptography>
+
+(A companion **FAQ**, NIS Cooperation Group, 15.04.2026, also exists and is not
+yet mined. Its §2.1 addresses store-now-decrypt-later directly and is worth a
+second pass.)
 
 | # | claim | status |
 |---|---|---|
-| E1 | National strategies and pilots by **end 2026** | `needs_verification` |
-| E2 | **High-risk use cases** by **end 2030** | `needs_verification` |
-| E3 | Medium/low risk "as far as feasible" by **2035** | `needs_verification` |
-| E4 | A **Recommendation**, not a Regulation — not directly binding on operators | `needs_verification` |
+| E1 | Member States initiate a national PQC strategy by **end of 2026** | ✅ verified |
+| E2 | High-risk use cases transitioned **no later than end of 2030** | ✅ verified |
+| E3 | By **2035** "completed for as many systems as practically feasible" | ✅ verified |
+| E4 | It **recommends**; non-binding on operators | ✅ verified |
+| E5 | **Medium-risk**: not stand-alone after end of **2035** | ✅ verified (new) |
+| E6 | **Hybrid is recommended** | ✅ verified — **the stub was wrong** |
+| E7 | Firmware/software update mechanisms should use PQ signatures | ✅ verified (new) |
 
-The review confirmed this pack as designed.
+### E6 — a correction to our own stub
 
-**Open questions**
+The stub shipped `hybrid: silent`, on the assumption that the roadmap did not
+address it. It does:
 
-1. **E4 decides whether this pack can ever emit `FAIL`.** A Commission
-   Recommendation is non-binding by definition (TFEU Art. 288). If that holds,
-   every rule caps at `WARN`. Check separately whether **NIS2 or DORA** pull any
-   of these dates into binding obligations for in-scope entities — that would
-   justify a second pack, not a change to this one.
-2. **E2's "high-risk use cases" is not CBOM-derivable**, exactly like the CNSA
-   category problem. Same resolution: declared in config, `INDET` when absent.
-   Confirm the roadmap's own sector list so the config enum matches.
-3. **Double-citation risk.** Both `bsi-de` (B4) and `anssi-fr` reportedly follow
-   "the European roadmap" for signature timing. If BSI's 2035 date simply *is*
-   E3, cite the roadmap from both packs rather than duplicating a date that
-   could silently drift apart in our YAML.
+> "it is recommended to use standardised and tested hybrid solutions, whenever
+> feasible and suitable. In particular, whenever a quantum-vulnerable
+> public-key cryptographic mechanism, such as RSA or any discrete logarithm
+> based mechanism, is currently used, replacing it by a standardized hybrid
+> combination which includes PQC should be considered."
+
+Silence was an assumption, and it was wrong. This matters: with the EU roadmap
+corrected, **all three European sources recommend hybrid** — BSI, ANSSI and the
+NIS CG — against ASD's "not recommended". The Europe-versus-anglophone split is
+now verified from three independent primary documents rather than two.
+
+Unlike BSI and ANSSI, the roadmap gives **no stated reason** for preferring
+hybrids, so `rationale` is `unstated` rather than assumed to match them.
+
+### E2 / E5 verbatim
+
+> "For high-risk use cases, quantum-vulnerable public-key mechanisms shall not
+> be used stand-alone after the end of 2030, analogously after the end of 2035
+> for medium-risk use cases."
+
+Note "stand-alone" — consistent with E6, the expected replacement is a hybrid.
+
+### E7 supports our signature carve-out
+
+> "products entering the market with an expected lifetime beyond 2030 should be
+> upgradable to PQC and … the upgrade mechanism for software and firmware
+> upgrades should incorporate post-quantum signature schemes for integrity and
+> authenticity."
+
+Primary-source support for the long-lived-verification rule in our scoring:
+firmware signing is exactly the case where a signature's trust horizon, not the
+data's confidentiality horizon, drives urgency.
+
+### Still open
+
+- Risk tiers (high / medium / low) are **not derivable from a CBOM**, same
+  problem as the CNSA categories. Declared as `system_category`; undeclared
+  means INDETERMINATE. Confirm the roadmap's own sector list matches our enum.
+- Whether **NIS2 or DORA** make any of these dates binding for in-scope
+  entities. If so, that is a separate pack, not a change to this one.
+- Part 2 of the roadmap, and the 2026 FAQ, are unread.
 
 ## 7. `nist-ir8547` — United States, NIST ✅ VERIFIED (as a draft)
 
@@ -492,4 +560,16 @@ A rule may only lose `needs_verification` with a row here.
 | `nist-signatures-disallowed-2035` | Sadjad Asadi | 2026-09-06 | IR 8547 ipd §4.1.1 Table 2 | confirmed, all strengths |
 | `nist-112bit-key-establishment-deprecated-2030` | Sadjad Asadi | 2026-09-06 | IR 8547 ipd §4.1.2 Table 4 | confirmed; 112-bit only |
 | `nist-key-establishment-disallowed-2035` | Sadjad Asadi | 2026-09-06 | IR 8547 ipd §4.1.2 Table 4 | confirmed, all strengths |
+| `asd-classical-asymmetric-2030` | Sadjad Asadi | 2026-09-06 | ISM 2026-09-03, Guidelines for Cryptography | confirmed, each algorithm named separately |
+| `asd-hybrid-not-recommended` | Sadjad Asadi | 2026-09-06 | ISM 2026-09-03 | confirmed verbatim; ASD grants the European premise and prices it differently |
+| `asd-mlkem768-2030` | Sadjad Asadi | 2026-09-06 | ISM 2026-09-03 | confirmed |
+| `asd-mldsa65-2030` | Sadjad Asadi | 2026-09-06 | ISM 2026-09-03 | confirmed, new |
+| `asd-sha256-aes128-2030` | Sadjad Asadi | 2026-09-06 | ISM 2026-09-03 | confirmed, new; explicitly not a quantum argument |
+| `asd-pqc-support-by-2030` | Sadjad Asadi | 2026-09-06 | ISM 2026-09-03 | confirmed |
+| `eu-high-risk-2030` | Sadjad Asadi | 2026-09-06 | EU Roadmap Part 1 v1.1 | confirmed |
+| `eu-medium-risk-2035` | Sadjad Asadi | 2026-09-06 | EU Roadmap Part 1 v1.1 | confirmed, new |
+| `eu-hybrid-recommended` | Sadjad Asadi | 2026-09-06 | EU Roadmap Part 1 v1.1 | **stub said `silent`; the roadmap recommends hybrid** |
+| `eu-transition-start-2026` | Sadjad Asadi | 2026-09-06 | EU Roadmap Part 1 v1.1 | confirmed |
+| `eu-remainder-2035` | Sadjad Asadi | 2026-09-06 | EU Roadmap Part 1 v1.1 | confirmed |
+| `eu-firmware-upgrade-signatures` | Sadjad Asadi | 2026-09-06 | EU Roadmap Part 1 v1.1 | confirmed, new |
 | **`cnsa-2.0` (all rules)** | — | 2026-09-06 | **blocked: nsa.gov and media.defense.gov return 403** | needs a human with a browser |

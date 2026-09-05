@@ -10,8 +10,9 @@ independent checkboxes — and no tool will show you the collision.
 `cbomctl` takes a CBOM from any generator, runs it against several national PQC
 policies at once, and reports the matrix and the conflicts.
 
-> ⚠️ **Pre-release. Verification is partial.** Four packs have been read from
-> their primary sources; three have not and ship as `status: needs_verification`. Output computed
+> ⚠️ **Pre-release.** Six of seven packs have been read from their primary
+> sources. `cnsa-2.0` has not — NSA's servers refuse automated access — and it
+> ships as `status: needs_verification`. Output computed
 > from an unverified rule carries a visible banner naming the packs involved.
 > See [docs/policy-sources.md](docs/policy-sources.md). Not compliance advice.
 
@@ -109,12 +110,15 @@ URL, a `last_verified` date, a `binding` classification, and a `hybrid` stance.
 |---|---|
 | pack | state |
 |---|---|
-| `bsi-de` | ✅ verified — TR-02102-1 v2026-01 §2.1, §5.3.4 |
-| `us-eo14412` | ✅ verified — 91 FR 38483 §4(b), §5(c) |
-| `nist-ir8547` | ✅ verified **as a draft** — IR 8547 ipd Tables 2 and 4 |
-| `anssi-fr` | ✅ verified 5/6 — ANSSI 2023 follow-up §1.1, §1.2, §2, §3.2, §4 |
+| pack | state |
+|---|---|
+| `bsi-de` | ✅ TR-02102-1 v2026-01 §2.1, §5.3.4 |
+| `anssi-fr` | ✅ 5/6 — ANSSI 2023 follow-up §1.1, §1.2, §2, §3.2, §4 |
+| `asd-au` | ✅ ISM Guidelines for Cryptography, 2026-09-03 |
+| `eu-roadmap` | ✅ Coordinated Implementation Roadmap Part 1 v1.1 |
+| `us-eo14412` | ✅ 91 FR 38483 §4(b), §5(c) |
+| `nist-ir8547` | ✅ **as a draft** — IR 8547 ipd Tables 2 and 4 |
 | `cnsa-2.0` | ❌ blocked — nsa.gov returns 403 to automated fetches |
-| `asd-au` · `eu-roadmap` | unverified |
 
 ## Install
 

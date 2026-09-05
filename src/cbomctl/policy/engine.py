@@ -111,6 +111,9 @@ def evaluate(
     #: pack's scope. If that is the *only* reason nothing fired, the honest
     #: cell is "does not apply to you", not "passes".
     out_of_scope: list[str] = []
+    #: A rule that applied and was satisfied. Distinguishes "this pack looked
+    #: and was happy" from "this pack never reached you".
+    satisfied: list[str] = []
     worst = Verdict.PASS
 
     for rule in pack.rules:
@@ -129,8 +132,8 @@ def evaluate(
             continue
 
         # A hybrid-stance rule only bites when the construction contradicts it.
-        satisfied = _hybrid_satisfied(rule, asset)
-        if satisfied is True:
+        if _hybrid_satisfied(rule, asset) is True:
+            satisfied.append(rule.id)
             continue
 
         verdict = rule.effective_verdict
@@ -152,8 +155,9 @@ def evaluate(
 
     # An unevaluable rule must not erase a verdict we *can* determine: a WARN
     # plus "one rule could not be evaluated" is more useful than INDET alone.
-    # INDETERMINATE wins only when nothing else was determinable.
-    if indeterminate_reasons and not hits:
+    # But INDETERMINATE must outrank PASS and INFO, or an unscoped
+    # informational rule silently masks "I could not tell what this key is for".
+    if indeterminate_reasons and worst.rank <= Verdict.INFO.rank:
         return Cell(verdict=Verdict.INDETERMINATE, rules=hits,
                     note="; ".join(indeterminate_reasons[:3]))
 
@@ -164,7 +168,9 @@ def evaluate(
                 verdict=Verdict.INDETERMINATE, rules=[],
                 note=f"purpose is {asset.purpose.value}; no rule can be evaluated",
             )
-        if out_of_scope and len(out_of_scope) == sum(
+        # "Does not apply to you" only holds if nothing in the pack actually
+        # engaged. A rule that applied and was satisfied means this is a PASS.
+        if out_of_scope and not satisfied and len(out_of_scope) == sum(
                 1 for r in pack.rules if r.applies_to.system_category):
             return Cell(
                 verdict=Verdict.NOT_APPLICABLE, rules=[],

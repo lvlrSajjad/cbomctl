@@ -2,71 +2,166 @@ id: asd-au
 name: "ASD / ACSC — Australia"
 authority: "Australian Signals Directorate"
 jurisdiction: AU
-pack_version: "0.1.0"
+pack_version: "0.2.0"
 applicability: >-
-  The ISM applies to Australian government entities and their suppliers. Verify
-  whether it is presented as binding policy or as guidance before treating a
-  finding as blocking.
+  The ISM is ASD's guidance for Australian government entities and their
+  suppliers. Its controls are written as statements of fact ("... is used"),
+  and Australian government entities are expected to comply; it is not a
+  statute. Treated as guideline_recommendation, so this pack produces WARN.
 notes: >-
-  STUB — needs verification against the current ISM release. The ISM is revised
-  roughly monthly, so record the release month, not just the URL.
+  VERIFIED 2026-09-06 against the ISM Guidelines for Cryptography as published
+  on cyber.gov.au, page last updated 03 September 2026 (controls dated up to
+  Sep-26). The ISM is revised roughly monthly, so this pack goes stale faster
+  than the others -- re-verify quarterly and update source_edition.
 
 rules:
-  - id: asd-classical-asymmetric-sunset
+  - id: asd-classical-asymmetric-2030
     description: >-
-      Cease use of traditional asymmetric cryptography (RSA, DH, ECDH, ECDSA)
-      by the end of 2030.
+      RSA, DH, ECDH and ECDSA are each withdrawn after 2030. The ISM states
+      separately for each: "Taking into account projected technological
+      advances in quantum computing, [RSA / DH / ECDH / ECDSA] will not be
+      approved beyond 2030."
     binding: guideline_recommendation
-    status: needs_verification
-    source_url: "https://www.cyber.gov.au/resources-business-and-government/essential-cybersecurity/ism"
-    source_title: "ASD Information Security Manual — Guidelines for Cryptography"
-    last_verified: 2026-09-05
+    status: verified
+    source_url: "https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/ism/cyber-security-guidelines/guidelines-for-cryptography"
+    source_title: "ASD Information Security Manual, §Guidelines for Cryptography — approved asymmetric algorithms"
+    source_edition: "ISM as published 2026-09-03"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
     deadline: 2030-12-31
     deadline_state: disallowed
     applies_to:
-      purpose: [key-agreement, signature, encryption]
+      purpose: [key-agreement, encryption, signature]
       quantum_status: [broken-by-shor]
-    rationale: unstated
+    rationale: harvest_now_decrypt_later
+    rationale_note: >-
+      The ISM's stated reason is Shor: "One known quantum attack (using Shor's
+      algorithm) effectively defeats all traditional cryptography that relies
+      upon asymmetric cryptographic algorithms such as DH, ECDH, ECDSA or RSA."
     migration_target: { kem: "ML-KEM-1024", signature: "ML-DSA-87", construction: pure-pqc }
     verdict: fail
-    open_question: >-
-      Exact ISM control number and whether the algorithm list is exhaustive
-      (Ed25519? X25519? finite-field DH separately?).
 
   - id: asd-hybrid-not-recommended
     description: >-
-      Post-quantum/traditional hybrid schemes are not recommended, on grounds of
-      added complexity and computational overhead. Not prohibited.
+      "The use of post-quantum traditional hybrid schemes is not recommended;
+      however, it is not prohibited."
     binding: guideline_recommendation
-    status: needs_verification
-    source_url: "https://www.cyber.gov.au/business-government/secure-design/quantum/planning-for-post-quantum-cryptography"
-    source_title: "ACSC — Planning for post-quantum cryptography"
-    last_verified: 2026-09-05
+    status: verified
+    source_url: "https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/ism/cyber-security-guidelines/guidelines-for-cryptography"
+    source_title: "ASD Information Security Manual, §Guidelines for Cryptography — post-quantum traditional hybrid schemes"
+    source_edition: "ISM as published 2026-09-03"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
     applies_to:
-      purpose: [key-agreement, signature]
+      purpose: [key-agreement, encryption, signature]
       construction: [hybrid]
     hybrid: not_recommended
-    rationale: unstated
-    rationale_note: "Complexity and computational overhead, per secondary sources."
+    rationale: algorithm_maturity
+    rationale_note: >-
+      ASD accepts the European premise and rejects the trade. It grants the
+      benefit -- hybrids have "the advantage of the security offered by the
+      traditional cryptographic algorithm if the post-quantum cryptographic
+      algorithm is vulnerable to an implementation flaw or new attack" -- then
+      weighs it against "increased complexity, making maintenance, analysis and
+      secure implementation more difficult, as well as having greater
+      computational and bandwidth overheads", and adds that "in the presence of
+      a CRQC, the security of such schemes is reduced to that provided by the
+      post-quantum cryptographic algorithm. As such, there is no practical
+      value in the use of such schemes in the presence of a CRQC." So this is
+      not a disagreement about facts; it is the same maturity argument decided
+      the other way on cost.
     verdict: warn
-    open_question: >-
-      Get the literal sentence. 'Not recommended but not prohibited' is what
-      makes this WARN rather than FAIL, and what makes a satisfies-all target
-      possible at a documented cost.
 
-  - id: asd-mlkem768-sunset
-    description: "ML-KEM-768 acceptable only until 2030; ML-KEM-1024 thereafter."
+  - id: asd-mlkem768-2030
+    description: >-
+      "For interoperability and maintainability reasons, ML-KEM-768 will not be
+      approved beyond 2030." ML-KEM-768 and ML-KEM-1024 are both approved now,
+      "preferably ML-KEM-1024".
     binding: guideline_recommendation
-    status: needs_verification
-    source_url: "https://www.cyber.gov.au/resources-business-and-government/essential-cybersecurity/ism"
-    source_title: "ASD Information Security Manual — Guidelines for Cryptography"
-    last_verified: 2026-09-05
+    status: verified
+    source_url: "https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/ism/cyber-security-guidelines/guidelines-for-cryptography"
+    source_title: "ASD Information Security Manual, §Guidelines for Cryptography — ML-KEM"
+    source_edition: "ISM as published 2026-09-03"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
     deadline: 2030-12-31
     deadline_state: deprecated
     applies_to:
       purpose: [key-agreement]
-      algorithm: ["ML-KEM-768", "ML-KEM"]
+      algorithm: ["ML-KEM-768", "ML-KEM-512", "ML-KEM"]
     rationale: key_length
+    rationale_note: >-
+      Stated as interoperability and maintainability, not security. Contrast
+      BSI and ANSSI, which accept ML-KEM-768 without a sunset.
     migration_target: { kem: "ML-KEM-1024" }
     verdict: warn
-    open_question: "Confirm the ML-KEM-768 sunset date and the strictest-grade-only framing."
+
+  - id: asd-mldsa65-2030
+    description: >-
+      "For interoperability and maintainability reasons, ML-DSA-65 will not be
+      approved beyond 2030." ML-DSA-65 and ML-DSA-87 are both approved now,
+      "preferably ML-DSA-87".
+    binding: guideline_recommendation
+    status: verified
+    source_url: "https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/ism/cyber-security-guidelines/guidelines-for-cryptography"
+    source_title: "ASD Information Security Manual, §Guidelines for Cryptography — ML-DSA"
+    source_edition: "ISM as published 2026-09-03"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    deadline: 2030-12-31
+    deadline_state: deprecated
+    applies_to:
+      purpose: [signature]
+      algorithm: ["ML-DSA-44", "ML-DSA-65", "ML-DSA"]
+    rationale: key_length
+    migration_target: { signature: "ML-DSA-87" }
+    verdict: warn
+
+  - id: asd-sha256-aes128-2030
+    description: >-
+      "For interoperability and maintainability reasons, SHA-224 and SHA-256
+      will not be approved beyond 2030" and "AES-128 and AES-192 will not be
+      approved beyond 2030"; likewise HMAC-SHA256.
+    binding: guideline_recommendation
+    status: verified
+    source_url: "https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/ism/cyber-security-guidelines/guidelines-for-cryptography"
+    source_title: "ASD Information Security Manual, §Guidelines for Cryptography — hashing and symmetric algorithms"
+    source_edition: "ISM as published 2026-09-03"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    deadline: 2030-12-31
+    deadline_state: deprecated
+    applies_to:
+      algorithm: ["SHA-224", "SHA-256", "SHA256", "AES-128", "AES128", "AES-192", "HMAC-SHA256"]
+    rationale: key_length
+    rationale_note: >-
+      Notable and stricter than any other pack here, and explicitly NOT a
+      quantum argument: "The impact of quantum attacks on hashing algorithms
+      and symmetric cryptographic algorithms, such as SHA-2 and AES, is
+      unlikely to be felt for some time. However, for interoperability reasons"
+      new equipment intended for use beyond 2030 "should support SHA-384,
+      SHA-512 and AES-256." Our scorer still bands these low, correctly — the
+      deadline is real but the quantum risk is not.
+    migration_target: { symmetric: "AES-256", hash: "SHA-384" }
+    verdict: warn
+
+  - id: asd-pqc-support-by-2030
+    description: >-
+      "The development and procurement of new cryptographic equipment,
+      applications and libraries ensures support for the use of ML-DSA-87,
+      ML-KEM-1024, SHA-384, SHA-512 and AES-256 by no later than 2030."
+    binding: guideline_recommendation
+    status: verified
+    source_url: "https://www.cyber.gov.au/business-government/asds-cyber-security-frameworks/ism/cyber-security-guidelines/guidelines-for-cryptography"
+    source_title: "ASD Information Security Manual, §Guidelines for Cryptography — transitioning to post-quantum cryptography"
+    source_edition: "ISM as published 2026-09-03"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    deadline: 2030-12-31
+    deadline_state: complete
+    applies_to:
+      purpose: [key-agreement, encryption, signature]
+      quantum_status: [broken-by-shor]
+    rationale: harvest_now_decrypt_later
+    migration_target: { kem: "ML-KEM-1024", signature: "ML-DSA-87", symmetric: "AES-256", hash: "SHA-384" }
+    verdict: warn
