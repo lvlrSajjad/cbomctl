@@ -1,0 +1,45 @@
+{
+  "format": "CycloneDX",
+  "spec_version": "1.6",
+  "components": [
+    {
+      "bom_ref": "st-ecdh",
+      "name": "ECDH",
+      "component_type": "CryptographicAsset",
+      "crypto_properties": {
+        "asset_type": "Algorithm",
+        "oid": "1.3.132.1.12",
+        "algorithm_properties": {
+          "primitive": "KeyAgree",
+          "crypto_functions": [],
+          "parameter_set_identifier": null,
+          "elliptic_curve": "secg/secp256r1",
+          "classical_security_level": 128
+        }
+      }
+    },
+    {
+      "bom_ref": "st-rsa",
+      "name": "RSA-2048",
+      "component_type": "CryptographicAsset",
+      "crypto_properties": {
+        "asset_type": "Algorithm",
+        "oid": "1.2.840.113549.1.1.1",
+        "algorithm_properties": {
+          "primitive": "Pke",
+          "crypto_functions": ["Keygen"],
+          "parameter_set_identifier": "2048"
+        }
+      }
+    },
+    {
+      "bom_ref": "st-unknown",
+      "name": "CustomKDF",
+      "component_type": "CryptographicAsset",
+      "crypto_properties": {
+        "asset_type": "Algorithm",
+        "algorithm_properties": { "primitive": "Unknown", "crypto_functions": [] }
+      }
+    }
+  ]
+}

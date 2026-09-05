@@ -1,0 +1,56 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "version": 1,
+  "metadata": { "component": { "type": "application", "name": "payments-gateway" } },
+  "components": [
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "hybrid-kex",
+      "name": "X25519MLKEM768",
+      "evidence": { "occurrences": [ { "location": "src/payments/tls.go", "line": 88 } ] },
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {
+          "primitive": "combiner",
+          "cryptoFunctions": ["encapsulate", "decapsulate"],
+          "algorithmFamily": "ML-KEM",
+          "parameterSetIdentifier": "768",
+          "nistQuantumSecurityLevel": 3
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "classical-kex",
+      "name": "ECDH",
+      "evidence": { "occurrences": [ { "location": "src/payments/legacy.go", "line": 12 } ] },
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "oid": "1.3.132.1.12",
+        "algorithmProperties": { "primitive": "key-agree", "ellipticCurve": "secg/secp256r1" }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "ambiguous-rsa",
+      "name": "RSA-2048",
+      "evidence": { "occurrences": [ { "location": "src/payments/keys.go", "line": 41 } ] },
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "oid": "1.2.840.113549.1.1.1",
+        "algorithmProperties": { "primitive": "pke", "cryptoFunctions": ["keygen"], "parameterSetIdentifier": "2048" }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "pq-signature",
+      "name": "ML-DSA-65",
+      "evidence": { "occurrences": [ { "location": "src/payments/sign.go", "line": 7 } ] },
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": { "primitive": "signature", "cryptoFunctions": ["sign", "verify"], "algorithmFamily": "ML-DSA" }
+      }
+    }
+  ]
+}

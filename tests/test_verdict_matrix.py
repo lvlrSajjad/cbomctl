@@ -1,0 +1,197 @@
+"""End-to-end: matrix, conflicts, determinism, and the unverified banner."""
+
+from __future__ import annotations
+
+import json
+from datetime import date
+from pathlib import Path
+
+import pytest
+
+from cbomctl.config import Config
+from cbomctl.loader import read_assets
+from cbomctl.models import Verdict
+from cbomctl.policy.schema import load_pack
+from cbomctl.report import json_out, markdown, matrix_text, sarif
+from cbomctl.verdict.conflicts import detect
+from cbomctl.verdict.matrix import build
+
+FIXTURES = Path(__file__).parent / "fixtures"
+TODAY = date(2026, 9, 5)
+JURISDICTIONS = ["bsi-de", "anssi-fr", "asd-au", "cnsa-2.0"]
+
+
+@pytest.fixture
+def result():
+    assets, _ = read_assets(FIXTURES / "conflict-hybrid.json")
+    packs = [load_pack(j) for j in JURISDICTIONS]
+    cfg = Config.model_validate({
+        "system_category": "web-cloud",
+        "assets": [{"match": {"location": "src/payments/**"},
+                    "data_lifetime_years": 25}],
+    })
+    matrix = build(assets, packs, cfg, today=TODAY)
+    return matrix, detect(matrix, packs), packs
+
+
+class TestMatrix:
+    def test_every_asset_gets_every_jurisdiction(self, result):
+        matrix, _, _ = result
+        for row in matrix.rows:
+            assert set(row.cells) == set(JURISDICTIONS)
+
+    def test_ambiguous_asset_is_never_passed_anywhere(self, result):
+        matrix, _, _ = result
+        row = next(r for r in matrix.rows if r.purpose == "ambiguous")
+        assert all(c.verdict is not Verdict.PASS for c in row.cells.values())
+
+    def test_config_lifetime_reaches_the_score(self, result):
+        matrix, _, _ = result
+        ecdh = next(r for r in matrix.rows if r.display == "ECDH")
+        assert ecdh.risk.x_years == 25
+        assert ecdh.risk.band == "critical"
+
+    def test_hybrid_keeps_its_full_name(self, result):
+        """`X25519MLKEM768` must not display as `ML-KEM` — the family token
+        hides the classical half, which is the interesting part."""
+        matrix, _, _ = result
+        assert any(r.display == "X25519MLKEM768" for r in matrix.rows)
+
+    def test_ordering_is_worst_first_and_stable(self, result):
+        matrix, _, _ = result
+        ranks = [r.worst.rank for r in matrix.rows]
+        assert ranks == sorted(ranks, reverse=True)
+
+
+class TestConflicts:
+    def test_hybrid_construction_conflict_is_found(self, result):
+        _, conflicts, _ = result
+        c = next(c for c in conflicts if c.kind == "construction")
+        assert {"bsi-de", "anssi-fr"} <= set(c.jurisdictions)
+        assert "asd-au" in c.jurisdictions
+
+    def test_construction_conflict_names_a_satisfies_all_target(self, result):
+        _, conflicts, _ = result
+        for c in (c for c in conflicts if c.kind == "construction"):
+            assert c.satisfies_all
+            assert "business decision" in c.cost_note
+
+    def test_parameter_conflict_targets_the_stricter_set(self, result):
+        _, conflicts, _ = result
+        c = next((c for c in conflicts if c.kind == "parameter"), None)
+        assert c is not None
+        assert "1024" in c.satisfies_all
+
+    def test_signature_conflict_exists_and_is_anssi_vs_asd(self, result):
+        """The maturity axis: ANSSI recommends hybrid signatures, ASD does
+        not. Neither position is about harvest risk."""
+        _, conflicts, _ = result
+        sig = next(c for c in conflicts
+                   if c.kind == "construction" and "ML-DSA" in c.display)
+        assert "anssi-fr" in sig.jurisdictions
+
+    def test_conflict_ids_are_dense_and_referenced(self, result):
+        matrix, conflicts, _ = result
+        assert [c.id for c in conflicts] == [f"c{i}" for i in range(1, len(conflicts) + 1)]
+        referenced = {i for r in matrix.rows for i in r.conflict_ids}
+        assert referenced == {c.id for c in conflicts}
+
+
+class TestUnverifiedIsUnmissable:
+    def test_matrix_reports_unverified_packs(self, result):
+        matrix, _, _ = result
+        assert set(matrix.unverified_packs) == set(JURISDICTIONS)
+
+    def test_text_output_carries_the_banner(self, result):
+        matrix, conflicts, _ = result
+        out = matrix_text.render(matrix, conflicts)
+        assert "UNVERIFIED POLICY PACK" in out
+        assert "NOT FOR COMPLIANCE USE" in out
+
+    def test_json_output_carries_a_machine_readable_warning(self, result):
+        matrix, conflicts, _ = result
+        doc = json.loads(json_out.render(matrix, conflicts))
+        assert doc["policy_warning"]["level"] == "unverified"
+
+    def test_markdown_output_carries_the_warning(self, result):
+        matrix, conflicts, _ = result
+        assert "UNVERIFIED POLICY PACK" in markdown.render(matrix, conflicts)
+
+    def test_sarif_marks_every_unverified_rule(self, result):
+        matrix, conflicts, _ = result
+        doc = json.loads(sarif.render(matrix, conflicts))
+        rules = doc["runs"][0]["tool"]["driver"]["rules"]
+        policy_rules = [r for r in rules if r["id"] != "cbomctl/jurisdiction-conflict"]
+        assert policy_rules
+        for rule in policy_rules:
+            assert "[UNVERIFIED RULE]" in rule["fullDescription"]["text"]
+
+
+class TestStrict:
+    def test_strict_downgrades_every_verdict_to_indeterminate(self):
+        assets, _ = read_assets(FIXTURES / "conflict-hybrid.json")
+        packs = [load_pack(j) for j in JURISDICTIONS]
+        matrix = build(assets, packs, Config(), strict=True, today=TODAY)
+        assert all(c.verdict is not Verdict.FAIL
+                   for r in matrix.rows for c in r.cells.values())
+        assert matrix.exit_code == 3
+
+
+class TestOutputs:
+    def test_json_is_deterministic(self, result):
+        matrix, conflicts, _ = result
+        assert json_out.render(matrix, conflicts) == json_out.render(matrix, conflicts)
+
+    def test_sarif_is_valid_2_1_0(self, result):
+        matrix, conflicts, _ = result
+        doc = json.loads(sarif.render(matrix, conflicts))
+        assert doc["version"] == "2.1.0"
+        assert doc["runs"][0]["tool"]["driver"]["name"] == "cbomctl"
+        for res in doc["runs"][0]["results"]:
+            assert res["locations"][0]["physicalLocation"]["artifactLocation"]["uri"]
+
+    def test_exit_code_is_one_when_a_mandatory_rule_fails(self, result):
+        matrix, _, _ = result
+        assert matrix.exit_code == 1
+
+
+class TestRealGeneratorOutput:
+    def test_keycloak_cbom_parses_and_reports_its_unresolved_share(self):
+        """Real CBOMkit output: a third of algorithm assets carry no usable
+        purpose signal. If this ever drops to zero, the normalizer has started
+        guessing."""
+        assets, fmt = read_assets(FIXTURES / "cbomkit-keycloak.json")
+        assert fmt == "cyclonedx"
+        algorithms = [a for a in assets if a.asset_type == "algorithm"]
+        assert len(algorithms) == 22
+        unresolved = [a for a in algorithms if not a.purpose.is_resolved]
+        assert 6 <= len(unresolved) <= 10
+
+    def test_kafka_cbom_parses(self):
+        assets, _ = read_assets(FIXTURES / "cbomkit-kafka.json")
+        assert len(assets) == 11
+
+    def test_spec_conformance_fixture_parses_all_asset_types(self):
+        assets, _ = read_assets(FIXTURES / "spec-conformance-1.6.json")
+        assert {a.asset_type for a in assets} == {
+            "algorithm", "certificate", "protocol", "related-crypto-material"}
+
+
+class TestSbomToolsAdapter:
+    def test_adapter_is_detected_and_reads_crypto_properties(self):
+        assets, fmt = read_assets(FIXTURES / "sbom-tools-view.json")
+        assert fmt == "sbom-tools"
+        ecdh = next(a for a in assets if a.raw_name == "ECDH")
+        assert ecdh.purpose.value == "key-agreement"
+
+    def test_adapter_preserves_ambiguity(self):
+        assets, _ = read_assets(FIXTURES / "sbom-tools-view.json")
+        rsa = next(a for a in assets if a.raw_name == "RSA-2048")
+        assert rsa.purpose.value == "ambiguous"
+
+    def test_absent_and_explicit_unknown_are_indistinguishable_here(self):
+        """Documented loss: their parser collapses both to Unknown. No verdict
+        changes, but the diagnostic is gone."""
+        assets, _ = read_assets(FIXTURES / "sbom-tools-view.json")
+        custom = next(a for a in assets if a.raw_name == "CustomKDF")
+        assert custom.purpose.value == "unknown"
