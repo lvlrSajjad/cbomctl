@@ -1,0 +1,104 @@
+name: Release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: read
+
+jobs:
+  # Never publish something the test suite has not passed on this exact commit.
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e '.[test]'
+      - run: pytest -q
+      - run: python scripts/gen_pack_docs.py --check
+      - run: python scripts/gen_article_blocks.py --check
+
+      - name: Tag must match the package version
+        run: |
+          tag="${GITHUB_REF_NAME#v}"
+          pkg=$(python -c "import tomllib,pathlib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text())['project']['version'])")
+          test "$tag" = "$pkg" || { echo "tag $tag != pyproject $pkg"; exit 1; }
+
+      - name: Every shipped rule must cite a primary source
+        # The project's central claim. If it is ever false, do not release.
+        run: |
+          python - <<'PY'
+          import pathlib, sys, yaml
+          sys.path.insert(0, "src")
+          from cbomctl.policy.schema import ALLOWED_SOURCE_HOSTS
+          bad = []
+          for p in sorted(pathlib.Path("policy-packs/packs").glob("*.yaml")):
+              for rule in yaml.safe_load(p.read_text())["rules"]:
+                  if not any(h in rule["source_url"] for h in ALLOWED_SOURCE_HOSTS):
+                      bad.append(f"{p.stem}/{rule['id']}: non-primary source")
+                  if rule["status"] == "verified" and not rule.get("verified_by"):
+                      bad.append(f"{p.stem}/{rule['id']}: verified with no verifier")
+          print("\n".join(bad) or "all rules cite primary sources")
+          sys.exit(1 if bad else 0)
+          PY
+
+  build:
+    needs: verify
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install build
+      - run: python -m build
+
+      - name: Packs must be inside the wheel
+        # They live at the repo root as a standalone artifact; an installed
+        # cbomctl with no rules would be silently useless.
+        run: |
+          python - <<'PY'
+          import glob, sys, zipfile
+          whl = sorted(glob.glob("dist/*.whl"))[-1]
+          packs = [n for n in zipfile.ZipFile(whl).namelist()
+                   if n.startswith("cbomctl/packs/") and n.endswith(".yaml")]
+          print(f"{whl}: {len(packs)} packs")
+          sys.exit(0 if len(packs) == 7 else 1)
+          PY
+
+      - uses: actions/upload-artifact@v4
+        with: { name: dist, path: dist/ }
+
+  pypi:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/p/cbomctl
+    permissions:
+      id-token: write   # trusted publishing — no API token stored anywhere
+    steps:
+      - uses: actions/download-artifact@v4
+        with: { name: dist, path: dist/ }
+      - uses: pypa/gh-action-pypi-publish@release/v1
+
+  github-release:
+    needs: build
+    runs-on: ubuntu-latest
+    permissions: { contents: write }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with: { name: dist, path: dist/ }
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*
+          generate_release_notes: true
+          body: |
+            See [CHANGELOG.md](CHANGELOG.md) and
+            [policy-packs/CHANGELOG.md](policy-packs/CHANGELOG.md).
+
+            All seven policy packs are read from primary sources. Every rule
+            cites the section or page it was read from. This is not compliance
+            advice — read the sources before acting on a verdict.

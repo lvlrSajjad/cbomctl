@@ -1,17 +1,19 @@
 # Roadmap
 
-## Before 1.0
+## Keeping it true
 
-**Verify `cnsa-2.0`.** The only pack still built from secondary reporting.
-NSA's servers return HTTP 403 to automated requests, so it needs a human with a
-browser. Its seven rules are already structured for the reading, and each
-`open_question` names the sentence to find. The hybrid sentence matters most:
-if NSA does not permit hybrids on mission systems outside named interoperability
-exceptions, then paired with BSI or ANSSI **no single construction satisfies
-every jurisdiction** — and that changes the output, not just a label.
+**Re-verification cadence.** All seven packs are verified as of 2026-09-06. The
+ASD ISM is revised roughly monthly and will go stale first; NIST IR 8547 is a
+draft that may finalise and move its dates. A scheduled CI job reports rules
+older than 180 days.
 
-**Re-verification cadence.** The ASD ISM is revised roughly monthly and will go
-stale fastest. A scheduled CI job reports rules older than 180 days.
+**One reading worth revisiting.** The CNSA 2.0 FAQ answers the hybrid question
+twice with different force, and the stronger answer is framed "while waiting for
+a final NIST post-quantum standard" — a premise that arguably ended when FIPS
+203/204/205 finalised. We encoded the stronger reading and
+[wrote down why](policy-sources.md). If a later revision drops that framing, the
+stance may need to change from `not_permitted_except_interop` to `silent`, and
+that would restore a satisfies-all target to the conflict output.
 
 ## Wanted
 

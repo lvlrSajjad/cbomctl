@@ -650,4 +650,4 @@ A rule may only lose `needs_verification` with a row here.
 | `eu-transition-start-2026` | Sadjad Asadi | 2026-09-06 | EU Roadmap Part 1 v1.1 | confirmed |
 | `eu-remainder-2035` | Sadjad Asadi | 2026-09-06 | EU Roadmap Part 1 v1.1 | confirmed |
 | `eu-firmware-upgrade-signatures` | Sadjad Asadi | 2026-09-06 | EU Roadmap Part 1 v1.1 | confirmed, new |
-| **`cnsa-2.0` (all rules)** | — | 2026-09-06 | **blocked: nsa.gov and media.defense.gov return 403** | needs a human with a browser |
+| `cnsa2-*` (all 9 rules) | Sadjad Asadi | 2026-09-06 | CNSA 2.0 FAQ v2.1, pp. 2, 6, 8, 19–20 | confirmed; 2 stub claims removed as absent from v2.1 |

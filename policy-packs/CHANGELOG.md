@@ -5,8 +5,9 @@ never a patch. See [README](README.md#versioning).
 
 ## [1.0.0] — unreleased
 
-First release. Six of seven packs are read from primary sources and carry a
-section citation, a pinned edition, a named verifier and a verification date.
+First release. **All seven packs are read from primary sources** and carry a
+section or page citation, a pinned edition, a named verifier and a verification
+date.
 
 Pre-release history is collapsed into this entry: nothing was ever published, so
 the corrections below are recorded as findings rather than as breaking changes.
@@ -21,7 +22,7 @@ the corrections below are recorded as findings rather than as breaking changes.
 | `eu-roadmap` | 6 ✅ | Coordinated Implementation Roadmap Part 1 v1.1 (2025-06-11) |
 | `us-eo14412` | 3 ✅ | EO 14412, 91 FR 38483 §4(b), §5(c) |
 | `nist-ir8547` | 4 ✅ | NIST IR 8547 **ipd** Tables 2 and 4 — verified *as a draft* |
-| `cnsa-2.0` | 7 ❌ | **unverified** — nsa.gov returns HTTP 403 to automated requests |
+| `cnsa-2.0` | 9 ✅ | CNSA 2.0 FAQ v2.1 (Dec 2024), pp. 2, 6, 8, 19–20 |
 
 ### Corrected during pre-release verification
 
@@ -80,10 +81,20 @@ sources at all.
 - `is_draft` — a verified reading of a draft is still a draft, and every
   reporter says so.
 
-### Known gap
+### Known limits
 
-`cnsa-2.0` could not be verified: `nsa.gov` and `media.defense.gov` return HTTP
-403 to automated requests, and the FAQ PDF will not render in a browser pane.
-Its seven rules are *structured* for the reading rather than asserted by it, and
-each `open_question` names the sentence to find. See
+**One reading is a judgement call.** The CNSA 2.0 FAQ answers the hybrid
+question twice. The position answer says only "will not require"; the other says
+"Do not use … except for those exceptions NSA specifically recommends" but is
+framed "while waiting for a final NIST post-quantum standard", a premise that
+arguably ended when FIPS 203/204/205 finalised four months before that edition.
+Encoded at the stronger reading (`not_permitted_except_interop`) because the
+imperative and the closing sentence are not time-scoped. The alternative reading
+and its consequence are recorded in
 [`../docs/policy-sources.md`](../docs/policy-sources.md) §2.
+
+**Two CNSA claims were removed as not present in v2.1**: per-product-category
+deadlines and any 2033 date. Both came from the superseded September 2022 chart.
+
+**Staleness.** The ASD ISM is revised roughly monthly; NIST IR 8547 is a draft
+that may finalise. Verified 2026-09-06 across the board.

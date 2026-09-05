@@ -40,9 +40,9 @@ This talk presents a deterministic, fully cited policy engine that evaluates one
 CycloneDX CBOM against several national policies at once and reports where their
 requirements collide, why, and what target satisfies all of them — or that none
 does. Every rule carries its primary source, the section read, a verification
-date, and its binding force. Six of seven jurisdictions were verified by reading
-the source documents; the seventh is marked unverified because its publisher
-blocks automated access, and the tool says so in every output.
+date, and its binding force. All seven jurisdictions were verified by reading
+the source documents; where one is a draft or ambiguous, the tool says so in
+every output rather than resolving it quietly.
 
 We will also cover what the engine refuses to do. In real CBOM output, more than
 a third of algorithm components carry no usable indication of what a key is

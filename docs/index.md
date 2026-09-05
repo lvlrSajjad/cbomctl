@@ -12,9 +12,9 @@ checkboxes — and no tool will show you the collision.
 policies at once, and reports the matrix and the conflicts.
 
 !!! warning "Pre-release"
-    Six of seven policy packs have been read from their primary sources.
-    `cnsa-2.0` has not — NSA's servers refuse automated access — and every
-    output computed from it carries a visible banner. Not compliance advice.
+    All seven policy packs have been read from their primary sources, and every
+    rule cites the section or page it came from. Still not compliance advice —
+    read the sources before acting on a verdict.
 
 ```
 ASSET           PURPOSE        bsi-de    anssi-fr  asd-au    cnsa-2.0
