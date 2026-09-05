@@ -322,3 +322,49 @@ class TestSourceDiscipline:
 
         for rule in load_pack(pid).rules:
             assert any(h in rule.source_url for h in ALLOWED_SOURCE_HOSTS), rule.id
+
+
+class TestSecurityStrengthScoping:
+    """The article's central claim, pinned: RSA-2048 and RSA-3072 have
+    different fates under NIST IR 8547."""
+
+    from pathlib import Path
+
+    FIXTURE = Path(__file__).parent / "fixtures" / "rsa-strength-split.json"
+
+    def _cells(self):
+        from cbomctl.loader import read_assets
+
+        assets, _ = read_assets(self.FIXTURE)
+        pack = load_pack("nist-ir8547")
+        return {a.display: evaluate(pack, a) for a in assets}
+
+    def test_rsa_2048_is_deprecated_in_2030(self):
+        ids = {r.rule_id for r in self._cells()["RSA-2048"].rules}
+        assert "nist-112bit-key-establishment-deprecated-2030" in ids
+
+    def test_rsa_3072_is_not_deprecated_in_2030(self):
+        """The half of "RSA is deprecated in 2030" that is false."""
+        ids = {r.rule_id for r in self._cells()["RSA-3072"].rules}
+        assert "nist-112bit-key-establishment-deprecated-2030" not in ids
+
+    def test_both_are_disallowed_in_2035(self):
+        for name in ("RSA-2048", "RSA-3072"):
+            ids = {r.rule_id for r in self._cells()[name].rules}
+            assert "nist-key-establishment-disallowed-2035" in ids
+
+    def test_names_stay_distinguishable(self):
+        """Both canonicalise to family RSA; the display must not collapse them
+        or the distinction is invisible in every report."""
+        assert set(self._cells()) == {"RSA-2048", "RSA-3072"}
+
+    def test_underivable_strength_is_indeterminate_not_stricter(self):
+        """Erring strict is not safe: it competes for budget with real work."""
+        from cbomctl.models import CryptoAsset, Purpose, QuantumStatus
+
+        opaque = CryptoAsset(bom_ref="x", raw_name="ProprietaryKEX",
+                             algorithm="ProprietaryKEX",
+                             purpose=Purpose.KEY_AGREEMENT,
+                             quantum_status=QuantumStatus.BROKEN_BY_SHOR)
+        cell = evaluate(load_pack("nist-ir8547"), opaque)
+        assert "could not be derived" in (cell.note or "")

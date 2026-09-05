@@ -57,6 +57,22 @@ def render(matrix: Matrix, conflicts: list[Conflict]) -> str:
         out.append(line)
 
         detail = []
+        # Two assets can share a verdict for different reasons and on different
+        # dates -- RSA-2048 and RSA-3072 both WARN under IR 8547, one
+        # deprecated in 2030 and one only disallowed in 2035. The matrix cell
+        # cannot show that; this line can.
+        for jid in matrix.jurisdictions:
+            cell = row.cells[jid]
+            dated = [(r.deadline_state.value if r.deadline_state else "due",
+                      r.deadline) for r in cell.rules if r.deadline]
+            if not dated:
+                continue
+            seen: dict[str, str] = {}
+            for state, when in sorted(dated, key=lambda d: d[1]):
+                seen.setdefault(state, when.isoformat())
+            detail.append(f"{jid} · " + " · ".join(
+                f"{k} {v}" for k, v in seen.items()))
+
         if row.risk and row.risk.band in ("critical", "high"):
             detail.append(f"{row.risk.band} · exposure {row.risk.exposure_years}y "
                           f"· {row.risk.rationale}")

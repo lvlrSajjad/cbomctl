@@ -107,6 +107,12 @@ def to_assets(doc: dict[str, Any]) -> list[CryptoAsset]:
             construction=identity.classify_construction(raw_name, primitive),
             quantum_status=identity.classify_quantum(raw_name),
             key_size=identity.parse_key_size(raw_name, param),
+            security_strength=identity.security_strength(
+                raw_name,
+                declared=algo.get("classicalSecurityLevel"),
+                key_size=identity.parse_key_size(raw_name, param),
+                curve=curve,
+            ),
             parameter_set=param if param and not str(param).isdigit() else None,
             curve=curve,
             oid=oid,

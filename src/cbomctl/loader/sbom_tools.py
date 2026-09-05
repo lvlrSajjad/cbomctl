@@ -65,6 +65,7 @@ def to_assets(doc: dict[str, Any]) -> list[CryptoAsset]:
                      for f in (algo.get("crypto_functions") or [])]
         oid = cp.get("oid")
 
+        curve = identity.parse_curve(raw_name, algo.get("elliptic_curve"))
         res = purpose_mod.resolve(
             raw_name=raw_name,
             crypto_functions=[f for f in functions if f],
@@ -85,8 +86,14 @@ def to_assets(doc: dict[str, Any]) -> list[CryptoAsset]:
             construction=identity.classify_construction(raw_name, primitive),
             quantum_status=identity.classify_quantum(raw_name),
             key_size=identity.parse_key_size(raw_name, param),
+            security_strength=identity.security_strength(
+                raw_name,
+                declared=algo.get("classical_security_level"),
+                key_size=identity.parse_key_size(raw_name, param),
+                curve=curve,
+            ),
             parameter_set=param if param and not str(param).isdigit() else None,
-            curve=identity.parse_curve(raw_name, algo.get("elliptic_curve")),
+            curve=curve,
             oid=oid,
             asset_type=str(cp.get("asset_type") or "algorithm").lower(),
             spec_version="sbom-tools",

@@ -95,3 +95,42 @@ class TestHarvestability:
     ])
     def test_only_key_establishment_is_harvestable(self, p, expected):
         assert p.is_harvestable is expected
+
+
+class TestSecurityStrength:
+    """IR 8547 scopes its 2030 deprecation to 112-bit strength, so a tool that
+    cannot compute strength reports the stricter date for everything."""
+
+    from cbomctl.normalize.identity import security_strength as _ss
+
+    @pytest.mark.parametrize("name,size,expected", [
+        ("RSA-2048", 2048, 112),
+        ("RSA-3072", 3072, 128),
+        ("RSA-4096", 4096, 152),
+        ("DH-2048", 2048, 112),
+    ])
+    def test_modulus_sizes(self, name, size, expected):
+        from cbomctl.normalize.identity import security_strength
+
+        assert security_strength(name, key_size=size) == expected
+
+    @pytest.mark.parametrize("curve,expected", [
+        ("secp224r1", 112), ("secp256r1", 128),
+        ("secp384r1", 192), ("secp521r1", 256),
+        ("secg/secp384r1", 192),
+    ])
+    def test_curves(self, curve, expected):
+        from cbomctl.normalize.identity import security_strength
+
+        assert security_strength("EC", curve=curve) == expected
+
+    def test_declared_level_wins(self):
+        """The generator may know something we cannot derive."""
+        from cbomctl.normalize.identity import security_strength
+
+        assert security_strength("RSA-2048", declared=999, key_size=2048) == 999
+
+    def test_undeterminable_returns_none_not_a_guess(self):
+        from cbomctl.normalize.identity import security_strength
+
+        assert security_strength("SomeProprietaryThing") is None

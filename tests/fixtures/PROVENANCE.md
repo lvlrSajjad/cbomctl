@@ -9,4 +9,5 @@ yourself about what your tool handles.
 | `cbomkit-kafka.json` | **Real** CBOMkit output, same repo. 11 components. |
 | `spec-conformance-1.6.json` | CycloneDX's own `valid-cryptography-full-1.6.json` conformance fixture. All four asset types. |
 | `conflict-hybrid.json` | **Hand-built.** The four-way conflict case: a hybrid KEM, a classical KEM, an ambiguous RSA key, and a PQ signature. |
+| `rsa-strength-split.json` | **Hand-built.** RSA-2048 and RSA-3072, identical but for modulus size, to pin that IR 8547's 112-bit deprecation reaches one and not the other. |
 | `sbom-tools-view.json` | **Constructed** from `sbom-tools` Rust struct definitions (snake_case, no serde renames), *not* captured from a run of their binary. The shape is inferred and may be wrong; see `upstream/issue-draft.md`. |

@@ -88,3 +88,78 @@ def parse_curve(raw: str, declared: str | None) -> str | None:
         return declared.split("/")[-1]
     m = _CURVE.search(raw)
     return m.group(1) if m else None
+
+
+#: Classical security strength in bits, by RSA / finite-field modulus size.
+#: Per NIST SP 800-57 Part 1 Rev. 5, Table 2.
+_MODULUS_STRENGTH = {1024: 80, 2048: 112, 3072: 128, 4096: 152,
+                     7680: 192, 15360: 256}
+
+#: Curve -> classical security strength. Roughly half the field size.
+_CURVE_STRENGTH = {
+    "secp192r1": 96, "prime192v1": 96, "p-192": 96,
+    "secp224r1": 112, "p-224": 112, "brainpoolp224r1": 112,
+    "secp256r1": 128, "prime256v1": 128, "p-256": 128, "secp256k1": 128,
+    "brainpoolp256r1": 128, "curve25519": 128, "edwards25519": 128,
+    "x25519": 128, "ed25519": 128,
+    "secp384r1": 192, "p-384": 192, "brainpoolp384r1": 192,
+    "secp521r1": 256, "p-521": 256, "brainpoolp512r1": 256,
+    "curve448": 224, "edwards448": 224, "x448": 224, "ed448": 224,
+}
+
+#: Symmetric and hash algorithms whose strength is not the raw digest length.
+#: A hash's collision resistance is half its output, which is the figure NIST
+#: transition tables are scoped to.
+_NAMED_STRENGTH = {
+    "AES128": 128, "AES192": 192, "AES256": 256,
+    "SHA1": 80, "SHA224": 112, "SHA256": 128, "SHA384": 192, "SHA512": 256,
+    "SHA3224": 112, "SHA3256": 128, "SHA3384": 192, "SHA3512": 256,
+    "MD5": 0, "3DES": 112, "DES": 56,
+}
+
+
+def security_strength(
+    raw_name: str,
+    *,
+    declared: int | None = None,
+    key_size: int | None = None,
+    curve: str | None = None,
+) -> int | None:
+    """Classical security strength in bits, or None when it cannot be derived.
+
+    This is not cosmetic. NIST IR 8547 scopes its 2030 deprecation to 112-bit
+    strength and leaves >=128-bit with only a 2035 disallowance, so RSA-2048 and
+    RSA-3072 have genuinely different fates. A tool that cannot compute strength
+    cannot tell them apart, and will report the stricter date for both.
+
+    `classicalSecurityLevel` from the CBOM wins when present -- the generator
+    may know something we cannot derive.
+    """
+    if declared:
+        return int(declared)
+
+    fam = family(raw_name)
+    n = canonical_name(raw_name)
+
+    if curve:
+        hit = _CURVE_STRENGTH.get(curve.split("/")[-1].strip().lower())
+        if hit:
+            return hit
+    for token, bits in _CURVE_STRENGTH.items():
+        if canonical_name(token) and canonical_name(token) in n:
+            return bits
+
+    if fam in ("RSA", "DH", "DHE", "DSA") and key_size:
+        if key_size in _MODULUS_STRENGTH:
+            return _MODULUS_STRENGTH[key_size]
+        # Between tabulated sizes, report the lower bracket rather than round up.
+        lower = [k for k in sorted(_MODULUS_STRENGTH) if k <= key_size]
+        return _MODULUS_STRENGTH[lower[-1]] if lower else None
+
+    hit = _NAMED_STRENGTH.get(n)
+    if hit is not None:
+        return hit
+    if fam in ("AES", "SHA1", "SHA224", "SHA256", "SHA384", "SHA512") and key_size:
+        return _NAMED_STRENGTH.get(f"{fam}{key_size}", key_size)
+
+    return None

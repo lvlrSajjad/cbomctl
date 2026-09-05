@@ -78,12 +78,20 @@ def rule_applies(rule: Rule, asset: CryptoAsset, *, system_category: str | None)
             return False, None
 
     if a.security_level:
-        # Security level is not derivable from a CBOM and has no config field
-        # yet; say so rather than silently passing.
-        return False, (
-            f"rule is scoped to security level {', '.join(a.security_level)}, "
-            f"which is not declared"
-        )
+        # Derived from key size, curve, or the CBOM's own
+        # `classicalSecurityLevel`. When it cannot be derived we say so rather
+        # than picking the stricter rule -- reporting RSA-3072 as deprecated in
+        # 2030 because we could not compute its strength is exactly the error
+        # this selector exists to avoid.
+        if asset.security_strength is None:
+            return False, (
+                f"rule is scoped to security strength "
+                f"{', '.join(a.security_level)} bits, which could not be "
+                f"derived from this asset (no key size, curve or "
+                f"classicalSecurityLevel)"
+            )
+        if str(asset.security_strength) not in a.security_level:
+            return False, None
 
     return True, None
 

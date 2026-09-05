@@ -1,0 +1,7 @@
+{"bomFormat":"CycloneDX","specVersion":"1.6","version":1,"components":[
+ {"type":"cryptographic-asset","bom-ref":"r2048","name":"RSA-2048",
+  "cryptoProperties":{"assetType":"algorithm","oid":"1.2.840.113549.1.1.1",
+   "algorithmProperties":{"primitive":"pke","cryptoFunctions":["encapsulate"],"parameterSetIdentifier":"2048"}}},
+ {"type":"cryptographic-asset","bom-ref":"r3072","name":"RSA-3072",
+  "cryptoProperties":{"assetType":"algorithm","oid":"1.2.840.113549.1.1.1",
+   "algorithmProperties":{"primitive":"pke","cryptoFunctions":["encapsulate"],"parameterSetIdentifier":"3072"}}}]}

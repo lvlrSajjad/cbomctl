@@ -201,6 +201,9 @@ class CryptoAsset(BaseModel):
     construction: Construction = Construction.UNKNOWN
     quantum_status: QuantumStatus = QuantumStatus.UNKNOWN
     key_size: int | None = None
+    #: Classical security strength in bits. NIST IR 8547 scopes its 2030
+    #: deprecation to 112-bit, so RSA-2048 and RSA-3072 differ here.
+    security_strength: int | None = None
     parameter_set: str | None = None
     curve: str | None = None
     oid: str | None = None
@@ -220,6 +223,12 @@ class CryptoAsset(BaseModel):
         """
         if self.construction is Construction.HYBRID:
             return self.raw_name
+        # Prefer the generator's name when it carries a parameter the canonical
+        # family name drops -- "RSA-2048" and "RSA-3072" must not both read
+        # as "RSA" when their transition dates differ.
+        if self.algorithm and any(c.isdigit() for c in self.raw_name):
+            if not any(c.isdigit() for c in self.algorithm):
+                return self.raw_name
         return self.algorithm or self.raw_name
 
 
