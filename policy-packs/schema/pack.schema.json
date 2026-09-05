@@ -84,6 +84,7 @@
             "required",
             "recommended",
             "not_recommended",
+            "not_permitted_except_interop",
             "silent"
           ],
           "description": "Stance on hybrid PQC+classical constructions FOR THE PURPOSES IN applies_to.purpose. Jurisdictions differ by purpose: a pack may recommend hybrid for key establishment and be silent on signatures. Always scope a hybrid rule with applies_to.purpose \u2014 never assume it covers both."
@@ -199,6 +200,13 @@
                 "type": "string"
               },
               "description": "Algorithms the rule explicitly does NOT reach. Needed for real carve-outs: BSI TR-02102-1 s5.3.4 recommends hybrid signatures but permits hash-based schemes (SLH-DSA, LMS, XMSS) standalone, because their security rests only on hash-function assumptions."
+            },
+            "parameter_set": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Parameter sets, e.g. ML-KEM-768 vs ML-KEM-1024. Jurisdictions disagree on required strength independently of their hybrid stance, so this is a separate selector."
             }
           }
         },

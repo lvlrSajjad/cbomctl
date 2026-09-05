@@ -35,6 +35,10 @@ class AppliesTo(BaseModel):
     quantum_status: list[QuantumStatus] = Field(default_factory=list)
     construction: list[Construction] = Field(default_factory=list)
     algorithm: list[str] = Field(default_factory=list)
+    #: Parameter sets, e.g. ML-KEM-768 vs -1024. Jurisdictions disagree on
+    #: required strength independently of their hybrid stance, so this is a
+    #: separate selector rather than folded into `algorithm`.
+    parameter_set: list[str] = Field(default_factory=list)
     #: Algorithms a rule explicitly does not reach — real carve-outs exist.
     exclude_algorithm: list[str] = Field(default_factory=list)
     system_category: list[str] = Field(default_factory=list)

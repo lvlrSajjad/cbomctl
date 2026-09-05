@@ -114,10 +114,35 @@ class Binding(StrEnum):
 
 
 class HybridStance(StrEnum):
+    """Stance on hybrid constructions, for the purposes a rule is scoped to.
+
+    A three-step gradient, not a binary. `NOT_RECOMMENDED` is discouraged but
+    permitted, so a satisfies-all target can still exist at a documented cost.
+    `NOT_PERMITTED_EXCEPT_INTEROP` is not permitted at all outside named
+    exceptions, which means no construction can satisfy it *and* a pack that
+    recommends hybrids — the honest output there is that no single
+    configuration works.
+    """
+
     REQUIRED = "required"
     RECOMMENDED = "recommended"
     NOT_RECOMMENDED = "not_recommended"
+    NOT_PERMITTED_EXCEPT_INTEROP = "not_permitted_except_interop"
     SILENT = "silent"
+
+    @property
+    def favours_hybrid(self) -> bool:
+        return self in (HybridStance.REQUIRED, HybridStance.RECOMMENDED)
+
+    @property
+    def opposes_hybrid(self) -> bool:
+        return self in (HybridStance.NOT_RECOMMENDED,
+                        HybridStance.NOT_PERMITTED_EXCEPT_INTEROP)
+
+    @property
+    def permits_hybrid(self) -> bool:
+        """Whether a hybrid remains an option at all, however discouraged."""
+        return self is not HybridStance.NOT_PERMITTED_EXCEPT_INTEROP
 
 
 class Rationale(StrEnum):

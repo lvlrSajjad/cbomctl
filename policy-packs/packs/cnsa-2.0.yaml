@@ -2,59 +2,112 @@ id: cnsa-2.0
 name: "CNSA 2.0 — NSA"
 authority: "United States National Security Agency"
 jurisdiction: US-NSS
-pack_version: "0.1.0"
+pack_version: "1.0.0"
 applicability: >-
   CNSA 2.0 governs US National Security Systems. It does not govern federal IT
-  generally and does not govern the private sector. If your system is not an
-  NSS, these rules do not apply to you.
+  generally — those fall under EO 14412, which explicitly excludes NSS — and it
+  does not govern the private sector. Run against a commercial CBOM, the honest
+  output is that these rules do not apply to you.
 notes: >-
-  STUB. Category deadlines require `system_category` in cbomctl.yaml; when it is
-  absent the verdict is INDETERMINATE, never a pass. The 2027 acquisition gate
-  is behind --cnsa-acquisition-gate because it is a procurement condition, not
-  an algorithm deadline.
+  ⚠️ NOT VERIFIED. Verification was attempted 2026-09-06 and failed: nsa.gov and
+  media.defense.gov return HTTP 403 to every automated request, and the FAQ PDF
+  triggers a download rather than rendering in a browser pane. This pack is the
+  only one in the set still built from secondary reporting.
+
+  The rules below are STRUCTURED for the reading, not asserted by it. Each
+  open_question names the sentence to find. The document to open is the CNSA 2.0
+  FAQ (reported as U/OO/194427-22, PP-24-4014, Version 2.1, December 2024) at
+  media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF —
+  record the page number for each rule you confirm.
 
 rules:
   - id: cnsa2-classical-asymmetric
-    description: "Quantum-vulnerable asymmetric algorithms are not CNSA 2.0 approved."
+    description: >-
+      Quantum-vulnerable asymmetric algorithms are not on the CNSA 2.0
+      allowlist.
     binding: agency_requirement
     status: needs_verification
     source_url: "https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF"
     source_title: "NSA CNSA 2.0 FAQ"
-    last_verified: 2026-09-05
+    last_verified: 2026-09-06
     applies_to:
-      purpose: [key-agreement, signature, encryption]
+      purpose: [key-agreement, encryption, signature]
       quantum_status: [broken-by-shor]
     rationale: unstated
     migration_target: { kem: "ML-KEM-1024", signature: "ML-DSA-87", symmetric: "AES-256", hash: "SHA-384", construction: pure-pqc }
     verdict: fail
-    open_question: "Verify the allowlist against the current FAQ revision."
+    open_question: "Confirm the allowlist and that it is exclusive (nothing else approved)."
 
-  - id: cnsa2-mlkem-1024-required
+  - id: cnsa2-parameter-set-highest-only
     description: >-
-      CNSA 2.0 requires ML-KEM-1024. ML-KEM-768, accepted elsewhere, is below
-      the required level.
+      CNSA 2.0 is reported to require the highest parameter sets only —
+      ML-KEM-1024 for key establishment and ML-DSA-87 for signatures — at all
+      classification levels.
     binding: agency_requirement
     status: needs_verification
     source_url: "https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF"
-    source_title: "NSA CNSA 2.0 FAQ"
-    last_verified: 2026-09-05
+    source_title: "NSA CNSA 2.0 FAQ — approved algorithms and parameter sets"
+    last_verified: 2026-09-06
     applies_to:
-      purpose: [key-agreement]
-      algorithm: ["ML-KEM-768", "ML-KEM-512", "ML-KEM"]
+      purpose: [key-agreement, encryption, signature]
+      quantum_status: [pq-secure]
+      parameter_set: ["ML-KEM-512", "ML-KEM-768", "ML-DSA-44", "ML-DSA-65", "512", "768", "44", "65"]
     rationale: key_length
-    migration_target: { kem: "ML-KEM-1024" }
+    rationale_note: >-
+      A parameter conflict with BSI and ANSSI, which both accept ML-KEM-768 and
+      ML-DSA-65 (verified). It is independent of the hybrid disagreement: a
+      deployment could satisfy every jurisdiction's construction preference and
+      still fail this on strength alone.
+    migration_target: { kem: "ML-KEM-1024", signature: "ML-DSA-87" }
     verdict: fail
     open_question: >-
-      Verify the level requirement precisely. This drives a `parameter` conflict
-      with BSI/ANSSI distinct from the hybrid one.
+      Confirm ML-KEM-1024 and ML-DSA-87 are required rather than merely
+      preferred, and that this holds at ALL classification levels rather than
+      only the highest. Record the page.
 
-  - id: cnsa2-signing-exclusive-2030
-    description: "Software and firmware signing: exclusive CNSA 2.0 use by 2030."
+  - id: cnsa2-hybrid-not-permitted
+    description: >-
+      NSA is reported to direct that hybrid or other non-standardised
+      quantum-resistant solutions not be used on NSS mission systems, except
+      where NSA specifically recommends them for standardisation or
+      interoperability (IKEv2 is cited as such an exception), and to state that
+      because it is confident in the CNSA 2.0 algorithms it does not require a
+      hybrid solution for security purposes.
     binding: agency_requirement
     status: needs_verification
     source_url: "https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF"
-    source_title: "NSA CNSA 2.0 FAQ"
-    last_verified: 2026-09-05
+    source_title: "NSA CNSA 2.0 FAQ — hybrid solutions"
+    last_verified: 2026-09-06
+    applies_to:
+      purpose: [key-agreement, encryption, signature]
+      construction: [hybrid]
+    hybrid: not_permitted_except_interop
+    rationale: unstated
+    rationale_note: >-
+      If confirmed, this is a stronger stance than ASD's "not recommended;
+      however, it is not prohibited" (verified), and it makes the hybrid axis a
+      three-step gradient rather than a binary: recommended (BSI, ANSSI, EU) →
+      not recommended but permitted (ASD) → not permitted outside named
+      exceptions (NSA). It also removes the satisfies-all target: no single
+      construction can clear both a recommending and a forbidding jurisdiction.
+    verdict: fail
+    open_question: >-
+      THE key sentence for this pack. Get NSA's exact words on hybrids and
+      record the page. "Does not require" and "shall not use except…" are
+      different stances: the first would be `silent`, the second
+      `not_permitted_except_interop`, and the difference decides whether a
+      satisfies-all target exists in the conflict output. Confirm the IKEv2
+      exception too.
+
+  - id: cnsa2-signing-exclusive-2030
+    description: >-
+      Software and firmware signing, and networking equipment: exclusive CNSA
+      2.0 use by 2030.
+    binding: agency_requirement
+    status: needs_verification
+    source_url: "https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF"
+    source_title: "NSA CNSA 2.0 FAQ — timeline table"
+    last_verified: 2026-09-06
     deadline: 2030-12-31
     deadline_state: exclusive_use
     applies_to:
@@ -62,32 +115,39 @@ rules:
       system_category: ["software-firmware-signing", "networking"]
     rationale: unstated
     verdict: fail
-    open_question: "Verify each category deadline against the FAQ table directly."
+    open_question: "Verify each category deadline against the FAQ's own table; do not trust transcription."
 
   - id: cnsa2-web-os-exclusive-2033
-    description: "Browsers, servers, cloud services and operating systems: exclusive use by 2033."
+    description: >-
+      Browsers, servers, cloud services and operating systems: exclusive CNSA
+      2.0 use by 2033.
     binding: agency_requirement
     status: needs_verification
     source_url: "https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF"
-    source_title: "NSA CNSA 2.0 FAQ"
-    last_verified: 2026-09-05
+    source_title: "NSA CNSA 2.0 FAQ — timeline table"
+    last_verified: 2026-09-06
     deadline: 2033-12-31
     deadline_state: exclusive_use
     applies_to:
       system_category: ["web-cloud", "operating-system"]
     rationale: unstated
     verdict: fail
-    open_question: "Confirm the category names so the config enum matches the FAQ."
+    open_question: >-
+      Confirm the category names so the cbomctl.yaml enum matches the FAQ's own
+      wording, and check whether a separate "all NSS by 2031 unless excepted"
+      milestone exists alongside these — that may be a conflation in secondary
+      sources.
 
   - id: cnsa2-acquisition-gate-2027
     description: >-
-      From 2027-01-01 new NSS acquisitions are expected to be CNSA 2.0 compliant
-      by default. A procurement condition, not an algorithm deadline.
+      From 2027-01-01 new NSS acquisitions are expected to be CNSA 2.0
+      compliant by default. A procurement condition, not an algorithm deadline,
+      so it sits behind --cnsa-acquisition-gate.
     binding: agency_requirement
     status: needs_verification
     source_url: "https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF"
-    source_title: "NSA CNSA 2.0 FAQ"
-    last_verified: 2026-09-05
+    source_title: "NSA CNSA 2.0 FAQ — acquisition"
+    last_verified: 2026-09-06
     deadline: 2027-01-01
     deadline_state: acquisition_gate
     applies_to:
@@ -95,3 +155,27 @@ rules:
     rationale: unstated
     verdict: fail
     open_question: "Confirm the gate's scope and wording."
+
+  - id: cnsa2-slh-dsa-status
+    description: >-
+      SLH-DSA (FIPS 205) status under CNSA 2.0 is disputed in secondary
+      sources — excluded outright, or approved only for specific uses such as
+      firmware signing.
+    binding: agency_requirement
+    status: needs_verification
+    source_url: "https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF"
+    source_title: "NSA CNSA 2.0 FAQ — hash-based signatures"
+    last_verified: 2026-09-06
+    applies_to:
+      purpose: [signature]
+      algorithm: ["SLH-DSA", "SPHINCS"]
+    rationale: unstated
+    rationale_note: >-
+      Worth getting right: BSI and ANSSI both *exempt* hash-based signatures
+      from their hybrid recommendations (verified), so if NSA excludes SLH-DSA
+      outright that is a second, independent contradiction on the same family.
+    verdict: indeterminate
+    open_question: >-
+      Does the FAQ approve SLH-DSA, exclude it, or approve LMS/XMSS (SP 800-208)
+      instead? Secondary sources disagree. Until read, this rule deliberately
+      returns INDETERMINATE rather than guessing either way.

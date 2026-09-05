@@ -2,7 +2,7 @@ id: nist-ir8547
 name: "NIST IR 8547 (draft) — United States"
 authority: "National Institute of Standards and Technology"
 jurisdiction: US
-pack_version: "0.1.0"
+pack_version: "1.0.0"
 applicability: >-
   NIST IR 8547 is an INITIAL PUBLIC DRAFT (November 2024). Its dates are
   proposed, not settled, and every output citing this pack prints "draft". It

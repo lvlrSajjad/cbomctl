@@ -46,26 +46,43 @@ def _hybrid_stances(row: Row, packs: dict[str, Pack]) -> dict[str, HybridStance]
 
 def _construction_conflict(row: Row, packs: dict[str, Pack], cid: str) -> Conflict | None:
     stances = _hybrid_stances(row, packs)
-    pro = sorted(j for j, s in stances.items()
-                 if s in (HybridStance.REQUIRED, HybridStance.RECOMMENDED))
-    anti = sorted(j for j, s in stances.items() if s is HybridStance.NOT_RECOMMENDED)
+    pro = sorted(j for j, st in stances.items() if st.favours_hybrid)
+    anti = sorted(j for j, st in stances.items() if st.opposes_hybrid)
     if not (pro and anti):
         return None
 
     required = any(stances[j] is HybridStance.REQUIRED for j in pro)
-    # ASD discourages hybrids without prohibiting them, so hybrid remains the
-    # only construction compliant everywhere — at a cost. Say that, rather than
-    # pretending the tension is resolved.
-    satisfies = "hybrid (classical + PQC)"
-    cost = (f"Hybrid is not recommended by {', '.join(anti)}, but is permitted "
-            f"there and {'required' if required else 'recommended'} by "
-            f"{', '.join(pro)}. No construction is preferred by all; hybrid is "
-            f"the only one compliant with all. This is a business decision.")
+    forbidding = sorted(j for j in anti if not stances[j].permits_hybrid)
+
+    if forbidding:
+        # A jurisdiction that does not permit hybrids at all cannot be
+        # reconciled with one that recommends them. Saying so is the honest
+        # output; inventing a compromise here would be worse than useless.
+        satisfies = None
+        cost = (f"{', '.join(forbidding)} does not permit a hybrid construction "
+                f"outside named interoperability exceptions, while "
+                f"{', '.join(pro)} "
+                f"{'require' if required else 'recommend'} one. **No single "
+                f"configuration satisfies all selected jurisdictions.** You "
+                f"will need different builds, or to drop a jurisdiction from "
+                f"scope. This is a business decision, not a technical one.")
+    else:
+        # Discouraged-but-permitted: hybrid clears everyone, at a cost.
+        satisfies = "hybrid (classical + PQC)"
+        cost = (f"Hybrid is not recommended by {', '.join(anti)}, but is "
+                f"permitted there and "
+                f"{'required' if required else 'recommended'} by "
+                f"{', '.join(pro)}. No construction is preferred by all; hybrid "
+                f"is the only one compliant with all. This is a business "
+                f"decision.")
 
     return Conflict(
         id=cid, kind="construction", bom_ref=row.bom_ref, display=row.display,
-        summary=(f"{', '.join(pro)} recommend a hybrid construction for "
-                 f"{row.purpose}; {', '.join(anti)} recommend against it."),
+        summary=(f"{', '.join(pro)} "
+                 f"{'require' if required else 'recommend'} a hybrid "
+                 f"construction for {row.purpose}; "
+                 f"{', '.join(anti)} "
+                 f"{'do not permit one' if forbidding else 'recommend against it'}."),
         jurisdictions=sorted(stances),
         satisfies_all=satisfies, cost_note=cost,
     )
@@ -85,22 +102,41 @@ def _parameter_conflict(row: Row, packs: dict[str, Pack], cid: str) -> Conflict 
     if not rejecting or not accepting:
         return None
 
+    # Collect whatever the stricter jurisdictions actually name as a target.
+    # Looking only at `kem` was a bug: ASD's SHA-256 -> SHA-384 and AES-128 ->
+    # AES-256 rules carry `hash` and `symmetric` targets, so the conflict
+    # claimed a stricter set existed while naming none.
     targets: set[str] = set()
     for jid, rule_id in rejecting.items():
         pack = packs.get(jid)
         if not pack:
             continue
         for r in pack.rules:
-            if r.id == rule_id and r.migration_target and r.migration_target.kem:
-                targets.add(r.migration_target.kem)
+            if r.id != rule_id or r.migration_target is None:
+                continue
+            mt = r.migration_target
+            targets.update(x for x in (mt.kem, mt.signature, mt.symmetric, mt.hash) if x)
+
+    if targets:
+        satisfies = " / ".join(sorted(targets))
+        cost = ("The stricter parameter set satisfies every selected "
+                "jurisdiction, at a performance cost the others do not "
+                "require.")
+    else:
+        satisfies = None
+        cost = (f"{', '.join(sorted(rejecting))} requires a stronger parameter "
+                f"set but names no replacement in the rules we hold, so **no "
+                f"single configuration is known to satisfy all selected "
+                f"jurisdictions.** Read the source for its required strength "
+                f"before acting on this.")
+
     return Conflict(
         id=cid, kind="parameter", bom_ref=row.bom_ref, display=row.display,
         summary=(f"{', '.join(sorted(rejecting))} require a higher parameter "
                  f"set than {', '.join(sorted(accepting))} accept."),
         jurisdictions=sorted(set(rejecting) | set(accepting)),
-        satisfies_all=(" / ".join(sorted(targets)) or None),
-        cost_note=("The stricter parameter set satisfies both, at a "
-                   "performance cost the weaker jurisdictions do not require."),
+        satisfies_all=satisfies,
+        cost_note=cost,
     )
 
 

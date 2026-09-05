@@ -121,20 +121,54 @@ find the timeline table, and check the seven claims below. Until then every
 | C6 | **ML-KEM-1024, ML-DSA-87, AES-256, SHA-384/512, LMS/XMSS** | `needs_verification` |
 | C7 | Hybrid **not required** → `hybrid: silent` | `needs_verification` |
 
-**Priority when you do read it:**
+**The seven rules are now structured for the reading rather than asserted by
+it.** Each `open_question` in the pack names the sentence to find. Record the
+page number for each rule you confirm.
 
-1. **C6's ML-KEM-1024.** BSI and ANSSI both accept ML-KEM-768 (verified). If
-   CNSA 2.0 requires -1024, that is a `parameter` conflict independent of the
-   hybrid one, and it is the second contradiction the matrix surfaces. Get the
-   level requirement exactly.
-2. **C7's phrasing.** *Not required* and *discouraged* are different pack
-   semantics. `silent` is the current encoding; if NSA actively discourages
-   hybrids, change it to `not_recommended` — that sharpens the Europe-versus-
-   anglophone split considerably.
-3. **C5 versus C3/C4.** A 2031 "all NSS unless excepted" milestone alongside
-   2030/2033 category dates looks like it may be a conflation in secondary
-   sources. Check whether all three exist.
-4. **C1 scoping**, so the applicability banner is right.
+**Priority order when you open it:**
+
+1. **The hybrid sentence — this is the one that changes the tool's output.**
+   Secondary reporting (an IETF TLS list quotation) suggests NSA's position is
+   *stronger* than "not required": that hybrid or other non-standardised
+   quantum-resistant solutions should not be used on NSS mission systems except
+   where NSA specifically recommends them for standardisation or
+   interoperability, with IKEv2 cited as such an exception, and separately that
+   because NSA is confident in the CNSA 2.0 algorithms it does not require
+   hybrid for security purposes.
+
+   If that is what the FAQ says, the stance is `not_permitted_except_interop`,
+   not `silent`, and the consequence is concrete: paired with BSI, ANSSI or the
+   EU roadmap, **no single construction satisfies all selected jurisdictions**,
+   and the conflict output says so instead of naming a compromise. The pack is
+   currently encoded that way, unverified, precisely so the difference is
+   visible — but the encoding is a hypothesis until you read it.
+
+   This also makes the hybrid axis a **three-step gradient** rather than a
+   binary: recommended (BSI, ANSSI, EU) → not recommended but permitted (ASD) →
+   not permitted outside named exceptions (NSA). That is a better story than
+   "Europe versus the anglophone agencies", and it is worth getting exactly
+   right.
+
+2. **Parameter sets (`cnsa2-parameter-set-highest-only`).** Reported as
+   ML-KEM-1024 and ML-DSA-87 only, at *all* classification levels. BSI and
+   ANSSI both accept ML-KEM-768 and ML-DSA-65 (verified). Confirm whether these
+   are *required* or merely *preferred*, and whether the "all classification
+   levels" part holds. This conflict is independent of hybrid: a deployment
+   could satisfy every jurisdiction's construction preference and still fail on
+   strength alone.
+
+3. **SLH-DSA (`cnsa2-slh-dsa-status`).** Secondary sources disagree about
+   whether CNSA 2.0 excludes it outright or approves it for specific uses. It
+   matters because BSI and ANSSI both *exempt* hash-based signatures from their
+   hybrid recommendations (both verified) — so if NSA excludes SLH-DSA, that is
+   a second independent contradiction on the same algorithm family. The rule
+   currently returns INDETERMINATE rather than guessing either way.
+
+4. **C3/C4 category deadlines**, against the FAQ's own table rather than any
+   transcription, and whether a separate "all NSS by 2031 unless excepted"
+   milestone exists alongside them.
+
+5. **C1 scoping**, so the applicability banner is right.
 
 ## 3. `bsi-de` — Germany, BSI ✅ VERIFIED
 
@@ -305,11 +339,16 @@ same exception is a good sign the reading is right.
 
 ### Still open
 
-- **F1 — the 2027 certification deadline is not in this document.** The 2023
+- **F1 — the 2027 certification rule was REMOVED on 2026-09-06.** The 2023
   follow-up describes a 3-phase visa roadmap with phase-2 visas *"expected to be
   delivered around 2024-2025"*, and says ANSSI is "speeding-up the original
-  agenda". The 2027 date appears only in 2026 press coverage. The rule stays
-  `needs_verification`; find the 2026 ANSSI communication or drop it.
+  agenda". The 2027 date appears only in 2026 press coverage and in no ANSSI
+  document we have read. Leaving it in the pack as `needs_verification` would
+  have been defensible, but in a pack whose entire value is citation discipline
+  a press-sourced rule is a liability — a reader who does not check `status`
+  sees a cited deadline that no source supports. Restore it if a primary ANSSI
+  communication turns up; the reasoning is recorded here so the removal is
+  auditable rather than silent.
 - The **2022** position paper (referenced as [1]) has not been read. F5's
   three-phase structure and any FrodoKEM preference (F6) live there. §2 of the
   follow-up does describe FrodoKEM as "a more conservative variant of

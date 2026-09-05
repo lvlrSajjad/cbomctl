@@ -2,7 +2,7 @@ id: anssi-fr
 name: "ANSSI — France"
 authority: "Agence nationale de la sécurité des systèmes d'information"
 jurisdiction: FR
-pack_version: "0.2.0"
+pack_version: "1.0.0"
 applicability: >-
   Two different obligations, deliberately kept as separate rules. ANSSI's
   general position is guidance and produces WARN. Its security-visa evaluation
@@ -135,24 +135,3 @@ rules:
     hybrid: recommended
     rationale: harvest_now_decrypt_later
     verdict: warn
-
-  - id: anssi-certification-2027
-    description: >-
-      Reported: from 2027 ANSSI will not certify security products lacking
-      quantum-resistant cryptography.
-    binding: certification_requirement
-    status: needs_verification
-    source_url: "https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition"
-    source_title: "ANSSI certification position (2026) — primary document not yet located"
-    last_verified: 2026-09-06
-    deadline: 2027-01-01
-    deadline_state: acquisition_gate
-    applies_to:
-      quantum_status: [broken-by-shor]
-    rationale: unstated
-    verdict: fail
-    open_question: >-
-      NOT in the 2023 follow-up, which instead describes a 3-phase visa roadmap
-      with phase-2 visas "expected to be delivered around 2024-2025". The 2027
-      date comes only from 2026 press coverage. Find the primary 2026 ANSSI
-      communication, or drop this rule.

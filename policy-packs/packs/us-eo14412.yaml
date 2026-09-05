@@ -2,7 +2,7 @@ id: us-eo14412
 name: "Executive Order 14412 — United States"
 authority: "The President of the United States"
 jurisdiction: US
-pack_version: "0.2.0"
+pack_version: "1.0.0"
 applicability: >-
   EO 14412 directs OMB to require agencies to transition High Value Assets and
   high impact systems, "excluding National Security Systems" (§4(b)(i)). It is

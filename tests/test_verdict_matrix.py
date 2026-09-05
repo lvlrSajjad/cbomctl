@@ -70,11 +70,31 @@ class TestConflicts:
         assert {"bsi-de", "anssi-fr"} <= set(c.jurisdictions)
         assert "asd-au" in c.jurisdictions
 
-    def test_construction_conflict_names_a_satisfies_all_target(self, result):
+    def test_construction_conflict_always_explains_the_trade(self, result):
+        """Whether or not a satisfies-all target exists, the conflict must say
+        so explicitly and name it as a business decision."""
         _, conflicts, _ = result
-        for c in (c for c in conflicts if c.kind == "construction"):
-            assert c.satisfies_all
+        found = [c for c in conflicts if c.kind == "construction"]
+        assert found
+        for c in found:
             assert "business decision" in c.cost_note
+            if c.satisfies_all is None:
+                assert "No single configuration" in c.cost_note
+
+    def test_a_forbidding_jurisdiction_removes_the_satisfies_all_target(self):
+        """cnsa-2.0 is modelled as not permitting hybrids outside interop
+        exceptions. Paired with a pack that recommends them, no single
+        construction works -- and inventing a compromise would be worse than
+        useless."""
+        assets, _ = read_assets(FIXTURES / "conflict-hybrid.json")
+        packs = [load_pack("bsi-de"), load_pack("cnsa-2.0")]
+        matrix = build(assets, packs, Config(system_category="web-cloud"),
+                       today=TODAY)
+        conflicts = detect(matrix, packs)
+        construction = [c for c in conflicts if c.kind == "construction"]
+        assert construction
+        assert all(c.satisfies_all is None for c in construction)
+        assert all("No single configuration" in c.cost_note for c in construction)
 
     def test_parameter_conflict_targets_the_stricter_set(self, result):
         _, conflicts, _ = result
@@ -101,11 +121,11 @@ class TestUnverifiedIsUnmissable:
     def test_matrix_reports_exactly_the_unverified_packs(self, result):
         """The warning must narrow as verification proceeds, not stay blanket.
 
-        anssi-fr is here because one of its six rules (the 2027 certification
-        date) is not in the primary document. cnsa-2.0 is here because NSA's
-        servers refuse automated access -- see docs/policy-sources.md."""
+        Only cnsa-2.0 remains: NSA's servers refuse automated access, so it is
+        the one pack still built from secondary reporting. See
+        docs/policy-sources.md §2."""
         matrix, _, _ = result
-        assert set(matrix.unverified_packs) == {"anssi-fr", "cnsa-2.0"}
+        assert set(matrix.unverified_packs) == {"cnsa-2.0"}
 
     def test_text_output_carries_the_banner(self, result):
         matrix, conflicts, _ = result

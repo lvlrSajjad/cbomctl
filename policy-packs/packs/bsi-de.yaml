@@ -2,7 +2,7 @@ id: bsi-de
 name: "BSI — Germany"
 authority: "Bundesamt für Sicherheit in der Informationstechnik"
 jurisdiction: DE
-pack_version: "0.2.0"
+pack_version: "1.0.0"
 applicability: >-
   BSI TR-02102-1 is a Technical Guideline. Its operative verb throughout is
   "recommends" — it is not a statute, and this pack therefore produces WARN,

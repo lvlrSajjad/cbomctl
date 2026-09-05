@@ -2,7 +2,7 @@ id: eu-roadmap
 name: "EU Coordinated Implementation Roadmap"
 authority: "NIS Cooperation Group, EU PQC Workstream"
 jurisdiction: EU
-pack_version: "0.2.0"
+pack_version: "1.0.0"
 applicability: >-
   A coordinated Member State planning roadmap, not a Regulation. Its language
   is "it is recommended"; a Commission Recommendation is non-binding on

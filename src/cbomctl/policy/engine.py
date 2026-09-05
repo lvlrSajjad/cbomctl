@@ -57,6 +57,16 @@ def rule_applies(rule: Rule, asset: CryptoAsset, *, system_category: str | None)
         if not (names & candidates):
             return False, None
 
+    if a.parameter_set:
+        from cbomctl.normalize.identity import canonical_name
+
+        wanted = {canonical_name(x) for x in a.parameter_set}
+        subject = canonical_name(
+            f"{asset.algorithm or ''}{asset.raw_name}{asset.parameter_set or ''}"
+            f"{asset.key_size or ''}")
+        if not any(w in subject for w in wanted):
+            return False, None
+
     if a.system_category:
         if system_category is None:
             return False, (
@@ -87,9 +97,9 @@ def _hybrid_satisfied(rule: Rule, asset: CryptoAsset) -> bool | None:
 
     if rule.hybrid is None or rule.hybrid is HybridStance.SILENT:
         return None
-    if rule.hybrid in (HybridStance.REQUIRED, HybridStance.RECOMMENDED):
+    if rule.hybrid.favours_hybrid:
         return asset.construction is Construction.HYBRID
-    if rule.hybrid is HybridStance.NOT_RECOMMENDED:
+    if rule.hybrid.opposes_hybrid:
         return asset.construction is not Construction.HYBRID
     return None
 

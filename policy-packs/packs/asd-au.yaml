@@ -2,7 +2,7 @@ id: asd-au
 name: "ASD / ACSC — Australia"
 authority: "Australian Signals Directorate"
 jurisdiction: AU
-pack_version: "0.2.0"
+pack_version: "1.0.0"
 applicability: >-
   The ISM is ASD's guidance for Australian government entities and their
   suppliers. Its controls are written as statements of fact ("... is used"),

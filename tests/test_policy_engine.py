@@ -49,15 +49,17 @@ class TestPacksAreHonest:
         it has reached, so a pack cannot quietly claim verification it has not
         earned -- and so the reverse (a rule regressing) is also caught."""
         fully = {p for p in ALL_PACKS if load_pack(p).is_verified}
-        assert fully == {"bsi-de", "us-eo14412", "nist-ir8547", "eu-roadmap",
-                         "asd-au"}
+        assert fully == {"bsi-de", "anssi-fr", "asd-au", "eu-roadmap",
+                         "us-eo14412", "nist-ir8547"}
 
         partial = {p: (len(load_pack(p).rules) - len(load_pack(p).unverified_rules),
                        len(load_pack(p).rules))
                    for p in ALL_PACKS}
-        assert partial["anssi-fr"] == (5, 6)   # 2027 cert date not in the source
+        # The 2027 certification rule was removed rather than left unverified:
+        # its date came only from press coverage.
+        assert partial["anssi-fr"] == (5, 5)
         assert partial["asd-au"] == (6, 6)
-        assert partial["cnsa-2.0"] == (0, 5)
+        assert partial["cnsa-2.0"] == (0, 7)
         assert partial["eu-roadmap"] == (6, 6)
 
     @pytest.mark.parametrize("pid", ALL_PACKS)
@@ -181,6 +183,36 @@ class TestHybridIsPerPurpose:
                         asset(construction=Construction.HYBRID,
                               status=QuantumStatus.PQ_SECURE, name="X25519MLKEM768"))
         assert cell.verdict is Verdict.WARN
+
+
+class TestHybridGradient:
+    """The hybrid axis is a three-step gradient, not a binary."""
+
+    def test_three_distinct_stances_exist_across_packs(self):
+        from cbomctl.models import HybridStance
+
+        stances = {}
+        for pid in ALL_PACKS:
+            for rule in load_pack(pid).rules:
+                if rule.hybrid and rule.hybrid is not HybridStance.SILENT:
+                    stances.setdefault(rule.hybrid, set()).add(pid)
+        assert HybridStance.RECOMMENDED in stances
+        assert HybridStance.NOT_RECOMMENDED in stances
+        assert HybridStance.NOT_PERMITTED_EXCEPT_INTEROP in stances
+
+    def test_not_recommended_still_permits_hybrid(self):
+        """ASD discourages without prohibiting, so a satisfies-all target can
+        still exist at a documented cost."""
+        from cbomctl.models import HybridStance
+
+        assert HybridStance.NOT_RECOMMENDED.permits_hybrid
+        assert HybridStance.NOT_RECOMMENDED.opposes_hybrid
+
+    def test_not_permitted_forecloses_hybrid(self):
+        from cbomctl.models import HybridStance
+
+        assert not HybridStance.NOT_PERMITTED_EXCEPT_INTEROP.permits_hybrid
+        assert HybridStance.NOT_PERMITTED_EXCEPT_INTEROP.opposes_hybrid
 
 
 class TestEuropeanAlignment:
