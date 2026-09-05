@@ -1,0 +1,108 @@
+name: CI
+
+on:
+  push: { branches: [main] }
+  pull_request:
+  schedule:
+    # Weekly: policy packs go stale, and a tool that silently serves stale
+    # rules is worse than one that serves none.
+    - cron: "0 6 * * 1"
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        python-version: ["3.11", "3.12", "3.13"]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+      - run: pip install -e '.[test]'
+      - run: pytest -q
+
+  cbom-schema-conformance:
+    # Hand-built fixtures must stay valid CycloneDX, or they stop proving
+    # anything about real input.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e '.[test]' requests
+      - name: Validate fixtures against the official CycloneDX schemas
+        run: |
+          python - <<'PY'
+          import json, pathlib, urllib.request, jsonschema
+          base = "https://raw.githubusercontent.com/CycloneDX/specification/master/schema"
+          schemas = {}
+          for v in ("1.6", "1.7"):
+              with urllib.request.urlopen(f"{base}/bom-{v}.schema.json") as r:
+                  schemas[v] = json.load(r)
+          failed = False
+          for p in sorted(pathlib.Path("tests/fixtures").glob("*.json")):
+              doc = json.loads(p.read_text())
+              v = str(doc.get("specVersion", ""))
+              if v not in schemas:
+                  print(f"skip   {p.name} (specVersion {v or 'absent'})")
+                  continue
+              try:
+                  jsonschema.validate(doc, schemas[v])
+                  print(f"ok     {p.name} ({v})")
+              except jsonschema.ValidationError as e:
+                  failed = True
+                  print(f"FAIL   {p.name}: {e.message}")
+          raise SystemExit(1 if failed else 0)
+          PY
+
+  dogfood:
+    # Run the action on our own fixtures. `continue-on-error` because the
+    # conflict fixture is *designed* to fail — a green run here would mean the
+    # gate had stopped working.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./
+        id: scan
+        continue-on-error: true
+        with:
+          cbom: tests/fixtures/conflict-hybrid.json
+          jurisdictions: bsi-de,anssi-fr,asd-au,cnsa-2.0
+          config: cbomctl.yaml.example
+          format: sarif
+          output: cbomctl.sarif
+      - name: The gate must have fired
+        run: |
+          test "${{ steps.scan.outcome }}" = "failure" \
+            || { echo "expected a non-zero exit on the conflict fixture"; exit 1; }
+      - uses: actions/upload-artifact@v4
+        with: { name: cbomctl-sarif, path: cbomctl.sarif }
+
+  policy-staleness:
+    if: github.event_name == 'schedule'
+    runs-on: ubuntu-latest
+    permissions: { issues: write, contents: read }
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: pip install -e .
+      - name: Report unverified or stale rules
+        run: |
+          python - <<'PY'
+          import datetime, pathlib, yaml
+          today = datetime.date.today()
+          stale = []
+          for p in sorted(pathlib.Path("policy-packs/packs").glob("*.yaml")):
+              for rule in yaml.safe_load(p.read_text())["rules"]:
+                  age = (today - rule["last_verified"]).days
+                  if rule["status"] != "verified":
+                      stale.append(f"{p.stem}/{rule['id']}: UNVERIFIED ({age}d old)")
+                  elif age > 180:
+                      stale.append(f"{p.stem}/{rule['id']}: stale, {age}d since verification")
+          print("\n".join(stale) or "all rules verified and fresh")
+          PY

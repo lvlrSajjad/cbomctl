@@ -1,0 +1,72 @@
+name: cbomctl
+description: >-
+  Evaluate a CycloneDX CBOM against several national post-quantum policies at
+  once and report where their verdicts contradict each other.
+branding: { icon: shield, color: purple }
+
+inputs:
+  cbom:
+    description: Path to a CycloneDX 1.6/1.7 CBOM JSON file.
+    required: true
+  jurisdictions:
+    description: Comma-separated policy packs.
+    required: false
+    default: bsi-de,anssi-fr,asd-au,cnsa-2.0
+  config:
+    description: Path to cbomctl.yaml (data lifetimes, system category).
+    required: false
+    default: ""
+  format:
+    description: matrix | json | md | sarif
+    required: false
+    default: sarif
+  output:
+    description: Write the report to this file instead of stdout.
+    required: false
+    default: ""
+  strict:
+    description: >-
+      Unverified rules return INDETERMINATE rather than asserting a verdict,
+      and indeterminate findings exit 3.
+    required: false
+    default: "false"
+  fail-on-warn:
+    description: Treat WARN (recommendations) as a build failure.
+    required: false
+    default: "false"
+
+outputs:
+  exit-code:
+    description: 0 pass, 1 policy failure, 2 usage error, 3 unresolved under --strict.
+    value: ${{ steps.run.outputs.exit-code }}
+
+runs:
+  using: composite
+  steps:
+    - name: Install cbomctl
+      shell: bash
+      run: pip install --quiet "${{ github.action_path }}"
+
+    - name: Run cbomctl
+      id: run
+      shell: bash
+      run: |
+        args=(verdict "${{ inputs.cbom }}" --jurisdictions "${{ inputs.jurisdictions }}" --format "${{ inputs.format }}")
+        [ -n "${{ inputs.config }}" ] && args+=(--config "${{ inputs.config }}")
+        [ "${{ inputs.strict }}" = "true" ] && args+=(--strict)
+        [ "${{ inputs.fail-on-warn }}" = "true" ] && args+=(--fail-on-warn)
+
+        set +e
+        if [ -n "${{ inputs.output }}" ]; then
+          cbomctl "${args[@]}" > "${{ inputs.output }}"
+          code=$?
+          # The matrix is the point — always show it in the log, even when the
+          # machine-readable report went to a file.
+          cbomctl "${args[@]}" --format matrix || true
+        else
+          cbomctl "${args[@]}"
+          code=$?
+        fi
+        set -e
+        echo "exit-code=$code" >> "$GITHUB_OUTPUT"
+        exit $code

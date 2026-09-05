@@ -1,0 +1,84 @@
+# Contributing to cbomctl
+
+## The one rule that matters
+
+**A policy rule may not assert anything you have not read in a primary source.**
+
+This project makes compliance-adjacent claims under a person's name. A wrong
+deadline or a guideline reported as a mandate is worse than no tool at all,
+because it will be believed. Everything below follows from that.
+
+## Adding or changing a policy rule
+
+Rules live in [`policy-packs/packs/`](policy-packs/packs/) and are validated
+against [`policy-packs/schema/pack.schema.json`](policy-packs/schema/pack.schema.json).
+
+A rule PR must include:
+
+1. **A primary `source_url`**, from the allowlist in
+   [`policy-packs/README.md`](policy-packs/README.md) — `nsa.gov`,
+   `csrc.nist.gov`, `whitehouse.gov`, `federalregister.gov`, `bsi.bund.de`,
+   `cyber.gouv.fr`, `cyber.gov.au`, `digital-strategy.ec.europa.eu`,
+   `eur-lex.europa.eu`. A vendor blog, a consultancy summary or a news article
+   is not a source. CI rejects anything else.
+2. **`source_title` and `source_edition`**, naming the exact document and version.
+3. **`binding`**, chosen deliberately. Most PQC guidance is *not* a mandate.
+   `guideline_recommendation` can never produce FAIL, and that is enforced in
+   code — if you believe a rule should fail a build, justify the binding.
+4. **`hybrid` scoped by `applies_to.purpose`.** Authorities differ between key
+   establishment and signatures. A hybrid rule without a purpose scope will be
+   rejected in review.
+5. **`rationale`.** `harvest_now_decrypt_later` and `algorithm_maturity` are
+   different arguments with different consequences; say which one the authority
+   is making.
+6. **`last_verified` and `verified_by`**, plus a row in the verification log in
+   [`docs/policy-sources.md`](docs/policy-sources.md) naming the section you
+   read.
+7. **A fixture and a test** demonstrating the rule firing and not firing.
+
+To move a rule from `needs_verification` to `verified` you must have read the
+primary document yourself. Not a summary of it. If the primary text is
+ambiguous, **leave the status as `needs_verification` and quote the ambiguity**
+in `docs/policy-sources.md`. That honesty is the product; a confident wrong
+answer is the failure mode.
+
+## Adding a jurisdiction
+
+Open an issue first. A new pack is a commitment to keep it verified — a stale
+pack that looks authoritative is a liability. Bring the primary sources and say
+who will re-verify it.
+
+## Changing the normalizer
+
+The normalizer's job is to resolve algorithm purpose *or to say it cannot*.
+
+- New signals may be added to the ladder in
+  [`src/cbomctl/normalize/purpose.py`](src/cbomctl/normalize/purpose.py), in
+  precedence order, with a test for each.
+- **`AMBIGUOUS` and `UNKNOWN` are not failures to be reduced.** A PR that
+  lowers the unresolved count by inferring purpose from a call site, a variable
+  name, or a heuristic will be declined unless it is behind an explicit opt-in
+  flag. There is a test asserting the Keycloak fixture keeps its unresolved
+  share for exactly this reason.
+- If a signal *can* be wrong for an algorithm family, add it to
+  `PLAUSIBLE_PURPOSES` rather than trusting precedence alone.
+
+## Versioning the packs
+
+Semver on the pack collection, per
+[`policy-packs/CHANGELOG.md`](policy-packs/CHANGELOG.md). Any change that can
+flip an existing verdict — a moved deadline, a `binding` or `hybrid`
+reclassification, a removed rule — is **major**, never a patch.
+
+## Running things
+
+```bash
+pip install -e '.[test]'
+pytest -q
+cbomctl verdict tests/fixtures/conflict-hybrid.json -c cbomctl.yaml.example
+```
+
+## Commits
+
+Conventional commits. Small and reviewable. Policy-pack changes go in their own
+commit, separate from code, so a verdict change is never buried in a refactor.
