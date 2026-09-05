@@ -1,0 +1,24 @@
+# cbomctl.yaml — the facts a CBOM cannot contain.
+#
+# Data lifetime is the load-bearing one. No inventory tool can derive how long
+# your data must stay confidential, and without it there is nothing to rank by.
+version: 1
+
+defaults:
+  data_lifetime_years: 5
+  migration_years: 3
+
+# CNSA 2.0 sets different deadlines per product category, and a CBOM contains
+# algorithms rather than product categories. Undeclared means INDETERMINATE —
+# never a silent pass.
+# One of: software-firmware-signing | networking | web-cloud | operating-system
+#         high-value-asset | high-impact | federal-contractor | high-risk
+system_category: web-cloud
+
+assets:
+  - match: { location: "src/payments/**" }
+    data_lifetime_years: 25          # cardholder data + regulatory retention
+
+  - match: { location: "firmware/**" }
+    verification_lifetime_years: 15  # signatures: how long it stays trusted,
+                                     # not how long data stays secret
