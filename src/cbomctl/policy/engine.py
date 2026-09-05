@@ -1,0 +1,155 @@
+"""Rule matching and cell verdicts.
+
+Three invariants:
+
+1. An unresolved purpose can never produce PASS. If we do not know what a key
+   is for, we do not know whether a purpose-scoped rule bites.
+2. A rule needing a fact the user did not declare produces INDETERMINATE, not a
+   pass. "Informational" reads as "fine"; indeterminate does not.
+3. `binding` decides FAIL versus WARN. A guideline that recommends cannot FAIL.
+"""
+
+from __future__ import annotations
+
+from cbomctl.models import (
+    Cell, CryptoAsset, Purpose, RuleRef, Verdict,
+)
+from cbomctl.policy.schema import Pack, Rule
+
+
+def _selector_hit(values: list, actual) -> bool | None:
+    """None when the selector is empty (no constraint)."""
+    if not values:
+        return None
+    return actual in values
+
+
+def rule_applies(rule: Rule, asset: CryptoAsset, *, system_category: str | None) -> tuple[bool, str | None]:
+    """Return (applies, indeterminate_reason)."""
+    a = rule.applies_to
+
+    if a.purpose:
+        if not asset.purpose.is_resolved:
+            return False, (
+                f"purpose is {asset.purpose.value}; this rule is scoped to "
+                f"{', '.join(p.value for p in a.purpose)} and cannot be evaluated"
+            )
+        if asset.purpose not in a.purpose:
+            return False, None
+
+    if a.quantum_status and asset.quantum_status not in a.quantum_status:
+        return False, None
+
+    if a.construction and asset.construction not in a.construction:
+        return False, None
+
+    if a.algorithm:
+        names = {n.upper() for n in a.algorithm}
+        candidates = {(asset.algorithm or "").upper(), asset.raw_name.upper()}
+        if not (names & candidates):
+            return False, None
+
+    if a.system_category:
+        if system_category is None:
+            return False, (
+                f"rule is scoped to system categories "
+                f"({', '.join(a.system_category)}) and none is declared; set "
+                f"system_category in cbomctl.yaml"
+            )
+        if system_category not in a.system_category:
+            return False, None
+
+    if a.security_level:
+        # Security level is not derivable from a CBOM and has no config field
+        # yet; say so rather than silently passing.
+        return False, (
+            f"rule is scoped to security level {', '.join(a.security_level)}, "
+            f"which is not declared"
+        )
+
+    return True, None
+
+
+def _hybrid_satisfied(rule: Rule, asset: CryptoAsset) -> bool | None:
+    """Whether the asset's construction matches the rule's hybrid stance.
+
+    ``None`` when the rule takes no hybrid position for this purpose.
+    """
+    from cbomctl.models import Construction, HybridStance
+
+    if rule.hybrid is None or rule.hybrid is HybridStance.SILENT:
+        return None
+    if rule.hybrid in (HybridStance.REQUIRED, HybridStance.RECOMMENDED):
+        return asset.construction is Construction.HYBRID
+    if rule.hybrid is HybridStance.NOT_RECOMMENDED:
+        return asset.construction is not Construction.HYBRID
+    return None
+
+
+def evaluate(
+    pack: Pack,
+    asset: CryptoAsset,
+    *,
+    system_category: str | None = None,
+    include_acquisition_gate: bool = False,
+    strict: bool = False,
+) -> Cell:
+    """Evaluate one asset against one pack."""
+    from cbomctl.models import DeadlineState, RuleStatus
+
+    hits: list[RuleRef] = []
+    indeterminate_reasons: list[str] = []
+    worst = Verdict.PASS
+
+    for rule in pack.rules:
+        if (rule.deadline_state is DeadlineState.ACQUISITION_GATE
+                and not include_acquisition_gate):
+            continue
+
+        applies, reason = rule_applies(rule, asset, system_category=system_category)
+        if reason:
+            indeterminate_reasons.append(f"{rule.id}: {reason}")
+            continue
+        if not applies:
+            continue
+
+        # A hybrid-stance rule only bites when the construction contradicts it.
+        satisfied = _hybrid_satisfied(rule, asset)
+        if satisfied is True:
+            continue
+
+        verdict = rule.effective_verdict
+        # Condition 2 of building on stubs: under --strict, a rule whose source
+        # has not been verified cannot assert a verdict.
+        if strict and rule.status is not RuleStatus.VERIFIED:
+            verdict = Verdict.INDETERMINATE
+
+        hits.append(RuleRef(
+            rule_id=rule.id, jurisdiction=pack.id, binding=rule.binding,
+            status=rule.status, source_url=rule.source_url,
+            source_title=rule.source_title, is_draft=rule.is_draft,
+            deadline=rule.deadline, deadline_state=rule.deadline_state,
+            hybrid=rule.hybrid, rationale=rule.rationale,
+            description=rule.description,
+        ))
+        if verdict.rank > worst.rank:
+            worst = verdict
+
+    # An unevaluable rule must not erase a verdict we *can* determine: a WARN
+    # plus "one rule could not be evaluated" is more useful than INDET alone.
+    # INDETERMINATE wins only when nothing else was determinable.
+    if indeterminate_reasons and not hits:
+        return Cell(verdict=Verdict.INDETERMINATE, rules=hits,
+                    note="; ".join(indeterminate_reasons[:3]))
+
+    if not hits and not indeterminate_reasons:
+        # Invariant 1: never claim PASS for an asset whose purpose is unknown.
+        if not asset.purpose.is_resolved:
+            return Cell(
+                verdict=Verdict.INDETERMINATE, rules=[],
+                note=f"purpose is {asset.purpose.value}; no rule can be evaluated",
+            )
+        return Cell(verdict=Verdict.PASS, rules=[])
+
+    return Cell(verdict=worst, rules=hits,
+                note="; ".join(indeterminate_reasons[:3]) or None)
