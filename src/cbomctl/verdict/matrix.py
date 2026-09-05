@@ -51,6 +51,18 @@ class Matrix(BaseModel):
         return bool(self.unverified_packs)
 
     @property
+    def draft_rules(self) -> list[str]:
+        """Rules whose source is a draft. A verified reading of a draft is
+        still a draft: the dates are proposed and may move."""
+        seen: dict[str, None] = {}
+        for row in self.rows:
+            for jid, cell in row.cells.items():
+                for ref in cell.rules:
+                    if ref.is_draft:
+                        seen[f"{jid}/{ref.rule_id}"] = None
+        return sorted(seen)
+
+    @property
     def exit_code(self) -> int:
         worst = [r.worst for r in self.rows]
         if Verdict.FAIL in worst:

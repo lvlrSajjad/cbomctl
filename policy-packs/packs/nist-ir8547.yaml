@@ -1,0 +1,105 @@
+id: nist-ir8547
+name: "NIST IR 8547 (draft) — United States"
+authority: "National Institute of Standards and Technology"
+jurisdiction: US
+pack_version: "0.1.0"
+applicability: >-
+  NIST IR 8547 is an INITIAL PUBLIC DRAFT (November 2024). Its dates are
+  proposed, not settled, and every output citing this pack prints "draft". It
+  describes the transition for US federal civilian cryptography; it is guidance,
+  not a mandate, and produces WARN at most.
+notes: >-
+  VERIFIED 2026-09-06 against the primary PDF, nvlpubs.nist.gov
+  NIST.IR.8547.ipd.pdf. Verified as a DRAFT: the reading is confirmed, the
+  status of the document is not. Deprecated and disallowed are modelled as
+  separate states using NIST's own glossary definitions.
+
+rules:
+  - id: nist-112bit-signatures-deprecated-2030
+    description: >-
+      Table 2: ECDSA and RSA signatures at 112 bits of security strength are
+      "Deprecated after 2030". Glossary: deprecated means "The algorithm and
+      key length may be used, but the user must accept some security risk."
+    binding: guideline_recommendation
+    status: verified
+    is_draft: true
+    source_url: "https://nvlpubs.nist.gov/nistpubs/ir/2024/NIST.IR.8547.ipd.pdf"
+    source_title: "NIST IR 8547 ipd, Transition to Post-Quantum Cryptography Standards, §4.1.1 Table 2"
+    source_edition: "Initial Public Draft, November 2024"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    deadline: 2030-12-31
+    deadline_state: deprecated
+    applies_to:
+      purpose: [signature]
+      quantum_status: [broken-by-shor]
+      security_level: ["112"]
+    rationale: unstated
+    migration_target: { signature: "ML-DSA-65" }
+    verdict: warn
+
+  - id: nist-signatures-disallowed-2035
+    description: >-
+      Table 2: quantum-vulnerable signatures (ECDSA, EdDSA, RSA) are
+      "Disallowed after 2035" at every security strength. Glossary: disallowed
+      means "The algorithm or key length is no longer allowed for applying
+      cryptographic protection."
+    binding: guideline_recommendation
+    status: verified
+    is_draft: true
+    source_url: "https://nvlpubs.nist.gov/nistpubs/ir/2024/NIST.IR.8547.ipd.pdf"
+    source_title: "NIST IR 8547 ipd §4.1.1 Table 2"
+    source_edition: "Initial Public Draft, November 2024"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    deadline: 2035-12-31
+    deadline_state: disallowed
+    applies_to:
+      purpose: [signature]
+      quantum_status: [broken-by-shor]
+    rationale: unstated
+    migration_target: { signature: "ML-DSA-65" }
+    verdict: warn
+
+  - id: nist-112bit-key-establishment-deprecated-2030
+    description: >-
+      Table 4: finite-field DH/MQV, EC DH/MQV and RSA key establishment at 112
+      bits of security strength are "Deprecated after 2030".
+    binding: guideline_recommendation
+    status: verified
+    is_draft: true
+    source_url: "https://nvlpubs.nist.gov/nistpubs/ir/2024/NIST.IR.8547.ipd.pdf"
+    source_title: "NIST IR 8547 ipd §4.1.2 Table 4"
+    source_edition: "Initial Public Draft, November 2024"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    deadline: 2030-12-31
+    deadline_state: deprecated
+    applies_to:
+      purpose: [key-agreement, encryption]
+      quantum_status: [broken-by-shor]
+      security_level: ["112"]
+    rationale: harvest_now_decrypt_later
+    migration_target: { kem: "ML-KEM-768" }
+    verdict: warn
+
+  - id: nist-key-establishment-disallowed-2035
+    description: >-
+      Table 4: quantum-vulnerable key establishment is "Disallowed after 2035"
+      at every security strength.
+    binding: guideline_recommendation
+    status: verified
+    is_draft: true
+    source_url: "https://nvlpubs.nist.gov/nistpubs/ir/2024/NIST.IR.8547.ipd.pdf"
+    source_title: "NIST IR 8547 ipd §4.1.2 Table 4"
+    source_edition: "Initial Public Draft, November 2024"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    deadline: 2035-12-31
+    deadline_state: disallowed
+    applies_to:
+      purpose: [key-agreement, encryption]
+      quantum_status: [broken-by-shor]
+    rationale: harvest_now_decrypt_later
+    migration_target: { kem: "ML-KEM-768" }
+    verdict: warn

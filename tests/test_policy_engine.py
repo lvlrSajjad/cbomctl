@@ -22,7 +22,7 @@ def asset(purpose=Purpose.KEY_AGREEMENT, construction=Construction.CLASSICAL,
 class TestPacksAreHonest:
     def test_all_six_packs_load(self):
         assert set(ALL_PACKS) == {"anssi-fr", "asd-au", "bsi-de", "cnsa-2.0",
-                                  "eu-roadmap", "us-eo14412"}
+                                  "eu-roadmap", "nist-ir8547", "us-eo14412"}
 
     @pytest.mark.parametrize("pid", ALL_PACKS)
     def test_every_unverified_rule_states_its_open_question(self, pid):
@@ -44,10 +44,20 @@ class TestPacksAreHonest:
                 f"{pid}/{rule.id} cites no section — 'verified' means a specific "
                 f"passage was read, not that the document was skimmed")
 
-    def test_bsi_is_verified_and_the_rest_are_not(self):
-        """Verification proceeds pack by pack; this pins where it has reached."""
-        verified = {p for p in ALL_PACKS if load_pack(p).is_verified}
-        assert verified == {"bsi-de"}
+    def test_verification_progress_is_pinned(self):
+        """Verification proceeds pack by pack and rule by rule. This pins where
+        it has reached, so a pack cannot quietly claim verification it has not
+        earned -- and so the reverse (a rule regressing) is also caught."""
+        fully = {p for p in ALL_PACKS if load_pack(p).is_verified}
+        assert fully == {"bsi-de", "us-eo14412", "nist-ir8547"}
+
+        partial = {p: (len(load_pack(p).rules) - len(load_pack(p).unverified_rules),
+                       len(load_pack(p).rules))
+                   for p in ALL_PACKS}
+        assert partial["anssi-fr"] == (5, 6)   # 2027 cert date not in the source
+        assert partial["asd-au"] == (0, 3)
+        assert partial["cnsa-2.0"] == (0, 5)
+        assert partial["eu-roadmap"] == (0, 3)
 
     @pytest.mark.parametrize("pid", ALL_PACKS)
     def test_every_pack_declares_who_it_binds(self, pid):
@@ -96,11 +106,12 @@ class TestNeverSilentlyPass:
 
     def test_strict_turns_unverified_rules_indeterminate(self):
         """Second condition of building on stubs."""
-        # EO 14412 rules are scoped to system categories, so declare one:
-        # otherwise the cell is already INDETERMINATE for a different reason.
-        kw = {"system_category": "high-value-asset"}
-        plain = evaluate(load_pack("us-eo14412"), asset(), **kw)
-        strict = evaluate(load_pack("us-eo14412"), asset(), strict=True, **kw)
+        # Uses a pack that is still unverified. CNSA rules are scoped to
+        # system categories, so declare one -- otherwise the cell would be
+        # INDETERMINATE for a different reason and prove nothing.
+        kw = {"system_category": "web-cloud"}
+        plain = evaluate(load_pack("cnsa-2.0"), asset(), **kw)
+        strict = evaluate(load_pack("cnsa-2.0"), asset(), strict=True, **kw)
         assert plain.verdict is Verdict.FAIL
         assert strict.verdict is Verdict.INDETERMINATE
 
@@ -168,6 +179,63 @@ class TestHybridIsPerPurpose:
                         asset(construction=Construction.HYBRID,
                               status=QuantumStatus.PQ_SECURE, name="X25519MLKEM768"))
         assert cell.verdict is Verdict.WARN
+
+
+class TestScope:
+    """A pack that demonstrably does not reach an asset says so."""
+
+    def test_out_of_scope_pack_says_not_applicable_not_pass(self):
+        """EO 14412 reaches federal HVAs and high impact systems. Run against a
+        commercial web-cloud system it must not report PASS -- that reads as
+        "you comply", when the truth is "this does not reach you"."""
+        cell = evaluate(load_pack("us-eo14412"), asset(),
+                        system_category="web-cloud")
+        assert cell.verdict is Verdict.NOT_APPLICABLE
+        assert "system category" in (cell.note or "")
+
+    def test_in_scope_pack_still_evaluates(self):
+        cell = evaluate(load_pack("us-eo14412"), asset(),
+                        system_category="high-value-asset")
+        assert cell.verdict is Verdict.FAIL
+
+    def test_no_rule_has_an_empty_selector(self):
+        """A rule with no selector fires on every asset and masks real
+        findings. EO 14412's CISA-guidance provision was one; it now lives in
+        the pack notes instead."""
+        for pid in ALL_PACKS:
+            for rule in load_pack(pid).rules:
+                a = rule.applies_to
+                assert any([a.purpose, a.quantum_status, a.construction,
+                            a.algorithm, a.system_category, a.security_level]), (
+                    f"{pid}/{rule.id} matches every asset")
+
+
+class TestDraftSources:
+    """A verified reading of a draft is still a draft."""
+
+    def test_ir8547_rules_are_all_marked_draft(self):
+        assert all(r.is_draft for r in load_pack("nist-ir8547").rules)
+
+    def test_deprecated_and_disallowed_are_modelled_separately(self):
+        """The most commonly misstated point in PQC compliance. NIST:
+        deprecated means "may be used, but the user must accept some security
+        risk"; disallowed means "no longer allowed"."""
+        from cbomctl.models import DeadlineState
+
+        states = {r.deadline_state for r in load_pack("nist-ir8547").rules}
+        assert DeadlineState.DEPRECATED in states
+        assert DeadlineState.DISALLOWED in states
+
+    def test_2030_deprecation_only_reaches_112_bit_strength(self):
+        """Table 2/4 deprecate 112-bit after 2030; >=128-bit is only
+        disallowed after 2035. Coverage that says "RSA deprecated in 2030"
+        without the strength qualifier is wrong."""
+        pack = load_pack("nist-ir8547")
+        for rule in pack.rules:
+            if rule.deadline_state.value == "deprecated":
+                assert rule.applies_to.security_level == ["112"]
+            if rule.deadline_state.value == "disallowed":
+                assert not rule.applies_to.security_level
 
 
 class TestSourceDiscipline:

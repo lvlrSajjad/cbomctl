@@ -19,6 +19,13 @@ def render(matrix: Matrix, conflicts: list[Conflict]) -> str:
             "",
         ]
 
+    if matrix.draft_rules:
+        out += ["> [!NOTE]",
+                "> **Draft source.** These rules cite a document that is still a "
+                "draft; their dates are proposed and may move: "
+                + ", ".join(f"`{r}`" for r in matrix.draft_rules) + ".",
+                ""]
+
     cols = " | ".join(f"`{j}`" for j in matrix.jurisdictions)
     out += [f"| Asset | Purpose | {cols} | |",
             "|---|---|" + "---|" * len(matrix.jurisdictions) + "---|"]

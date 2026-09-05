@@ -23,6 +23,13 @@ def render(matrix: Matrix, conflicts: list[Conflict]) -> str:
                 "packs": matrix.unverified_packs,
             }
         ),
+        "draft_sources": (
+            None if not matrix.draft_rules else {
+                "message": ("Rules citing a draft document. Their dates are "
+                            "proposed and may move."),
+                "rules": matrix.draft_rules,
+            }
+        ),
         "matrix": [
             {
                 "bom_ref": r.bom_ref,

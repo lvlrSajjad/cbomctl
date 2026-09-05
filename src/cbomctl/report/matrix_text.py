@@ -33,6 +33,13 @@ def render(matrix: Matrix, conflicts: list[Conflict]) -> str:
         out.append(_banner(matrix.unverified_packs))
         out.append("")
 
+    if matrix.draft_rules:
+        out.append("⚠ DRAFT SOURCE — these rules cite a document that is still a "
+                   "draft; their dates are proposed and may move:")
+        for rid in matrix.draft_rules:
+            out.append(f"    {rid}")
+        out.append("")
+
     name_w = max([len(r.display) for r in matrix.rows] + [len("ASSET")]) + 2
     purpose_w = max([len(r.purpose) for r in matrix.rows] + [len("PURPOSE")]) + 2
     col_w = max([len(j) for j in matrix.jurisdictions] + [6]) + 2

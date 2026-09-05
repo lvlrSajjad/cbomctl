@@ -7,6 +7,7 @@ allowed to drift away from the packs it describes.
 from __future__ import annotations
 
 import json
+import re
 from pathlib import Path
 
 import jsonschema
@@ -19,7 +20,7 @@ PACKS = sorted((ROOT / "policy-packs" / "packs").glob("*.yaml"))
 
 
 def test_packs_exist():
-    assert len(PACKS) == 6
+    assert len(PACKS) == 7
 
 
 def _as_json(value):
@@ -58,11 +59,16 @@ def test_a_recommendation_never_describes_itself_as_a_mandate(path):
     for rule in yaml.safe_load(path.read_text())["rules"]:
         if rule["binding"] != "guideline_recommendation":
             continue
-        text = f"{rule['description']} {rule.get('rationale_note', '')}".lower()
+        blob = f"{rule['description']} {rule.get('rationale_note', '')}"
+        # Quoted spans are the source speaking, not us. NIST's own glossary
+        # defines "deprecated" as "may be used, but the user must accept some
+        # security risk" -- quoting that is correct; paraphrasing it into our
+        # own mandate language would not be.
+        ours = re.sub(r'"[^"]*"|“[^”]*”', " ", blob).lower()
         for word in ("mandator", "must ", "obliged", "required to"):
-            assert word not in text, (
+            assert word not in ours, (
                 f"{path.stem}/{rule['id']} is a guideline_recommendation but "
-                f"its own text says {word!r}")
+                f"our own prose (outside quotes) says {word!r}")
 
 
 @pytest.mark.parametrize("path", PACKS, ids=lambda p: p.stem)

@@ -107,6 +107,10 @@ def evaluate(
 
     hits: list[RuleRef] = []
     indeterminate_reasons: list[str] = []
+    #: Rules skipped because the declared system category is outside this
+    #: pack's scope. If that is the *only* reason nothing fired, the honest
+    #: cell is "does not apply to you", not "passes".
+    out_of_scope: list[str] = []
     worst = Verdict.PASS
 
     for rule in pack.rules:
@@ -119,6 +123,9 @@ def evaluate(
             indeterminate_reasons.append(f"{rule.id}: {reason}")
             continue
         if not applies:
+            if (rule.applies_to.system_category and system_category is not None
+                    and system_category not in rule.applies_to.system_category):
+                out_of_scope.append(rule.id)
             continue
 
         # A hybrid-stance rule only bites when the construction contradicts it.
@@ -156,6 +163,13 @@ def evaluate(
             return Cell(
                 verdict=Verdict.INDETERMINATE, rules=[],
                 note=f"purpose is {asset.purpose.value}; no rule can be evaluated",
+            )
+        if out_of_scope and len(out_of_scope) == sum(
+                1 for r in pack.rules if r.applies_to.system_category):
+            return Cell(
+                verdict=Verdict.NOT_APPLICABLE, rules=[],
+                note=(f"every scoped rule in this pack targets a different "
+                      f"system category; you declared {system_category!r}"),
             )
         return Cell(verdict=Verdict.PASS, rules=[])
 

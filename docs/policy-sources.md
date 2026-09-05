@@ -1,7 +1,9 @@
 # Policy sources, corrections, and open questions
 
-**`bsi-de` and `anssi-fr` are verified. The other four packs are not — every
-claim in them still needs a primary source read.**
+**Verified: `bsi-de`, `us-eo14412`, `nist-ir8547` (as a draft), and `anssi-fr`
+(5 of 6 rules). Not verified: `asd-au`, `eu-roadmap`, and `cnsa-2.0` — the last
+because NSA's servers refuse automated access, which needs a human with a
+browser rather than more effort.**
 
 Everything here was assembled from secondary reporting — vendor blogs, law-firm
 summaries, consultancy explainers — which is frequently wrong about exactly the
@@ -28,77 +30,108 @@ each would have produced a materially misleading verdict.
 | 5 | (absent) | **EO 14412** added — and it is *not* a blanket federal PQC mandate. |
 | 6 | (absent) | `binding` field added to the pack schema, precisely because of 1–3. |
 
-## 1. `us-eo14412` — United States, Executive Order 14412
+## 1. `us-eo14412` — United States, Executive Order 14412 ✅ VERIFIED
 
-**Primary sources**
-- EO 14412, *"Securing the Nation Against Advanced Cryptographic Attacks"*,
-  June 22 2026 —
-  <https://www.whitehouse.gov/presidential-actions/2026/06/securing-the-nation-against-advanced-cryptographic-attacks/>
-- Federal Register publication, June 25 2026 — **91 FR 38483**.
+**Verified 2026-09-06 by Sadjad Asadi against the Federal Register text:**
+EO 14412, *"Securing the Nation Against Advanced Cryptographic Attacks"*,
+signed June 22 2026, published June 25 2026 — **91 FR 38483**, FR doc
+2026-12909 —
+<https://www.federalregister.gov/documents/full_text/text/2026/06/25/2026-12909.txt>
 
-**What the pack asserts** — `binding: executive_order`
+| # | claim | status | where |
+|---|---|---|---|
+| U1 | Scope is federal **HVAs and high impact systems, excluding National Security Systems** — not blanket federal PQC | ✅ verified | §4(b)(i) |
+| U2 | **Key establishment by 2030-12-31** | ✅ verified | §4(b)(ii) |
+| U3 | **Digital signatures by 2031-12-31** | ✅ verified | §4(b)(iii) |
+| U4 | FAR Council to publish a **proposed** rule requiring covered contractors to comply by 2030-12-31 | ✅ verified | §5(c) |
+| U5 | CISA CBOM minimum-elements guidance within **270 days** (≈ 2027-03-19) | ✅ verified | §5(d) |
+| U6 | Agency PQC migration lead within **30 days** (by 2026-07-22) | ✅ verified | §4(a) |
+| U7 | The order **never uses the word "hybrid"** — 0 occurrences | ✅ verified | whole text |
+
+### The operative sentence
+
+§4(b), one sentence, doing all the work:
+
+> "…issue guidance requiring each agency to: (i) review their inventory of HVAs
+> and high impact systems, **excluding National Security Systems**; (ii)
+> transition all HVAs and high impact systems to use PQC for **key
+> establishment by December 31, 2030**; (iii) transition all HVAs and high
+> impact systems to use PQC for **digital signatures by December 31, 2031**"
+
+This is the cleanest primary-source evidence for the urgency asymmetry anywhere
+in these packs: **one order, one population, consecutive clauses, and signatures
+get an extra year.** The order gives no reason for the gap, so the pack records
+`rationale: unstated` — the inference is ours, not the document's.
+
+§1 names the mechanism for key establishment: *"adversaries collecting United
+States information now, and decrypting it later once large-scale quantum
+computers are operational."*
+
+### Two corrections to how this is usually reported
+
+**It is not a blanket federal mandate.** Secondary coverage routinely renders
+this as "the US mandates PQC by 2030". The scope is HVAs and high impact
+systems, and NSS are explicitly excluded (they fall under CNSA 2.0 instead).
+Running this pack against a commercial system now returns **N/A**, not PASS —
+"passes" would read as "you comply" when the truth is "this does not reach you".
+
+**The FAR rule is only proposed.** §5(c) directs the FAR Council to *publish a
+proposed rule* within 180 days. A proposed rule is not a contractual
+obligation, so that rule is `warn` despite the `executive_order` binding.
+Revisit when the final rule publishes.
+
+### Worth watching
+
+§5(d): CISA must, by roughly **2027-03-19**, publish minimum elements for a
+cryptographic bill of materials, and those elements *"shall enable the
+automated assessment of the cryptographic assets utilized by a hardware or
+software element."* That may define the input format this tool consumes. It is
+recorded in the pack's notes rather than as a rule — a rule with no selector
+would fire on every asset and mask real findings.
+
+## 2. `cnsa-2.0` — United States, NSA ❌ BLOCKED — needs a human
+
+**Verification attempted 2026-09-06 and failed. Not for lack of trying, and not
+because the source is unclear — because it cannot be fetched.**
+
+`media.defense.gov` and `nsa.gov` return **HTTP 403** to every automated
+request, including with browser user-agents and a referer. Opening the PDF in
+the browser triggers a file download rather than rendering it. Attempted:
+
+- `https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF` → 403
+- `https://www.nsa.gov/Cybersecurity-Guidance/` → 403
+- the same PDF via a real browser engine → download dialog, no text
+
+**This is a ten-minute job for a human with a browser.** Open the CNSA 2.0 FAQ,
+find the timeline table, and check the seven claims below. Until then every
+`cnsa-2.0` rule stays `needs_verification` and the pack triggers the banner.
+
+**What the pack currently asserts** — `binding: agency_requirement`, **NSS only**
 
 | # | claim | status |
 |---|---|---|
-| U1 | Scope is federal **High Value Assets and high-impact systems**, **excluding National Security Systems** — *not* blanket federal PQC migration | `needs_verification` |
-| U2 | **Key establishment** by **2030-12-31** | `needs_verification` |
-| U3 | **Digital signatures** by **2031-12-31** — a separate, later deadline | `needs_verification` |
-| U4 | Contractor compliance via a **FAR rule** targeting **2030-12-31** | `needs_verification` |
-| U5 | CISA to publish **CBOM minimum-elements guidance within 270 days** (≈ 2027-03-19) | `needs_verification` |
-| U6 | Each agency designates a PQC migration lead within 30 days (≈ 2026-07-22) | `needs_verification` |
+| C1 | Applies to **National Security Systems** only | `needs_verification` |
+| C2 | **2027-01-01** acquisition gate | `needs_verification` |
+| C3 | Software/firmware signing and networking: exclusive use by **2030** | `needs_verification` |
+| C4 | Browsers, servers, cloud, operating systems: exclusive use by **2033** | `needs_verification` |
+| C5 | "All NSS by **2031** unless excepted" | `needs_verification` |
+| C6 | **ML-KEM-1024, ML-DSA-87, AES-256, SHA-384/512, LMS/XMSS** | `needs_verification` |
+| C7 | Hybrid **not required** → `hybrid: silent` | `needs_verification` |
 
-**Open questions**
+**Priority when you do read it:**
 
-1. **U1 is the correction that matters most.** Secondary coverage routinely
-   renders this as "the US mandates PQC by 2030". It does not. Confirm the HVA /
-   high-impact scoping language and the NSS exclusion verbatim — if we get this
-   wrong we will fail assets the order never reached.
-2. **U2 vs U3 is the only place a major jurisdiction explicitly splits key
-   establishment from signatures with different dates**, which is direct
-   evidence for our scoring asymmetry (DESIGN §7). Worth quoting exactly.
-3. U4 — a *proposed* FAR rule is not yet a contractual obligation. Confirm
-   status; until the rule is final this should be `warn`, not `fail`.
-4. U5 matters to us specifically: CISA CBOM minimum elements may define the
-   input format we consume. Track it.
-5. Confirm 91 FR 38483 and whether the FR text differs from the White House
-   posting.
-
-## 2. `cnsa-2.0` — United States, NSA
-
-**Primary sources**
-- NSA CNSA 2.0 FAQ (current revision) —
-  <https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF>
-  (verify the live URL; NSA rehosts)
-- The Sept 2022 CSA and any revision after NIST finalised FIPS 203/204/205.
-
-**What the pack asserts** — `binding: agency_requirement`, **NSS only**
-
-| # | claim | status |
-|---|---|---|
-| C1 | Applies to **National Security Systems** — not federal IT generally, not the private sector | `needs_verification` |
-| C2 | **2027-01-01** acquisition gate for new NSS acquisitions | `needs_verification` |
-| C3 | Software/firmware signing and networking equipment: exclusive use by **2030** | `needs_verification` |
-| C4 | Browsers, servers, cloud, and operating systems: exclusive use by **2033** | `needs_verification` |
-| C5 | "All NSS by **2031** unless excepted" milestone | `needs_verification` |
-| C6 | Algorithms: **ML-KEM-1024, ML-DSA-87, AES-256, SHA-384/512, LMS/XMSS** | `needs_verification` |
-| C7 | Hybrid **not required**; NSA has stated pure CNSA 2.0 suffices → `hybrid: silent` | `needs_verification` |
-
-**Open questions**
-
-1. **C6's ML-KEM-1024 is a conflict driver.** BSI and ANSSI reportedly accept
-   ML-KEM-768; CNSA 2.0 reportedly requires -1024. That is a `parameter`
-   conflict distinct from the hybrid one, and it is the second contradiction the
-   matrix should surface. Verify the level requirement precisely.
-2. **C7 phrasing.** *Not required* and *discouraged* are different pack
+1. **C6's ML-KEM-1024.** BSI and ANSSI both accept ML-KEM-768 (verified). If
+   CNSA 2.0 requires -1024, that is a `parameter` conflict independent of the
+   hybrid one, and it is the second contradiction the matrix surfaces. Get the
+   level requirement exactly.
+2. **C7's phrasing.** *Not required* and *discouraged* are different pack
    semantics. `silent` is the current encoding; if NSA actively discourages
-   hybrids, change it to `not_recommended` — that changes the conflict story.
-3. **C5** — how does the 2031 "all NSS unless excepted" milestone interact with
-   the 2030/2033 category dates? Possibly a conflation in secondary sources.
-4. **C1 scoping.** Run against commercial SaaS, the honest output is "these
-   rules do not apply to you". The pack carries an `applicability` banner.
-5. **Category list.** `system_category` config enum must match the FAQ's own
-   category names. (Design decision already settled: undeclared ⇒ `INDET`; the
-   2027 gate is its own flag.)
+   hybrids, change it to `not_recommended` — that sharpens the Europe-versus-
+   anglophone split considerably.
+3. **C5 versus C3/C4.** A 2031 "all NSS unless excepted" milestone alongside
+   2030/2033 category dates looks like it may be a conflation in secondary
+   sources. Check whether all three exist.
+4. **C1 scoping**, so the applicability banner is right.
 
 ## 3. `bsi-de` — Germany, BSI ✅ VERIFIED
 
@@ -350,7 +383,57 @@ The review confirmed this pack as designed.
    E3, cite the roadmap from both packs rather than duplicating a date that
    could silently drift apart in our YAML.
 
-## 7. Cross-cutting
+## 7. `nist-ir8547` — United States, NIST ✅ VERIFIED (as a draft)
+
+**Verified 2026-09-06 by Sadjad Asadi against the primary PDF:** NIST IR 8547
+**ipd (Initial Public Draft), November 2024**, *Transition to Post-Quantum
+Cryptography Standards* —
+<https://nvlpubs.nist.gov/nistpubs/ir/2024/NIST.IR.8547.ipd.pdf>
+
+Verified **as a draft**: the reading is confirmed; the status of the document is
+not. Every rule carries `is_draft: true`, and all four reporters print a draft
+notice when one is cited.
+
+### Deprecated is not disallowed
+
+NIST's own glossary, quoted in the rules:
+
+> **deprecated** — "The algorithm and key length may be used, but the user must
+> accept some security risk."
+> **disallowed** — "The algorithm or key length is no longer allowed for
+> applying cryptographic protection."
+
+These are modelled as separate `deadline_state` values. Collapsing them into one
+failure is the single most commonly misstated point in PQC compliance, and it is
+the subject of article 2.
+
+### The tables, exactly
+
+Table 2 (signatures: ECDSA, EdDSA, RSA) and Table 4 (key establishment:
+finite-field DH/MQV, EC DH/MQV, RSA) have **identical structure**:
+
+| security strength | transition |
+|---|---|
+| **112 bits** | Deprecated after 2030 **and** Disallowed after 2035 |
+| **≥ 128 bits** | Disallowed after 2035 — **no 2030 deprecation** |
+
+This is the detail that almost every summary loses. "RSA is deprecated in 2030"
+is true only at 112-bit strength (RSA-2048). RSA-3072 and P-256 are **not**
+deprecated in 2030 under this draft — they are only disallowed after 2035. A
+tool that warns on all RSA in 2030 is wrong, and a pinned test asserts our
+deprecation rules carry `security_level: ["112"]`.
+
+Note also that EdDSA appears only at ≥128 bits, so it has no 2030 row at all.
+
+### Still open
+
+- The draft's comment period closed 2025-01-10. **Check whether a final IR 8547
+  has been published**; if so this pack rebases and `is_draft` clears.
+- Tables 6 and 7 (block ciphers, hash functions) are not yet encoded — they are
+  Grover-scale concerns and score `low` in this tool regardless, but the pack
+  should carry them for completeness.
+
+## 8. Cross-cutting
 
 **NIST IR 8547 — draft, and two distinct states.** Still an *initial public
 draft* (Nov 2024). Its 2030 **deprecated** / 2035 **disallowed** dates for RSA,
@@ -402,3 +485,11 @@ A rule may only lose `needs_verification` with a row here.
 | `anssi-visa-hybridation-mandatory` | Sadjad Asadi | 2026-09-06 | ANSSI 2023 follow-up §4 | confirmed "mandatory"/"shall", scoped to security visas |
 | `anssi-longlived-protection-2030` | Sadjad Asadi | 2026-09-06 | ANSSI 2023 follow-up §1.2 | confirmed |
 | `anssi-certification-2027` | — | — | — | **not found in the 2023 follow-up**; stays unverified |
+| `eo14412-key-establishment-2030` | Sadjad Asadi | 2026-09-06 | 91 FR 38483 §4(b)(ii) | confirmed |
+| `eo14412-signatures-2031` | Sadjad Asadi | 2026-09-06 | 91 FR 38483 §4(b)(iii) | confirmed, one year later than key establishment |
+| `eo14412-far-contractors-2030` | Sadjad Asadi | 2026-09-06 | 91 FR 38483 §5(c) | confirmed; rule is *proposed*, so WARN |
+| `nist-112bit-signatures-deprecated-2030` | Sadjad Asadi | 2026-09-06 | IR 8547 ipd §4.1.1 Table 2 | confirmed; 112-bit only |
+| `nist-signatures-disallowed-2035` | Sadjad Asadi | 2026-09-06 | IR 8547 ipd §4.1.1 Table 2 | confirmed, all strengths |
+| `nist-112bit-key-establishment-deprecated-2030` | Sadjad Asadi | 2026-09-06 | IR 8547 ipd §4.1.2 Table 4 | confirmed; 112-bit only |
+| `nist-key-establishment-disallowed-2035` | Sadjad Asadi | 2026-09-06 | IR 8547 ipd §4.1.2 Table 4 | confirmed, all strengths |
+| **`cnsa-2.0` (all rules)** | — | 2026-09-06 | **blocked: nsa.gov and media.defense.gov return 403** | needs a human with a browser |
