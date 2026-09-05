@@ -25,9 +25,11 @@ jobs:
       - run: pip install -e '.[test]'
       - run: pytest -q
 
-      - name: Generated pack docs are current
+      - name: Generated content is current
         if: matrix.python-version == '3.12'
-        run: python scripts/gen_pack_docs.py --check
+        run: |
+          python scripts/gen_pack_docs.py --check
+          python scripts/gen_article_blocks.py --check
 
   cbom-schema-conformance:
     # Hand-built fixtures must stay valid CycloneDX, or they stop proving

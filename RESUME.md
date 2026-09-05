@@ -9,7 +9,7 @@ cbomctl verdict tests/fixtures/conflict-hybrid.json -c cbomctl.yaml.example
 cbomctl prioritize|plan|normalize <cbom>
 cbomctl policies list|show <id>
 ```
-260 tests pass. Wheel builds with packs inside; verified in a clean venv.
+302 tests pass. Wheel builds with packs inside; verified in a clean venv.
 JSON output byte-identical across runs. Exit codes: 0/1/2/3.
 
 ## The two conditions on building against stubs — both enforced and tested
@@ -95,6 +95,18 @@ agencies **on both purposes**, not an ANSSI quirk — and both European
 authorities still put signatures on a later horizon (2035) than key
 establishment (2030/2031). Urgency and assurance are both documented in the
 same guidelines, which is the best possible evidence for modelling them apart.
+
+## Phase 3 status
+- ✅ MkDocs Material site, builds `--strict` clean. Pack pages generated from
+  the packs; CI fails if stale.
+- ✅ Article 2 drafted (1,423 words) — the only one not blocked on CNSA. Held
+  as the day-one post: its demo invokes `cbomctl`, so it must not publish
+  before the repo is public.
+- ✅ Generated-block mechanism for prose (`scripts/gen_article_blocks.py`),
+  wired into both workflows.
+- ⏸ Articles 1 and 3 — deliberately not drafted. Writing prose around an
+  unverified pack is how you get committed to a claim before checking it.
+- ⏸ Show HN draft — its honest version states how many packs are verified.
 
 ## Not started
 Phase 3 docs site (MkDocs). Phase 4 release. Show HN draft.

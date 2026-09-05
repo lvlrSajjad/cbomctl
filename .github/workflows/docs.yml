@@ -17,9 +17,13 @@ jobs:
         with: { python-version: "3.12" }
       - run: pip install -e . -r docs/requirements.txt
 
-      - name: Pack docs must match the packs
-        # Generated, not hand-written: a drifted citation is worse than no page.
-        run: python scripts/gen_pack_docs.py --check
+      - name: Generated content must match reality
+        # Pack pages and prose code blocks are both generated. A drifted
+        # citation is worse than no page, and a hand-typed demo block is a
+        # claim nobody verified.
+        run: |
+          python scripts/gen_pack_docs.py --check
+          python scripts/gen_article_blocks.py --check
 
       - run: mkdocs build --strict
 
