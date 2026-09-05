@@ -119,13 +119,13 @@ CONFLICTS (6)
   c1  [construction]  ECDH
       anssi-fr, bsi-de, eu-roadmap recommend a hybrid construction for key-agreement; asd-au recommend against it; cnsa-2.0 does not permit one outside named interoperability exceptions.
       cnsa-2.0 does not permit a hybrid construction outside named interoperability exceptions, while anssi-fr, bsi-de, eu-roadmap recommend one. **No single configuration satisfies all selected jurisdictions.** You will need different builds, or to drop a jurisdiction from scope. asd-au would permit a hybrid but recommends against it, so even dropping cnsa-2.0 leaves a documented cost. This is a business decision, not a technical one.
+      ⚖ This conflict depends on a contested encoding. Under the alternative reading (cnsa-2.0 silent), a hybrid construction would satisfy all selected jurisdictions, at a documented cost. The argument and the evidence for the encoding used are in the `cnsa-2.0` rule's interpretation note (`cbomctl policies show cnsa-2.0`).
   c2  [deadline]  ECDH
       eu-roadmap requires this by 2026-12-31; bsi-de allows until 2031-12-31.
       satisfies all: meet the earlier date (2026-12-31)
       eu-roadmap governs in practice — the later deadline provides no relief if you are bound by both.
   c3  [construction]  X25519MLKEM768
       anssi-fr, bsi-de, eu-roadmap recommend a hybrid construction for key-agreement; asd-au recommend against it; cnsa-2.0 does not permit one outside named interoperability exceptions.
-      cnsa-2.0 does not permit a hybrid construction outside named interoperability exceptions, while anssi-fr, bsi-de, eu-roadmap recommend one. **No single configuration satisfies all selected jurisdictions.** You will need different builds, or to drop a jurisdiction from scope. asd-au would permit a hybrid but recommends against it, so even dropping cnsa-2.0 leaves a documented cost. This is a business decision, not a technical one.
 ```
 
 Two distinct collisions on one asset. The construction conflict has **no**
@@ -180,12 +180,31 @@ common error in this space, and I made it myself in an early draft — which is
 why the field exists.
 
 All seven packs are read from primary sources. Where a source is a draft, the
-tool prints "draft". Where it is ambiguous, the ambiguity is recorded rather
-than resolved: NSA's FAQ answers the hybrid question twice with different force,
-and one of the answers is framed "while waiting for a final NIST post-quantum
-standard" — a premise that arguably expired in August 2024. I encoded the
-stronger reading and wrote down why, along with what changes if you read it the
-other way.
+tool prints "draft". And where reading it required a judgement, the tool shows
+the judgement rather than hiding it behind a verdict.
+
+That last one earns its place here. NSA's FAQ answers the hybrid question
+twice, and the answers differ in force: one says only "will not require", the
+other says "Do not use … except for those exceptions NSA specifically
+recommends" — but sits under a question framed "while waiting for a final NIST
+post-quantum standard", a premise that arguably ended when FIPS 203/204/205
+were finalised in August 2024.
+
+I encoded the stronger reading, because Ver. 2.1 is dated four months *after*
+that finalisation and was demonstrably revised in the interval — it notes that
+"NSA clarified the CNSA 2.0 language when the FIPS documents were published"
+and discusses a FIPS 204 variant — and NSA kept the imperative through that
+revision. But the encoding is a judgement, and it is the judgement that decides
+whether the tool tells you a compromise exists. So the conflict says both:
+
+```
+⚖ This conflict depends on a contested encoding. Under the alternative reading
+  (cnsa-2.0 silent), a hybrid construction would satisfy all selected
+  jurisdictions, at a documented cost.
+```
+
+If you disagree with me, you can see exactly which sentence you would argue
+with. That seems more useful than a confident answer.
 
 It refuses to guess, too. In CBOMkit's published Keycloak CBOM, 8 of 22
 algorithm components carry no usable indication of what the key is for, and for

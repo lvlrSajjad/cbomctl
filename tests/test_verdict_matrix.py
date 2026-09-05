@@ -272,3 +272,55 @@ class TestConflictTargetsFitThePurpose:
             row = next(r for r in matrix.rows if r.bom_ref == c.bom_ref)
             if row.purpose == "signature":
                 assert "KEM" not in c.satisfies_all.upper(), c.satisfies_all
+
+
+class TestContestedConflicts:
+    """When a contested encoding drives a conflict, both outcomes are stated."""
+
+    def _run(self, jurisdictions):
+        assets, _ = read_assets(FIXTURES / "conflict-hybrid.json")
+        packs = [load_pack(j) for j in jurisdictions]
+        matrix = build(assets, packs, Config(system_category="web-cloud"),
+                       today=TODAY)
+        return matrix, detect(matrix, packs)
+
+    def test_both_outcomes_are_reported(self):
+        _, conflicts = self._run(["bsi-de", "cnsa-2.0"])
+        construction = [c for c in conflicts if c.kind == "construction"]
+        assert construction
+        for c in construction:
+            assert c.satisfies_all is None
+            assert "No single configuration" in c.cost_note
+            # …and what would follow if the encoding were the other way.
+            assert c.alternative_reading
+            assert "alternative reading" in c.alternative_reading
+            assert c.contested_rules == ["cnsa2-hybrid-not-permitted"]
+
+    def test_alternative_outcome_reflects_who_else_is_selected(self):
+        """The fork is computed, not boilerplate. With only BSI and CNSA, the
+        alternative reading removes the conflict entirely; add ASD, which
+        discourages hybrids on its own account, and the alternative becomes a
+        compromise that still costs something."""
+        _, only_two = self._run(["bsi-de", "cnsa-2.0"])
+        c = next(c for c in only_two if c.kind == "construction")
+        assert "no construction conflict at all" in c.alternative_reading
+
+        _, with_asd = self._run(["bsi-de", "asd-au", "cnsa-2.0"])
+        c = next(c for c in with_asd if c.kind == "construction")
+        assert "would satisfy all" in c.alternative_reading
+        assert "documented cost" in c.alternative_reading
+
+    def test_uncontested_conflicts_carry_no_alternative(self):
+        """BSI vs ASD rests on no contested encoding, so no fork to show."""
+        _, conflicts = self._run(["bsi-de", "asd-au"])
+        for c in (c for c in conflicts if c.kind == "construction"):
+            assert c.alternative_reading is None
+            assert c.contested_rules == []
+
+    def test_every_reporter_surfaces_the_fork(self):
+        matrix, conflicts = self._run(["bsi-de", "cnsa-2.0"])
+        assert "CONTESTED" in sarif.render(matrix, conflicts).upper()
+        assert "Contested encoding" in markdown.render(matrix, conflicts)
+        assert "alternative reading" in matrix_text.render(matrix, conflicts)
+        doc = json.loads(json_out.render(matrix, conflicts))
+        assert any(c["alternative_reading"] for c in doc["conflicts"])

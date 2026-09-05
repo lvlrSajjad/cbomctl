@@ -26,9 +26,14 @@ from cbomctl.verdict.matrix import Matrix, Row
 DEADLINE_CONFLICT_YEARS = 3
 
 
-def _hybrid_stances(row: Row, packs: dict[str, Pack]) -> dict[str, HybridStance]:
-    """Each jurisdiction's hybrid stance *for this asset's purpose*."""
+def _hybrid_stances(row: Row, packs: dict[str, Pack]):
+    """Each jurisdiction's hybrid stance *for this asset's purpose*.
+
+    Returns the stances plus the rule behind each, so a contested encoding can
+    travel into the conflict rather than being flattened into a verdict.
+    """
     out: dict[str, HybridStance] = {}
+    by_rule: dict[str, object] = {}
     for jid, cell in row.cells.items():
         pack = packs.get(jid)
         if pack is None:
@@ -40,12 +45,13 @@ def _hybrid_stances(row: Row, packs: dict[str, Pack]) -> dict[str, HybridStance]
             if scoped and row.purpose not in [p.value for p in scoped]:
                 continue
             out[jid] = rule.hybrid
+            by_rule[jid] = rule
             break
-    return out
+    return out, by_rule
 
 
 def _construction_conflict(row: Row, packs: dict[str, Pack], cid: str) -> Conflict | None:
-    stances = _hybrid_stances(row, packs)
+    stances, rules_by_j = _hybrid_stances(row, packs)
     pro = sorted(j for j, st in stances.items() if st.favours_hybrid)
     anti = sorted(j for j, st in stances.items() if st.opposes_hybrid)
     if not (pro and anti):
@@ -85,6 +91,39 @@ def _construction_conflict(row: Row, packs: dict[str, Pack], cid: str) -> Confli
                 f"is the only one compliant with all. This is a business "
                 f"decision.")
 
+    # A judgement that changes the output must not be invisible in the output.
+    from cbomctl.models import Interpretation
+
+    contested = {j: r for j, r in rules_by_j.items()
+                 if getattr(r, "interpretation", None) is Interpretation.CONTESTED}
+    alternative = None
+    if contested:
+        alt_stances = dict(stances)
+        for j, rule in contested.items():
+            if rule.alt_reading is not None:
+                alt_stances[j] = rule.alt_reading
+        alt_pro = sorted(j for j, st in alt_stances.items() if st.favours_hybrid)
+        alt_anti = sorted(j for j, st in alt_stances.items() if st.opposes_hybrid)
+        alt_forbid = [j for j in alt_anti if not alt_stances[j].permits_hybrid]
+
+        if not alt_pro or not alt_anti:
+            alt_outcome = "there would be no construction conflict at all"
+        elif alt_forbid:
+            alt_outcome = "no single configuration would satisfy all jurisdictions either"
+        else:
+            alt_outcome = ("a hybrid construction would satisfy all selected "
+                           "jurisdictions, at a documented cost")
+        names = ", ".join(sorted(contested))
+        readings = "; ".join(
+            f"{j} {r.alt_reading.value if r.alt_reading else 'unspecified'}"
+            for j, r in sorted(contested.items()))
+        alternative = (
+            f"This conflict depends on a contested encoding. Under the "
+            f"alternative reading ({readings}), {alt_outcome}. The argument and "
+            f"the evidence for the encoding used are in the "
+            f"`{names}` rule's interpretation note "
+            f"(`cbomctl policies show {names}`).")
+
     opposed = []
     if discouraging:
         opposed.append(f"{', '.join(discouraging)} recommend against it")
@@ -100,6 +139,8 @@ def _construction_conflict(row: Row, packs: dict[str, Pack], cid: str) -> Confli
                  + "; ".join(opposed) + "."),
         jurisdictions=sorted(stances),
         satisfies_all=satisfies, cost_note=cost,
+        alternative_reading=alternative,
+        contested_rules=sorted(r.id for r in contested.values()),
     )
 
 

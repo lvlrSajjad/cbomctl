@@ -62,7 +62,7 @@ class TestPacksAreHonest:
         # its date came only from press coverage.
         assert partial["anssi-fr"] == (5, 5)
         assert partial["asd-au"] == (6, 6)
-        assert partial["cnsa-2.0"] == (9, 9)
+        assert partial["cnsa-2.0"] == (10, 10)
         assert partial["eu-roadmap"] == (6, 6)
 
     @pytest.mark.parametrize("pid", ALL_PACKS)
@@ -468,3 +468,55 @@ class TestSecurityStrengthScoping:
                              quantum_status=QuantumStatus.BROKEN_BY_SHOR)
         cell = evaluate(load_pack("nist-ir8547"), opaque)
         assert "could not be derived" in (cell.note or "")
+
+
+class TestContestedInterpretation:
+    """A judgement that changes the output must not be invisible in the output.
+
+    `status` says whether the text was read. `interpretation` says whether
+    reasonable readers could encode that text differently. The CNSA hybrid rule
+    quotes its source exactly and is still contested.
+    """
+
+    def test_the_contested_rule_declares_an_alternative(self):
+        from cbomctl.models import HybridStance, Interpretation
+
+        rule = next(r for r in load_pack("cnsa-2.0").rules
+                    if r.id == "cnsa2-hybrid-not-permitted")
+        assert rule.status is RuleStatus.VERIFIED
+        assert rule.interpretation is Interpretation.CONTESTED
+        assert rule.alt_reading is HybridStance.SILENT
+        assert rule.interpretation_note
+
+    def test_the_uncontested_half_is_a_separate_rule(self):
+        """So the matrix keeps an anchor for a reader who rejects the stronger
+        encoding. Nobody disputes "will not require"."""
+        from cbomctl.models import Interpretation
+
+        rule = next(r for r in load_pack("cnsa-2.0").rules
+                    if r.id == "cnsa2-hybrid-not-required")
+        assert rule.interpretation is Interpretation.SETTLED
+        assert "will not require" in rule.description
+
+    def test_a_contested_rule_must_explain_itself(self):
+        """Anywhere in any pack, not just this one."""
+        from cbomctl.models import Interpretation
+
+        for pid in ALL_PACKS:
+            for rule in load_pack(pid).rules:
+                if rule.interpretation is not Interpretation.CONTESTED:
+                    continue
+                assert rule.alt_reading is not None, f"{pid}/{rule.id}"
+                assert rule.interpretation_note, f"{pid}/{rule.id}"
+                assert len(rule.interpretation_note) > 200, (
+                    f"{pid}/{rule.id}: a contested encoding needs an argument, "
+                    f"not a sentence")
+
+    def test_contestedness_reaches_the_cell(self):
+        from cbomctl.models import Construction, Interpretation, QuantumStatus
+
+        hybrid = asset(construction=Construction.HYBRID,
+                       status=QuantumStatus.PQ_SECURE, name="X25519MLKEM768")
+        cell = evaluate(load_pack("cnsa-2.0"), hybrid)
+        refs = [r for r in cell.rules if r.rule_id == "cnsa2-hybrid-not-permitted"]
+        assert refs and refs[0].interpretation is Interpretation.CONTESTED

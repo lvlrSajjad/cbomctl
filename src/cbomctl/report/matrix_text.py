@@ -100,6 +100,8 @@ def render(matrix: Matrix, conflicts: list[Conflict]) -> str:
                 out.append(f"      satisfies all: {c.satisfies_all}")
             if c.cost_note:
                 out.append(f"      {c.cost_note}")
+            if c.alternative_reading:
+                out.append(f"      ⚖ {c.alternative_reading}")
     else:
         out.append("")
         out.append("CONFLICTS (0) — the selected jurisdictions do not disagree "

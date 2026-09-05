@@ -43,6 +43,8 @@ def render(matrix: Matrix, conflicts: list[Conflict]) -> str:
             out.append(f"**Satisfies all:** {c.satisfies_all}")
         if c.cost_note:
             out += ["", c.cost_note]
+        if c.alternative_reading:
+            out += ["", "> [!NOTE]", f"> **Contested encoding.** {c.alternative_reading}"]
         out.append("")
 
     unresolved = [r for r in matrix.rows if r.unscored]

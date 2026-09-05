@@ -158,12 +158,40 @@ standard — arguably expired when FIPS 203/204/205 were finalised in August 202
 four months before this edition published. Its closing sentence, though, is
 unconditional and forward-looking.
 
-Encoded at the **stronger** reading (`not_permitted_except_interop`), because
-"Do not use" is imperative and "will not be integrated into eventual deployable
-solutions" is not time-scoped. Flagging it here rather than resolving it
-silently: if you read it the other way, the correct value is `silent`, and the
-conflict output would then name a satisfies-all target instead of saying none
-exists.
+**Resolved 2026-09-06: encoded at the stronger reading, and marked
+`interpretation: contested` so the fork is visible in every output.**
+
+Three reasons for the stronger reading, all from the document:
+
+1. **Ver. 2.1 is dated December 2024 — four months after FIPS 203/204/205 were
+   finalised — and the document was demonstrably revised in that window.** It
+   states "NSA clarified the CNSA 2.0 language when the FIPS documents were
+   published" (p. 4) and discusses HashML-DSA (p. 9), a FIPS 204 variant that
+   only exists as a topic post-publication. NSA had the opportunity to delete or
+   rewrite the "while waiting" question and did not.
+2. **The closing sentence is unconditional.** "Except as noted above, hybrid
+   solutions will not be integrated into eventual deployable solutions" is
+   forward-looking, not scoped to an interim.
+3. **The IKEv2 carve-out is framed as an exception NSA specifically
+   recommends**, which only makes sense if the default is "do not".
+
+**Not established:** whether that answer is verbatim carry-over from Ver. 2.0
+(April 2024). The FAQ carries **no revision history**, so the comparison could
+not be made from this document alone. If it is carry-over the argument is
+weaker, though it remains the operative published text. Recorded in the rule's
+`interpretation_note`.
+
+**And the encoding is disclosed rather than asserted.** The rule carries
+`interpretation: contested` and `alt_reading: silent`, and any conflict it
+drives prints both outcomes — under the encoded reading no configuration
+satisfies everyone; under the alternative a hybrid would, at a cost. The
+uncontested half of NSA's position ("will not require") is a separate rule,
+`cnsa2-hybrid-not-required`, so the matrix keeps an anchor for a reader who
+rejects the stronger one.
+
+**Scope limits the stakes either way:** this binds NSS mission systems only.
+For a non-NSS reader the whole pack returns N/A regardless of which reading
+wins.
 
 NSA's reasoning is cost, not doubt about the benefit — which is the same
 argument ASD makes:
@@ -206,8 +234,10 @@ preferred, while "the multi-tree algorithms HSS and XMSSMT are not allowed"
 ### Still open
 
 - **Whether v2.1 is current.** Check for a later revision; NSA rehosts these.
-- The scope question on C8, above. Worth watching whether a future revision
-  drops the "while waiting" framing.
+- **Whether the C8 answer is carry-over from v2.0.** Would need the April 2024
+  edition to settle; it would weaken, not overturn, the reading.
+- Watch whether a future revision drops the "while waiting" framing. If it
+  does, `interpretation` moves to `settled`.
 
 ## 3. `bsi-de` — Germany, BSI ✅ VERIFIED
 

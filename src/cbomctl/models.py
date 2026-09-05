@@ -166,6 +166,21 @@ class RuleStatus(StrEnum):
     NEEDS_VERIFICATION = "needs_verification"
 
 
+class Interpretation(StrEnum):
+    """Whether the encoding of a verified quote is itself a judgement call.
+
+    `status` says whether the text was read. This says whether reasonable
+    readers could encode that text differently. They are independent: the CNSA
+    hybrid rule quotes its source exactly and is still contested, because the
+    question it answers is framed by a premise that may have expired.
+
+    A judgement that changes the output must not be invisible in the output.
+    """
+
+    SETTLED = "settled"
+    CONTESTED = "contested"
+
+
 class DeadlineState(StrEnum):
     """`deprecated` and `disallowed` are different states and never collapse."""
 
@@ -255,6 +270,9 @@ class RuleRef(BaseModel):
     jurisdiction: str
     binding: Binding
     status: RuleStatus
+    interpretation: "Interpretation" = Interpretation.SETTLED
+    alt_reading: "HybridStance | None" = None
+    interpretation_note: str | None = None
     source_url: str
     source_title: str
     is_draft: bool = False
@@ -287,3 +305,7 @@ class Conflict(BaseModel):
     jurisdictions: list[str]
     satisfies_all: str | None = None
     cost_note: str | None = None
+    #: Set when a contested rule drove this conflict: what would follow if the
+    #: rule were encoded the other way, and where to read the argument.
+    alternative_reading: str | None = None
+    contested_rules: list[str] = Field(default_factory=list)

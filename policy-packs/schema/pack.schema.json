@@ -263,6 +263,28 @@
         "rationale_note": {
           "type": "string",
           "description": "Free text where the authority states its reasoning; quote it."
+        },
+        "interpretation": {
+          "enum": [
+            "settled",
+            "contested"
+          ],
+          "default": "settled",
+          "description": "Whether encoding this rule required a judgement reasonable readers could make differently. Independent of `status`: a rule can quote its source exactly and still be contested. A judgement that changes the output must not be invisible in the output."
+        },
+        "alt_reading": {
+          "enum": [
+            "required",
+            "recommended",
+            "not_recommended",
+            "not_permitted_except_interop",
+            "silent"
+          ],
+          "description": "The hybrid stance that would apply under the alternative reading."
+        },
+        "interpretation_note": {
+          "type": "string",
+          "description": "Why the encoding is contested, and the evidence for the reading chosen."
         }
       }
     }

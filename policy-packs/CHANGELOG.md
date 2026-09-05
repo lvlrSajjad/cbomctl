@@ -83,15 +83,21 @@ sources at all.
 
 ### Known limits
 
-**One reading is a judgement call.** The CNSA 2.0 FAQ answers the hybrid
-question twice. The position answer says only "will not require"; the other says
-"Do not use … except for those exceptions NSA specifically recommends" but is
-framed "while waiting for a final NIST post-quantum standard", a premise that
-arguably ended when FIPS 203/204/205 finalised four months before that edition.
-Encoded at the stronger reading (`not_permitted_except_interop`) because the
-imperative and the closing sentence are not time-scoped. The alternative reading
-and its consequence are recorded in
-[`../docs/policy-sources.md`](../docs/policy-sources.md) §2.
+**One rule is `interpretation: contested`.** `cnsa2-hybrid-not-permitted`
+quotes its source exactly, but encoding that quote as a prohibition is a
+judgement — the FAQ answers the hybrid question twice with different force, and
+the stronger answer sits under a premise that arguably expired in August 2024.
+
+Encoded at the stronger reading, with `alt_reading: silent` and an
+`interpretation_note` giving the evidence: Ver. 2.1 postdates FIPS
+finalisation by four months and was demonstrably revised in that window, the
+closing sentence is unconditional, and the IKEv2 carve-out only makes sense if
+the default is "do not". Consumers are expected to surface both outcomes when a
+contested rule drives a conflict; `cbomctl` does.
+
+The uncontested half — NSA "will not require" hybrids — is a separate rule,
+`cnsa2-hybrid-not-required`, so the matrix keeps an anchor for a reader who
+rejects the stronger encoding.
 
 **Two CNSA claims were removed as not present in v2.1**: per-product-category
 deadlines and any 2033 date. Both came from the superseded September 2022 chart.

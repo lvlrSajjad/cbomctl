@@ -11,7 +11,7 @@ import typer
 
 from cbomctl.config import Config
 from cbomctl.loader import CbomParseError, read_assets
-from cbomctl.models import RuleStatus
+from cbomctl.models import Interpretation, RuleStatus
 from cbomctl.policy.schema import available, load_pack, load_packs
 from cbomctl.report import json_out, markdown, matrix_text, sarif
 from cbomctl.scoring import mosca
@@ -222,6 +222,13 @@ def policies_show(pack_id: str) -> None:
                    + (f" rationale={r.rationale.value}" if r.rationale else "")
                    + (f" deadline={r.deadline}" if r.deadline else ""))
         typer.echo(f"      source: {r.source_title} — {r.source_url}")
+        if r.interpretation.value == "contested":
+            alt = r.alt_reading.value if r.alt_reading else "unspecified"
+            typer.secho(f"      ⚖ CONTESTED ENCODING — alternative reading: {alt}",
+                        fg=typer.colors.YELLOW)
+            for line in (r.interpretation_note or "").strip().split("\n"):
+                if line.strip():
+                    typer.echo(f"        {line.strip()}")
         if r.open_question:
             typer.echo(f"      OPEN: {r.open_question.strip()}")
         typer.echo("")

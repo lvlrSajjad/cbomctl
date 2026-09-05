@@ -33,6 +33,8 @@ def rule_block(rule) -> list[str]:
              f"**Verdict:** `{rule.effective_verdict.value}`"]
     if rule.hybrid:
         facts.append(f"**Hybrid:** `{rule.hybrid.value}`")
+    if rule.interpretation.value == "contested":
+        facts.append("**Interpretation:** ⚖ `contested`")
     if rule.rationale:
         facts.append(f"**Rationale:** `{rule.rationale.value}`")
     if rule.deadline:
@@ -65,6 +67,16 @@ def rule_block(rule) -> list[str]:
         out.append("!!! warning \"Draft source\"")
         out.append("    This rule cites a document that is still a draft. Its "
                    "dates are proposed and may move.")
+    if rule.interpretation.value == "contested":
+        alt = rule.alt_reading.value if rule.alt_reading else "unspecified"
+        out.append("")
+        out.append(f"!!! warning \"Contested encoding — alternative reading: `{alt}`\"")
+        out.append("    The quote above is exact; encoding it this way is a "
+                   "judgement, and it changes what the conflict output says.")
+        for para in (rule.interpretation_note or "").strip().split("\n\n"):
+            out.append("")
+            for line in para.strip().split("\n"):
+                out.append(f"    {line.strip()}")
     if rule.open_question:
         out.append("")
         out.append("!!! question \"Open question\"")

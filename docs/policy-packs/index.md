@@ -9,7 +9,7 @@ The packs are a [standalone versioned artifact](https://github.com/lvlrSajjad/cb
 | [ANSSI — France](anssi-fr.md) | `anssi-fr` | FR | 5/5 | ✅ |
 | [ASD / ACSC — Australia](asd-au.md) | `asd-au` | AU | 6/6 | ✅ |
 | [BSI — Germany](bsi-de.md) | `bsi-de` | DE | 6/6 | ✅ |
-| [CNSA 2.0 — NSA](cnsa-2.0.md) | `cnsa-2.0` | US-NSS | 9/9 | ✅ |
+| [CNSA 2.0 — NSA](cnsa-2.0.md) | `cnsa-2.0` | US-NSS | 10/10 | ✅ |
 | [EU Coordinated Implementation Roadmap](eu-roadmap.md) | `eu-roadmap` | EU | 6/6 | ✅ |
 | [NIST IR 8547 (draft) — United States](nist-ir8547.md) | `nist-ir8547` | US | 4/4 | ✅ |
 | [Executive Order 14412 — United States](us-eo14412.md) | `us-eo14412` | US | 3/3 | ✅ |

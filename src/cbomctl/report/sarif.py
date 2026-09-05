@@ -93,6 +93,8 @@ def render(matrix: Matrix, conflicts: list[Conflict]) -> str:
             text += f" Satisfies all: {c.satisfies_all}."
         if c.cost_note:
             text += f" {c.cost_note}"
+        if c.alternative_reading:
+            text += f" CONTESTED ENCODING: {c.alternative_reading}"
         results.append({
             "ruleId": conflict_rule,
             "level": "warning",

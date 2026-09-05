@@ -37,17 +37,35 @@ The CNSA 2.0 table requires the highest parameter sets only: "ML-KEM-1024 for al
 **Source:** [NSA CNSA 2.0 FAQ, Table: Commercial National Security Algorithm Suite 2.0 (p. 2)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
 **Verified:** 2026-09-06 by Sadjad Asadi
 
+### ✅ `cnsa2-hybrid-not-required`
+
+"NSA has confidence in CNSA 2.0 algorithms and will not require NSS developers to use hybrid certified products for security purposes. However, product availability and interoperability requirements may lead to adopting hybrid solutions."
+
+**Binding:** `agency_requirement` · **Verdict:** `INFO` · **Hybrid:** `silent` · **Rationale:** `unstated`
+
+> The uncontested half of NSA's hybrid position, recorded separately so the matrix has a solid anchor even for a reader who rejects the stronger rule below. Nobody disputes that NSA does not *require* hybrids; the argument is only about whether it forbids them.
+
+**Source:** [NSA CNSA 2.0 FAQ, §Hybrids (p. 19)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
+**Verified:** 2026-09-06 by Sadjad Asadi
+
 ### ✅ `cnsa2-hybrid-not-permitted`
 
 "Do not use a hybrid or other non-standardized QR solution on NSS mission systems except for those exceptions NSA specifically recommends to meet standardization or interoperability requirements. … Except as noted above, hybrid solutions will not be integrated into eventual deployable solutions."
 
-**Binding:** `agency_requirement` · **Verdict:** `FAIL` · **Hybrid:** `not_permitted_except_interop` · **Rationale:** `unstated`
+**Binding:** `agency_requirement` · **Verdict:** `FAIL` · **Hybrid:** `not_permitted_except_interop` · **Interpretation:** ⚖ `contested` · **Rationale:** `unstated`
 
-> READ THE SCOPE CAVEAT. The FAQ gives two answers on hybrids and they are not identical in force. The position answer says only: "NSA has confidence in CNSA 2.0 algorithms and will not require NSS developers to use hybrid certified products for security purposes. However, product availability and interoperability requirements may lead to adopting hybrid solutions." The imperative quoted in this rule's description comes from a question framed "while waiting for a final NIST post-quantum standard" — a period that arguably ended when FIPS 203/204/205 were finalised in August 2024, four months before this edition published. Its closing sentence, however, is unconditional and forward-looking.
-> Encoded at the stronger reading because "Do not use" is imperative and "will not be integrated into eventual deployable solutions" is not time-scoped. NSA's reasoning is cost, not doubt about hybrids' benefit: "spending limited resources to add cryptographic complexity can at times weaken security rather than improve it."
+> NSA's reasoning is cost, not doubt about the benefit — the same argument ASD makes: "Because more security products fail due to implementation or configuration errors than failures in their underlying cryptographic algorithms, spending limited resources to add cryptographic complexity can at times weaken security rather than improve it." (p. 19)
 
-**Source:** [NSA CNSA 2.0 FAQ, §Hybrids (pp. 19–20)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
+**Source:** [NSA CNSA 2.0 FAQ, §Hybrids (p. 20)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
 **Verified:** 2026-09-06 by Sadjad Asadi
+
+!!! warning "Contested encoding — alternative reading: `silent`"
+    The quote above is exact; encoding it this way is a judgement, and it changes what the conflict output says.
+
+    The quote is exact; encoding it as a prohibition is a judgement. The question it answers is framed "while waiting for a final NIST post-quantum standard", and FIPS 203/204/205 were finalised in August 2024 — so a reader could argue the premise has expired and NSA's operative position is the uncontested "will not require" (see cnsa2-hybrid-not-required), i.e. `silent`.
+    Encoded as a prohibition for three reasons. Ver. 2.1 is dated December 2024, four months after finalisation, and the document was demonstrably revised in that window — it states "NSA clarified the CNSA 2.0 language when the FIPS documents were published" and discusses HashML-DSA, a FIPS 204 variant. NSA kept the question and its imperative through that revision. Second, the closing sentence — "hybrid solutions will not be integrated into eventual deployable solutions" — is unconditional and forward-looking, not scoped to an interim. Third, the IKEv2 carve-out is framed as an exception NSA specifically recommends, which only makes sense if the default is "do not".
+    Not established: whether this answer is verbatim carry-over from Ver. 2.0 (April 2024). The FAQ carries no revision history, so the comparison could not be made from this document alone. If it is carry-over the argument is weaker, though it remains the operative published text.
+    Scope limits the stakes: this binds NSS mission systems only. For a non-NSS reader the whole pack is N/A regardless of which reading wins.
 
 ### ✅ `cnsa2-hybrid-ikev2-exception`
 

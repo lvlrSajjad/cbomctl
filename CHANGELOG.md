@@ -54,10 +54,11 @@ checked, and are exercised by a synthetic test fixture.
   acquisitions, not an algorithm deadline.
 
 ### Known limits
-- **One reading is a judgement call.** The CNSA 2.0 FAQ answers the hybrid
-  question twice with different force, and the stronger answer is framed "while
-  waiting for a final NIST post-quantum standard". Encoded at the stronger
-  reading; the alternative and its consequence are in `docs/policy-sources.md`.
+- **One rule's encoding is a judgement call, and says so.** The CNSA 2.0 FAQ
+  answers the hybrid question twice with different force. The stronger reading
+  is encoded, marked `interpretation: contested` with `alt_reading: silent`,
+  and any conflict it drives prints both outcomes. The uncontested half of
+  NSA's position is a separate rule so the matrix keeps an anchor.
 - The `sbom-tools` adapter's payload shape is inferred from their Rust struct
   definitions, not captured from a run. Its fixture is labelled constructed.
 - cdxgen is unverified as a CBOM producer; a code search of their repository

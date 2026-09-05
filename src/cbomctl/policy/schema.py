@@ -16,7 +16,7 @@ import yaml
 from pydantic import BaseModel, Field, field_validator
 
 from cbomctl.models import (
-    Binding, Construction, DeadlineState, HybridStance, Purpose,
+    Binding, Construction, DeadlineState, HybridStance, Interpretation, Purpose,
     QuantumStatus, Rationale, RuleStatus, Verdict,
 )
 
@@ -69,6 +69,12 @@ class Rule(BaseModel):
     deadline_state: DeadlineState | None = None
     applies_to: AppliesTo = Field(default_factory=AppliesTo)
     hybrid: HybridStance | None = None
+    #: Whether encoding this rule required a judgement reasonable readers could
+    #: make differently. Independent of `status`, which is about reading.
+    interpretation: Interpretation = Interpretation.SETTLED
+    #: The hybrid stance that would apply under the alternative reading.
+    alt_reading: HybridStance | None = None
+    interpretation_note: str | None = None
     rationale: Rationale | None = None
     rationale_note: str | None = None
     migration_target: MigrationTarget | None = None

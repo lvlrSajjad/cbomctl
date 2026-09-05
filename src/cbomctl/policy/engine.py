@@ -172,6 +172,8 @@ def evaluate(
             source_title=rule.source_title, is_draft=rule.is_draft,
             deadline=rule.deadline, deadline_state=rule.deadline_state,
             hybrid=rule.hybrid, rationale=rule.rationale,
+            interpretation=rule.interpretation, alt_reading=rule.alt_reading,
+            interpretation_note=rule.interpretation_note,
             description=rule.description,
         ))
         if verdict.rank > worst.rank:

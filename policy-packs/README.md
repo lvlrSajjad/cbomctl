@@ -72,11 +72,40 @@ or `hybrid: recommended` + `binding: certification_requirement` (ANSSI, for
 products seeking certification). Those are different obligations and the schema
 keeps them separate.
 
+## `interpretation` — when the encoding is itself a judgement
+
+`status` says whether the text was **read**. `interpretation` says whether
+reasonable readers could **encode that text differently**. They are
+independent: a rule can quote its source exactly and still be contested.
+
+| value | meaning |
+|---|---|
+| `settled` | the text admits one sensible encoding |
+| `contested` | reasonable readers could encode it differently; `alt_reading` gives the alternative and `interpretation_note` argues the case |
+
+There is one contested rule today: `cnsa-2.0/cnsa2-hybrid-not-permitted`. The
+NSA FAQ answers the hybrid question twice with different force, and the
+stronger answer sits under a question framed *"while waiting for a final NIST
+post-quantum standard"* — a premise that arguably ended in August 2024.
+
+**A judgement that changes the output must not be invisible in the output.**
+When a contested rule drives a conflict, consumers are expected to report both
+outcomes. `cbomctl` prints:
+
+> ⚖ This conflict depends on a contested encoding. Under the alternative
+> reading (cnsa-2.0 silent), a hybrid construction would satisfy all selected
+> jurisdictions, at a documented cost.
+
+The uncontested half of that position — NSA "will not require" hybrids — is a
+separate rule, so the matrix keeps an anchor even for a reader who rejects the
+stronger one.
+
 ## Rule fields
 
 `id` · `jurisdiction` · `source_url` · `source_title` · `last_verified` ·
-`status` · `binding` · `deadline` · `applies_to` (purpose / category / security level) · `hybrid` ·
-`rationale` · `migration_target` · `verdict` · `open_question`
+`status` · `binding` · `deadline` · `applies_to` (purpose / category / security level / parameter set) · `hybrid` ·
+`rationale` · `interpretation` · `alt_reading` · `interpretation_note` ·
+`migration_target` · `verdict` · `open_question`
 
 `source_url` **must** be a primary source. Permitted hosts:
 `nsa.gov`, `csrc.nist.gov`, `nist.gov`, `whitehouse.gov`, `federalregister.gov`,
