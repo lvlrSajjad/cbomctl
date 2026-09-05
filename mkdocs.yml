@@ -1,0 +1,59 @@
+site_name: cbomctl
+site_description: >-
+  Evaluate a CycloneDX CBOM against multiple national post-quantum policies and
+  report where their verdicts contradict.
+site_url: https://lvlrSajjad.github.io/cbomctl/
+repo_url: https://github.com/lvlrSajjad/cbomctl
+repo_name: lvlrSajjad/cbomctl
+edit_uri: edit/main/docs/
+
+theme:
+  name: material
+  features:
+    - navigation.sections
+    - navigation.top
+    - content.code.copy
+    - content.action.edit
+    - toc.follow
+  palette:
+    - media: "(prefers-color-scheme: light)"
+      scheme: default
+      primary: deep purple
+      toggle: { icon: material/weather-night, name: Switch to dark mode }
+    - media: "(prefers-color-scheme: dark)"
+      scheme: slate
+      primary: deep purple
+      toggle: { icon: material/weather-sunny, name: Switch to light mode }
+
+markdown_extensions:
+  - admonition
+  - pymdownx.details
+  - pymdownx.superfences:
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_code_format
+  - pymdownx.tabbed: { alternate_style: true }
+  - tables
+  - attr_list
+  - toc: { permalink: true }
+
+nav:
+  - Home: index.md
+  - Quickstart: quickstart.md
+  - Concepts:
+      - Urgency and assurance: concepts.md
+      - Why purpose is hard: purpose.md
+  - Policy packs:
+      - Overview: policy-packs/index.md
+      - BSI (Germany): policy-packs/bsi-de.md
+      - ANSSI (France): policy-packs/anssi-fr.md
+      - ASD (Australia): policy-packs/asd-au.md
+      - EU roadmap: policy-packs/eu-roadmap.md
+      - EO 14412 (US): policy-packs/us-eo14412.md
+      - NIST IR 8547 (US, draft): policy-packs/nist-ir8547.md
+      - CNSA 2.0 (NSA): policy-packs/cnsa-2.0.md
+  - CI integration: ci.md
+  - Sources and open questions: policy-sources.md
+  - Design: DESIGN.md
+  - Roadmap: roadmap.md
