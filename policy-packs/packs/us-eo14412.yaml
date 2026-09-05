@@ -1,0 +1,85 @@
+id: us-eo14412
+name: "Executive Order 14412 — United States"
+authority: "The White House"
+jurisdiction: US
+pack_version: "0.1.0"
+applicability: >-
+  EO 14412 covers federal High Value Assets and high-impact systems, EXCLUDING
+  National Security Systems. It is not a blanket federal PQC mandate, and it
+  does not bind the private sector except through the forthcoming FAR rule for
+  covered contractors.
+notes: >-
+  STUB. The scoping in `applicability` is the most commonly misreported fact
+  about this order — secondary coverage routinely renders it as "the US mandates
+  PQC by 2030". Key establishment and signatures carry SEPARATE deadlines, which
+  is the only place a major jurisdiction dates them differently.
+
+rules:
+  - id: eo14412-key-establishment-2030
+    description: >-
+      Federal High Value Assets and high-impact systems transition to
+      post-quantum key establishment by 2030-12-31.
+    binding: executive_order
+    status: needs_verification
+    source_url: "https://www.whitehouse.gov/presidential-actions/2026/06/securing-the-nation-against-advanced-cryptographic-attacks/"
+    source_title: "EO 14412, Securing the Nation Against Advanced Cryptographic Attacks (91 FR 38483)"
+    source_edition: "2026-06-22"
+    last_verified: 2026-09-05
+    deadline: 2030-12-31
+    deadline_state: complete
+    applies_to:
+      purpose: [key-agreement, encryption]
+      quantum_status: [broken-by-shor]
+      system_category: ["high-value-asset", "high-impact"]
+    rationale: harvest_now_decrypt_later
+    migration_target: { kem: "ML-KEM-1024" }
+    verdict: fail
+    open_question: >-
+      Confirm the HVA / high-impact scoping language and the NSS exclusion
+      verbatim against 91 FR 38483. Getting this wrong fails assets the order
+      never reached.
+
+  - id: eo14412-signatures-2031
+    description: >-
+      Federal High Value Assets and high-impact systems transition to
+      post-quantum digital signatures by 2031-12-31 — one year later than key
+      establishment.
+    binding: executive_order
+    status: needs_verification
+    source_url: "https://www.whitehouse.gov/presidential-actions/2026/06/securing-the-nation-against-advanced-cryptographic-attacks/"
+    source_title: "EO 14412 (91 FR 38483)"
+    source_edition: "2026-06-22"
+    last_verified: 2026-09-05
+    deadline: 2031-12-31
+    deadline_state: complete
+    applies_to:
+      purpose: [signature]
+      quantum_status: [broken-by-shor]
+      system_category: ["high-value-asset", "high-impact"]
+    rationale: unstated
+    rationale_note: >-
+      The split between 2030 for key establishment and 2031 for signatures is
+      direct evidence for the urgency asymmetry — quote it exactly once verified.
+    migration_target: { signature: "ML-DSA-87" }
+    verdict: fail
+    open_question: "Confirm both dates and that the split is as reported."
+
+  - id: eo14412-far-contractors-2030
+    description: >-
+      A FAR rule requiring covered federal contractors to comply with applicable
+      NIST FIPS incorporating PQC, targeting end of 2030.
+    binding: executive_order
+    status: needs_verification
+    source_url: "https://www.whitehouse.gov/presidential-actions/2026/06/securing-the-nation-against-advanced-cryptographic-attacks/"
+    source_title: "EO 14412 (91 FR 38483)"
+    last_verified: 2026-09-05
+    deadline: 2030-12-31
+    deadline_state: complete
+    applies_to:
+      quantum_status: [broken-by-shor]
+      system_category: ["federal-contractor"]
+    rationale: policy_alignment
+    verdict: warn
+    open_question: >-
+      A PROPOSED FAR rule is not yet a contractual obligation. Keep this WARN
+      until the rule is final.

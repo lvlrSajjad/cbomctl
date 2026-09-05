@@ -1,0 +1,97 @@
+id: cnsa-2.0
+name: "CNSA 2.0 — NSA"
+authority: "United States National Security Agency"
+jurisdiction: US-NSS
+pack_version: "0.1.0"
+applicability: >-
+  CNSA 2.0 governs US National Security Systems. It does not govern federal IT
+  generally and does not govern the private sector. If your system is not an
+  NSS, these rules do not apply to you.
+notes: >-
+  STUB. Category deadlines require `system_category` in cbomctl.yaml; when it is
+  absent the verdict is INDETERMINATE, never a pass. The 2027 acquisition gate
+  is behind --cnsa-acquisition-gate because it is a procurement condition, not
+  an algorithm deadline.
+
+rules:
+  - id: cnsa2-classical-asymmetric
+    description: "Quantum-vulnerable asymmetric algorithms are not CNSA 2.0 approved."
+    binding: agency_requirement
+    status: needs_verification
+    source_url: "https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF"
+    source_title: "NSA CNSA 2.0 FAQ"
+    last_verified: 2026-09-05
+    applies_to:
+      purpose: [key-agreement, signature, encryption]
+      quantum_status: [broken-by-shor]
+    rationale: unstated
+    migration_target: { kem: "ML-KEM-1024", signature: "ML-DSA-87", symmetric: "AES-256", hash: "SHA-384", construction: pure-pqc }
+    verdict: fail
+    open_question: "Verify the allowlist against the current FAQ revision."
+
+  - id: cnsa2-mlkem-1024-required
+    description: >-
+      CNSA 2.0 requires ML-KEM-1024. ML-KEM-768, accepted elsewhere, is below
+      the required level.
+    binding: agency_requirement
+    status: needs_verification
+    source_url: "https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF"
+    source_title: "NSA CNSA 2.0 FAQ"
+    last_verified: 2026-09-05
+    applies_to:
+      purpose: [key-agreement]
+      algorithm: ["ML-KEM-768", "ML-KEM-512", "ML-KEM"]
+    rationale: key_length
+    migration_target: { kem: "ML-KEM-1024" }
+    verdict: fail
+    open_question: >-
+      Verify the level requirement precisely. This drives a `parameter` conflict
+      with BSI/ANSSI distinct from the hybrid one.
+
+  - id: cnsa2-signing-exclusive-2030
+    description: "Software and firmware signing: exclusive CNSA 2.0 use by 2030."
+    binding: agency_requirement
+    status: needs_verification
+    source_url: "https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF"
+    source_title: "NSA CNSA 2.0 FAQ"
+    last_verified: 2026-09-05
+    deadline: 2030-12-31
+    deadline_state: exclusive_use
+    applies_to:
+      purpose: [signature]
+      system_category: ["software-firmware-signing", "networking"]
+    rationale: unstated
+    verdict: fail
+    open_question: "Verify each category deadline against the FAQ table directly."
+
+  - id: cnsa2-web-os-exclusive-2033
+    description: "Browsers, servers, cloud services and operating systems: exclusive use by 2033."
+    binding: agency_requirement
+    status: needs_verification
+    source_url: "https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF"
+    source_title: "NSA CNSA 2.0 FAQ"
+    last_verified: 2026-09-05
+    deadline: 2033-12-31
+    deadline_state: exclusive_use
+    applies_to:
+      system_category: ["web-cloud", "operating-system"]
+    rationale: unstated
+    verdict: fail
+    open_question: "Confirm the category names so the config enum matches the FAQ."
+
+  - id: cnsa2-acquisition-gate-2027
+    description: >-
+      From 2027-01-01 new NSS acquisitions are expected to be CNSA 2.0 compliant
+      by default. A procurement condition, not an algorithm deadline.
+    binding: agency_requirement
+    status: needs_verification
+    source_url: "https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF"
+    source_title: "NSA CNSA 2.0 FAQ"
+    last_verified: 2026-09-05
+    deadline: 2027-01-01
+    deadline_state: acquisition_gate
+    applies_to:
+      quantum_status: [broken-by-shor]
+    rationale: unstated
+    verdict: fail
+    open_question: "Confirm the gate's scope and wording."

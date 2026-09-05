@@ -1,0 +1,85 @@
+id: bsi-de
+name: "BSI — Germany"
+authority: "Bundesamt für Sicherheit in der Informationstechnik"
+jurisdiction: DE
+pack_version: "0.1.0"
+applicability: >-
+  BSI TR-02102-1 is a technical guideline. It recommends; it is not a statute.
+  Verdicts from this pack are WARN, not FAIL, unless a rule is separately scoped
+  to a population BSI binds (e.g. BSI-approved or government-facing systems).
+notes: >-
+  STUB — assembled from secondary reporting. Every rule needs verification
+  against TR-02102-1 v2026-01 (published 2026-01-23), German text normative.
+
+rules:
+  - id: bsi-classical-key-agreement-sunset
+    description: >-
+      Sole use of classical key agreement is recommended only until 2031-12-31.
+    binding: guideline_recommendation
+    status: needs_verification
+    source_url: "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.html"
+    source_title: "BSI TR-02102-1, Cryptographic Mechanisms: Recommendations and Key Lengths"
+    source_edition: "2026-01"
+    last_verified: 2026-09-05
+    deadline: 2031-12-31
+    deadline_state: disallowed
+    applies_to:
+      purpose: [key-agreement]
+      quantum_status: [broken-by-shor]
+      construction: [classical]
+    hybrid: recommended
+    rationale: harvest_now_decrypt_later
+    migration_target: { kem: "ML-KEM-768", construction: hybrid }
+    verdict: fail
+    open_question: >-
+      Confirm the date, and whether it binds all protection levels or only some.
+      2030 and 2031 appear together across sources, which may be a conflation of
+      the 2025-01 and 2026-01 editions.
+
+  - id: bsi-high-protection-2030
+    description: >-
+      Very high protection requirements: complete the transition to quantum-safe
+      key agreement by 2030-12-31.
+    binding: guideline_recommendation
+    status: needs_verification
+    source_url: "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.html"
+    source_title: "BSI TR-02102-1"
+    source_edition: "2026-01"
+    last_verified: 2026-09-05
+    deadline: 2030-12-31
+    deadline_state: complete
+    applies_to:
+      purpose: [key-agreement]
+      quantum_status: [broken-by-shor]
+      security_level: ["very-high"]
+    hybrid: recommended
+    rationale: harvest_now_decrypt_later
+    verdict: warn
+    open_question: "Is this distinct from the 2031 date, or has one superseded the other?"
+
+  - id: bsi-classical-signatures-2035
+    description: >-
+      Migration to quantum-safe signatures by end of 2035, following the
+      European roadmap.
+    binding: guideline_recommendation
+    status: needs_verification
+    source_url: "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.html"
+    source_title: "BSI TR-02102-1"
+    source_edition: "2026-01"
+    last_verified: 2026-09-05
+    deadline: 2035-12-31
+    deadline_state: disallowed
+    applies_to:
+      purpose: [signature]
+      quantum_status: [broken-by-shor]
+    rationale: policy_alignment
+    rationale_note: >-
+      Reportedly adopts the EU roadmap's horizon rather than setting its own.
+      NOTE: BSI's hybrid stance for SIGNATURES in 2026-01 is deliberately left
+      unset here. Do not assume it mirrors the key-agreement stance — that is
+      the specific thing to check when verifying this pack.
+    migration_target: { signature: "ML-DSA-65" }
+    verdict: warn
+    open_question: >-
+      Does BSI recommend hybrid for signatures as ANSSI reportedly does, or only
+      for key establishment? Set `hybrid` once the 2026-01 text is read.

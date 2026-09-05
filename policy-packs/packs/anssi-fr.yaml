@@ -1,0 +1,81 @@
+id: anssi-fr
+name: "ANSSI — France"
+authority: "Agence nationale de la sécurité des systèmes d'information"
+jurisdiction: FR
+pack_version: "0.1.0"
+applicability: >-
+  ANSSI's position papers are guidance. The certification rule binds only
+  products seeking ANSSI certification (CSPN, Critères Communs) — a far narrower
+  population than French industry generally.
+notes: >-
+  STUB. The signature-hybrid rule below is the most consequential unverified
+  claim in this repository: it is the only jurisdiction reportedly recommending
+  hybrid for signatures, and it does so on maturity grounds rather than harvest
+  grounds. See docs/policy-sources.md F4.
+
+rules:
+  - id: anssi-hybrid-key-establishment
+    description: >-
+      Strongly recommends hybrid (post-quantum + classical) key establishment
+      for products protecting information beyond 2030, or deployed without
+      updates past 2030.
+    binding: guideline_recommendation
+    status: needs_verification
+    source_url: "https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition"
+    source_title: "ANSSI views on the Post-Quantum Cryptography transition (2023 follow-up)"
+    last_verified: 2026-09-05
+    applies_to:
+      purpose: [key-agreement]
+      quantum_status: [broken-by-shor, pq-secure]
+    hybrid: recommended
+    rationale: harvest_now_decrypt_later
+    migration_target: { kem: "ML-KEM-768", construction: hybrid }
+    verdict: warn
+    open_question: >-
+      'Strongly recommends' is not 'requires'. Confirm the verb — the conflict
+      narrative must not claim France mandates hybrid.
+
+  - id: anssi-hybrid-signatures
+    description: >-
+      Extends the hybrid recommendation to signatures, on the grounds that
+      post-quantum signature schemes are newer and less battle-tested than
+      post-quantum key establishment.
+    binding: guideline_recommendation
+    status: needs_verification
+    source_url: "https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition"
+    source_title: "ANSSI views on the Post-Quantum Cryptography transition (2023 follow-up)"
+    last_verified: 2026-09-05
+    applies_to:
+      purpose: [signature]
+    hybrid: recommended
+    rationale: algorithm_maturity
+    rationale_note: >-
+      Not a harvest-now-decrypt-later argument — a signature cannot be
+      harvested. The concern is that ML-DSA and SLH-DSA are young: Rainbow and
+      SIKE both fell to classical cryptanalysis during the NIST competition, and
+      that risk does not diminish as the CRQC date approaches. This is why
+      urgency and assurance are modelled as separate axes.
+    migration_target: { signature: "ML-DSA-65", construction: hybrid }
+    verdict: warn
+    open_question: >-
+      THE key claim to verify. If confirmed, article 3 needs a section on the
+      maturity argument; if not, this rule is removed.
+
+  - id: anssi-certification-2027
+    description: >-
+      From 2027, ANSSI will not certify security products lacking
+      quantum-resistant cryptography.
+    binding: certification_requirement
+    status: needs_verification
+    source_url: "https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition"
+    source_title: "ANSSI certification position (2026)"
+    last_verified: 2026-09-05
+    deadline: 2027-01-01
+    deadline_state: acquisition_gate
+    applies_to:
+      quantum_status: [broken-by-shor]
+    rationale: unstated
+    verdict: fail
+    open_question: >-
+      Find the primary 2026 communication; the position papers may predate it.
+      Confirm which certification schemes are covered.

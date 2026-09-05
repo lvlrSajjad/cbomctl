@@ -1,0 +1,255 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://github.com/lvlrSajjad/cbomctl/policy-packs/schema/pack.schema.json",
+  "title": "PQC policy pack",
+  "type": "object",
+  "required": [
+    "id",
+    "name",
+    "authority",
+    "pack_version",
+    "jurisdiction",
+    "applicability",
+    "rules"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9][a-z0-9.-]*$"
+    },
+    "name": {
+      "type": "string"
+    },
+    "authority": {
+      "type": "string"
+    },
+    "jurisdiction": {
+      "type": "string",
+      "description": "ISO 3166 code, 'EU', or 'US-NSS'."
+    },
+    "pack_version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "applicability": {
+      "type": "string",
+      "description": "Who this actually binds. Printed as a banner."
+    },
+    "notes": {
+      "type": "string"
+    },
+    "rules": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/$defs/rule"
+      }
+    }
+  },
+  "$defs": {
+    "rule": {
+      "type": "object",
+      "required": [
+        "id",
+        "description",
+        "binding",
+        "status",
+        "source_url",
+        "source_title",
+        "last_verified",
+        "applies_to",
+        "verdict"
+      ],
+      "additionalProperties": false,
+      "properties": {
+        "id": {
+          "type": "string"
+        },
+        "description": {
+          "type": "string"
+        },
+        "binding": {
+          "enum": [
+            "statute",
+            "executive_order",
+            "agency_requirement",
+            "certification_requirement",
+            "guideline_recommendation"
+          ],
+          "description": "Force of the rule. Guidance is not a mandate; a tool that conflates them misinforms."
+        },
+        "hybrid": {
+          "enum": [
+            "required",
+            "recommended",
+            "not_recommended",
+            "silent"
+          ],
+          "description": "Stance on hybrid PQC+classical constructions FOR THE PURPOSES IN applies_to.purpose. Jurisdictions differ by purpose: a pack may recommend hybrid for key establishment and be silent on signatures. Always scope a hybrid rule with applies_to.purpose \u2014 never assume it covers both."
+        },
+        "status": {
+          "enum": [
+            "verified",
+            "needs_verification"
+          ]
+        },
+        "source_url": {
+          "type": "string",
+          "format": "uri",
+          "description": "Primary source only \u2014 see README host allowlist."
+        },
+        "source_title": {
+          "type": "string"
+        },
+        "source_edition": {
+          "type": "string"
+        },
+        "is_draft": {
+          "type": "boolean",
+          "default": false,
+          "description": "Source is a draft; consumers must print 'draft'."
+        },
+        "last_verified": {
+          "type": "string",
+          "format": "date"
+        },
+        "verified_by": {
+          "type": "string"
+        },
+        "deadline": {
+          "type": [
+            "string",
+            "null"
+          ],
+          "format": "date"
+        },
+        "deadline_state": {
+          "enum": [
+            "deprecated",
+            "disallowed",
+            "exclusive_use",
+            "acquisition_gate",
+            "transition_start",
+            "complete"
+          ],
+          "description": "Deprecated and disallowed are different states and are never collapsed."
+        },
+        "applies_to": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "purpose": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "key-agreement",
+                  "encryption",
+                  "signature",
+                  "hash",
+                  "mac",
+                  "kdf",
+                  "rng"
+                ]
+              }
+            },
+            "quantum_status": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "broken-by-shor",
+                  "weakened-by-grover",
+                  "pq-secure",
+                  "unknown"
+                ]
+              }
+            },
+            "construction": {
+              "type": "array",
+              "items": {
+                "enum": [
+                  "classical",
+                  "pure-pqc",
+                  "hybrid",
+                  "unknown"
+                ]
+              }
+            },
+            "algorithm": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "system_category": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            },
+            "security_level": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              }
+            }
+          }
+        },
+        "migration_target": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "kem": {
+              "type": "string"
+            },
+            "signature": {
+              "type": "string"
+            },
+            "symmetric": {
+              "type": "string"
+            },
+            "hash": {
+              "type": "string"
+            },
+            "construction": {
+              "enum": [
+                "classical",
+                "pure-pqc",
+                "hybrid"
+              ]
+            },
+            "note": {
+              "type": "string"
+            }
+          }
+        },
+        "verdict": {
+          "enum": [
+            "fail",
+            "warn",
+            "info",
+            "indeterminate"
+          ]
+        },
+        "open_question": {
+          "type": "string",
+          "description": "Required in practice while status is needs_verification."
+        },
+        "rationale": {
+          "enum": [
+            "harvest_now_decrypt_later",
+            "algorithm_maturity",
+            "key_length",
+            "policy_alignment",
+            "unstated"
+          ],
+          "description": "Why the authority takes this stance. Orthogonal to urgency. harvest_now_decrypt_later = recorded ciphertext is retroactively readable (drives urgency, key establishment only). algorithm_maturity = the PQ scheme is young and may fall to classical cryptanalysis, as Rainbow and SIKE did during the NIST competition (drives target choice, applies to signatures too). A rule may be urgent, mature-risky, both or neither."
+        },
+        "rationale_note": {
+          "type": "string",
+          "description": "Free text where the authority states its reasoning; quote it."
+        }
+      }
+    }
+  }
+}

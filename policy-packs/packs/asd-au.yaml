@@ -1,0 +1,72 @@
+id: asd-au
+name: "ASD / ACSC — Australia"
+authority: "Australian Signals Directorate"
+jurisdiction: AU
+pack_version: "0.1.0"
+applicability: >-
+  The ISM applies to Australian government entities and their suppliers. Verify
+  whether it is presented as binding policy or as guidance before treating a
+  finding as blocking.
+notes: >-
+  STUB — needs verification against the current ISM release. The ISM is revised
+  roughly monthly, so record the release month, not just the URL.
+
+rules:
+  - id: asd-classical-asymmetric-sunset
+    description: >-
+      Cease use of traditional asymmetric cryptography (RSA, DH, ECDH, ECDSA)
+      by the end of 2030.
+    binding: guideline_recommendation
+    status: needs_verification
+    source_url: "https://www.cyber.gov.au/resources-business-and-government/essential-cybersecurity/ism"
+    source_title: "ASD Information Security Manual — Guidelines for Cryptography"
+    last_verified: 2026-09-05
+    deadline: 2030-12-31
+    deadline_state: disallowed
+    applies_to:
+      purpose: [key-agreement, signature, encryption]
+      quantum_status: [broken-by-shor]
+    rationale: unstated
+    migration_target: { kem: "ML-KEM-1024", signature: "ML-DSA-87", construction: pure-pqc }
+    verdict: fail
+    open_question: >-
+      Exact ISM control number and whether the algorithm list is exhaustive
+      (Ed25519? X25519? finite-field DH separately?).
+
+  - id: asd-hybrid-not-recommended
+    description: >-
+      Post-quantum/traditional hybrid schemes are not recommended, on grounds of
+      added complexity and computational overhead. Not prohibited.
+    binding: guideline_recommendation
+    status: needs_verification
+    source_url: "https://www.cyber.gov.au/business-government/secure-design/quantum/planning-for-post-quantum-cryptography"
+    source_title: "ACSC — Planning for post-quantum cryptography"
+    last_verified: 2026-09-05
+    applies_to:
+      purpose: [key-agreement, signature]
+      construction: [hybrid]
+    hybrid: not_recommended
+    rationale: unstated
+    rationale_note: "Complexity and computational overhead, per secondary sources."
+    verdict: warn
+    open_question: >-
+      Get the literal sentence. 'Not recommended but not prohibited' is what
+      makes this WARN rather than FAIL, and what makes a satisfies-all target
+      possible at a documented cost.
+
+  - id: asd-mlkem768-sunset
+    description: "ML-KEM-768 acceptable only until 2030; ML-KEM-1024 thereafter."
+    binding: guideline_recommendation
+    status: needs_verification
+    source_url: "https://www.cyber.gov.au/resources-business-and-government/essential-cybersecurity/ism"
+    source_title: "ASD Information Security Manual — Guidelines for Cryptography"
+    last_verified: 2026-09-05
+    deadline: 2030-12-31
+    deadline_state: deprecated
+    applies_to:
+      purpose: [key-agreement]
+      algorithm: ["ML-KEM-768", "ML-KEM"]
+    rationale: key_length
+    migration_target: { kem: "ML-KEM-1024" }
+    verdict: warn
+    open_question: "Confirm the ML-KEM-768 sunset date and the strictest-grade-only framing."

@@ -1,0 +1,113 @@
+# PQC policy packs
+
+Machine-readable rule sets describing what each national authority says about
+post-quantum cryptography: which algorithms, which constructions, by when, and
+**with what force**.
+
+These are published as a standalone, semantically versioned artifact. `cbomctl`
+is the first consumer, but nothing here depends on it — the schema, the rules
+and the citations are usable by any tool that has a normalized view of
+cryptographic assets. If you want to build something else on them, take them.
+
+- Schema: [`schema/pack.schema.json`](schema/pack.schema.json)
+- Packs: [`packs/`](packs/)
+- Version and history: [`CHANGELOG.md`](CHANGELOG.md)
+- Sourcing and verification status: [`../docs/policy-sources.md`](../docs/policy-sources.md)
+
+## Status
+
+> **No pack is verified yet.** Every rule currently ships as
+> `status: needs_verification`, meaning its content was assembled from secondary
+> reporting and has not been read from the primary source. Consumers should
+> surface that state to their users. `cbomctl` prints a banner and
+> `--require-verified-policy` refuses to run.
+
+## The two fields that matter most
+
+**`binding`** — the force of the rule. Most PQC guidance is *not* a mandate,
+and conflating a technical guideline with a statute is the most common error in
+this space. A tool that reports "FAIL: violates BSI" for a document whose own
+language is *recommends* is misinforming its user.
+
+| value | meaning |
+|---|---|
+| `statute` | binding law |
+| `executive_order` | binding on its addressees by executive authority |
+| `agency_requirement` | binding on a defined population (e.g. US NSS under CNSA 2.0) |
+| `certification_requirement` | binding only if you seek that certification |
+| `guideline_recommendation` | technical guidance; recommends, does not compel |
+
+**`hybrid`** — the axis on which jurisdictions actually contradict each other.
+**It is scoped per purpose**, via `applies_to.purpose`, because authorities take
+different positions on key establishment and on signatures. Never write a hybrid
+rule without scoping it.
+
+| value | meaning |
+|---|---|
+| `required` | a hybrid construction is compelled |
+| `recommended` | encouraged, not compelled |
+| `not_recommended` | discouraged, though not prohibited |
+| `silent` | the source does not address hybrids for this purpose |
+
+**`rationale`** — *why* the authority takes that stance, and the reason this is
+a second axis rather than a footnote:
+
+| value | meaning |
+|---|---|
+| `harvest_now_decrypt_later` | recorded ciphertext becomes readable once a CRQC exists. Drives **urgency**. Applies to key establishment and encryption only — a signature cannot be harvested. |
+| `algorithm_maturity` | the post-quantum scheme is young and may yet fall to classical cryptanalysis — as Rainbow and SIKE both did during the NIST competition. Drives **target choice**, and applies to signatures just as much as to key establishment. |
+| `key_length` | a parameter-strength requirement (CNSA 2.0's ML-KEM-1024) |
+| `policy_alignment` | adopts another body's timeline |
+| `unstated` | the source gives no reason |
+
+These are orthogonal. HNDL answers *when must I move*; maturity answers *what
+must I move to*. Both can be true of one asset, and conflating them is why
+"signatures aren't urgent" gets misread as "signatures are simple". ANSSI
+reportedly recommends hybrid signatures on maturity grounds while every
+jurisdiction puts signature *deadlines* later than key establishment — those two
+facts are consistent, and the schema has to be able to say so.
+
+A rule may be `hybrid: recommended` + `binding: guideline_recommendation` (BSI)
+or `hybrid: recommended` + `binding: certification_requirement` (ANSSI, for
+products seeking certification). Those are different obligations and the schema
+keeps them separate.
+
+## Rule fields
+
+`id` · `jurisdiction` · `source_url` · `source_title` · `last_verified` ·
+`status` · `binding` · `deadline` · `applies_to` (purpose / category / security level) · `hybrid` ·
+`rationale` · `migration_target` · `verdict` · `open_question`
+
+`source_url` **must** be a primary source. Permitted hosts:
+`nsa.gov`, `csrc.nist.gov`, `nist.gov`, `whitehouse.gov`, `federalregister.gov`,
+`bsi.bund.de`, `cyber.gouv.fr`, `ssi.gouv.fr`, `cyber.gov.au`,
+`digital-strategy.ec.europa.eu`, `eur-lex.europa.eu`. Secondary reporting may be
+recorded in `docs/policy-sources.md` for traceability, never as `source_url`.
+
+## Packs
+
+| pack | authority | scope | hybrid: key est. | hybrid: signatures |
+|---|---|---|---|---|
+| `bsi-de` | BSI (Germany) | technical guideline | `recommended` | **unverified** |
+| `anssi-fr` | ANSSI (France) | guidance + certification | `recommended` | `recommended`* |
+| `asd-au` | ASD/ACSC (Australia) | ISM, Australian government | `not_recommended` | `not_recommended` |
+| `cnsa-2.0` | NSA (US) | National Security Systems only | `silent` | `silent` |
+| `us-eo14412` | Executive Order 14412 | US federal HVAs / high-impact, excl. NSS | `silent` | `silent` |
+| `eu-roadmap` | NIS Cooperation Group | EU Member State planning horizon | `silent` | `silent` |
+
+`*` ANSSI's signature stance is `rationale: algorithm_maturity`, not HNDL — see
+[`../docs/policy-sources.md`](../docs/policy-sources.md) F4. BSI's 2026-01
+signature-hybrid language is the specific thing to check when verifying that
+pack; do not assume it mirrors its key-agreement stance.
+
+## Versioning
+
+Semver on the pack collection.
+
+- **patch** — typo, clarification, citation fix that changes no verdict
+- **minor** — new rule, new pack, or a rule moving `needs_verification → verified`
+- **major** — any change that can flip an existing verdict: a deadline moving,
+  a `binding` or `hybrid` reclassification, a rule removed
+
+A verdict-flipping change is never a patch. Downstream tools pin a pack version
+and get told when it moves.
