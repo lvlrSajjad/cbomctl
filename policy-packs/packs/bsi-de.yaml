@@ -2,25 +2,30 @@ id: bsi-de
 name: "BSI — Germany"
 authority: "Bundesamt für Sicherheit in der Informationstechnik"
 jurisdiction: DE
-pack_version: "0.1.0"
+pack_version: "0.2.0"
 applicability: >-
-  BSI TR-02102-1 is a technical guideline. It recommends; it is not a statute.
-  Verdicts from this pack are WARN, not FAIL, unless a rule is separately scoped
-  to a population BSI binds (e.g. BSI-approved or government-facing systems).
+  BSI TR-02102-1 is a Technical Guideline. Its operative verb throughout is
+  "recommends" — it is not a statute, and this pack therefore produces WARN,
+  not FAIL. Verified against the English edition, Version 2026-01, dated
+  January 23 2026.
 notes: >-
-  STUB — assembled from secondary reporting. Every rule needs verification
-  against TR-02102-1 v2026-01 (published 2026-01-23), German text normative.
+  VERIFIED 2026-09-06 against the primary PDF (bsi.bund.de,
+  TG02102/BSI-TR-02102-1.pdf, Version 2026-01). Section numbers and quoted
+  sentences are in docs/policy-sources.md.
 
 rules:
   - id: bsi-classical-key-agreement-sunset
     description: >-
-      Sole use of classical key agreement is recommended only until 2031-12-31.
+      Sole use of classical key agreement is recommended only until the end of
+      2031. §2.1: "The sole use of classic key agreement mechanisms is only
+      recommended until the end of 2031."
     binding: guideline_recommendation
-    status: needs_verification
-    source_url: "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.html"
-    source_title: "BSI TR-02102-1, Cryptographic Mechanisms: Recommendations and Key Lengths"
-    source_edition: "2026-01"
-    last_verified: 2026-09-05
+    status: verified
+    source_url: "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf"
+    source_title: "BSI TR-02102-1, Cryptographic Mechanisms: Recommendations and Key Lengths, §2.1"
+    source_edition: "2026-01 (January 23, 2026)"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
     deadline: 2031-12-31
     deadline_state: disallowed
     applies_to:
@@ -29,23 +34,25 @@ rules:
       construction: [classical]
     hybrid: recommended
     rationale: harvest_now_decrypt_later
+    rationale_note: >-
+      §2.1 names the mechanism explicitly: "encrypted data can already be
+      stored for later decryption ('Store Now, Decrypt Later')".
     migration_target: { kem: "ML-KEM-768", construction: hybrid }
     verdict: fail
-    open_question: >-
-      Confirm the date, and whether it binds all protection levels or only some.
-      2030 and 2031 appear together across sources, which may be a conflation of
-      the 2025-01 and 2026-01 editions.
 
   - id: bsi-high-protection-2030
     description: >-
-      Very high protection requirements: complete the transition to quantum-safe
-      key agreement by 2030-12-31.
+      Applications with very high protection requirements should complete the
+      transition by the end of 2030. §2.1: "For applications with very high
+      protection requirements, the transition to quantum-safe mechanisms
+      should already take place by the end of 2030."
     binding: guideline_recommendation
-    status: needs_verification
-    source_url: "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.html"
-    source_title: "BSI TR-02102-1"
-    source_edition: "2026-01"
-    last_verified: 2026-09-05
+    status: verified
+    source_url: "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf"
+    source_title: "BSI TR-02102-1 §2.1"
+    source_edition: "2026-01 (January 23, 2026)"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
     deadline: 2030-12-31
     deadline_state: complete
     applies_to:
@@ -55,18 +62,40 @@ rules:
     hybrid: recommended
     rationale: harvest_now_decrypt_later
     verdict: warn
-    open_question: "Is this distinct from the 2031 date, or has one superseded the other?"
+
+  - id: bsi-hybrid-key-agreement
+    description: >-
+      Quantum-safe key agreement mechanisms should be used in hybrid form.
+      §2.1: "The quantum-safe mechanisms recommended in Section 2.4 should be
+      used in 'hybrid' form, i.e., in a suitable combination with a classical
+      method."
+    binding: guideline_recommendation
+    status: verified
+    source_url: "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf"
+    source_title: "BSI TR-02102-1 §2.1, §2.2 (Key Derivation and Hybridisation)"
+    source_edition: "2026-01 (January 23, 2026)"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    applies_to:
+      purpose: [key-agreement]
+      quantum_status: [pq-secure]
+    hybrid: recommended
+    rationale: algorithm_maturity
+    migration_target: { kem: "ML-KEM-768", construction: hybrid }
+    verdict: warn
 
   - id: bsi-classical-signatures-2035
     description: >-
-      Migration to quantum-safe signatures by end of 2035, following the
-      European roadmap.
+      Classical signature mechanisms are recommended only until the end of
+      2035, following the EU roadmap. §2.1: "the use of classic signature
+      mechanisms is therefore only recommended until the end of 2035."
     binding: guideline_recommendation
-    status: needs_verification
-    source_url: "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.html"
-    source_title: "BSI TR-02102-1"
-    source_edition: "2026-01"
-    last_verified: 2026-09-05
+    status: verified
+    source_url: "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf"
+    source_title: "BSI TR-02102-1 §2.1"
+    source_edition: "2026-01 (January 23, 2026)"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
     deadline: 2035-12-31
     deadline_state: disallowed
     applies_to:
@@ -74,12 +103,63 @@ rules:
       quantum_status: [broken-by-shor]
     rationale: policy_alignment
     rationale_note: >-
-      Reportedly adopts the EU roadmap's horizon rather than setting its own.
-      NOTE: BSI's hybrid stance for SIGNATURES in 2026-01 is deliberately left
-      unset here. Do not assume it mirrors the key-agreement stance — that is
-      the specific thing to check when verifying this pack.
+      §2.1 states the urgency asymmetry directly: "In contrast to key
+      agreement, classic signatures are still trustworthy as long as no
+      cryptographically relevant quantum computer exists." The later horizon
+      (2035 vs 2030/2031) follows from that, and follows the EU roadmap.
     migration_target: { signature: "ML-DSA-65" }
     verdict: warn
-    open_question: >-
-      Does BSI recommend hybrid for signatures as ANSSI reportedly does, or only
-      for key establishment? Set `hybrid` once the 2026-01 text is read.
+
+  - id: bsi-hybrid-signatures
+    description: >-
+      Quantum-safe signature schemes are recommended only in combination with
+      a classical signature scheme. §5.3.4: "This Technical Guideline
+      recommends the use of a quantum-safe signature scheme only in
+      combination with a classic signature scheme."
+    binding: guideline_recommendation
+    status: verified
+    source_url: "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf"
+    source_title: "BSI TR-02102-1 §5.3.4, Quantum-Safe Signature Schemes"
+    source_edition: "2026-01 (January 23, 2026)"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    applies_to:
+      purpose: [signature]
+      quantum_status: [pq-secure]
+      # Carve-out, §5.3.4: hash-based schemes may be used standalone.
+      exclude_algorithm: ["SLH-DSA", "LMS", "XMSS", "HSS", "SPHINCS"]
+    hybrid: recommended
+    rationale: algorithm_maturity
+    rationale_note: >-
+      Not a harvest argument — §2.1 says classic signatures stay trustworthy
+      until a CRQC exists. §5.3.4 asks that hybridisation "be implemented in
+      such a way that the hybrid signature scheme is secure as long as at
+      least one of the schemes is secure", i.e. it hedges against the new
+      scheme being wrong.
+    migration_target: { signature: "ML-DSA-65", construction: hybrid }
+    verdict: warn
+
+  - id: bsi-hash-based-standalone-permitted
+    description: >-
+      Hash-based signature schemes may be used standalone, not in hybrid form.
+      §5.3.4: "hash-based signatures can, provided that the implementation
+      security of stateful and stateless hash-based mechanisms is carefully
+      considered, in principle also be used alone (i.e. not in hybrid form)."
+    binding: guideline_recommendation
+    status: verified
+    source_url: "https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf"
+    source_title: "BSI TR-02102-1 §5.3.4"
+    source_edition: "2026-01 (January 23, 2026)"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    applies_to:
+      purpose: [signature]
+      algorithm: ["SLH-DSA", "LMS", "XMSS", "HSS"]
+    hybrid: silent
+    rationale: algorithm_maturity
+    rationale_note: >-
+      §5.3.4: "The security of hash-based signature schemes is only based on
+      complexity-theoretical assumptions about cryptographic hash functions."
+      Recorded as an explicit permission so a hash-based signature does not
+      inherit the hybrid recommendation from bsi-hybrid-signatures.
+    verdict: info

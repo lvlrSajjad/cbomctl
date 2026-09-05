@@ -43,6 +43,14 @@ def rule_applies(rule: Rule, asset: CryptoAsset, *, system_category: str | None)
     if a.construction and asset.construction not in a.construction:
         return False, None
 
+    if a.exclude_algorithm:
+        from cbomctl.normalize.identity import canonical_name
+
+        excluded = {canonical_name(n) for n in a.exclude_algorithm}
+        subject = canonical_name(asset.algorithm or asset.raw_name)
+        if any(e in subject or subject in e for e in excluded):
+            return False, None
+
     if a.algorithm:
         names = {n.upper() for n in a.algorithm}
         candidates = {(asset.algorithm or "").upper(), asset.raw_name.upper()}

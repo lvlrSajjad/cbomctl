@@ -10,10 +10,11 @@ independent checkboxes — and no tool will show you the collision.
 `cbomctl` takes a CBOM from any generator, runs it against several national PQC
 policies at once, and reports the matrix and the conflicts.
 
-> ⚠️ **Pre-release. No policy rule is verified.** Every rule ships as
-> `status: needs_verification` — assembled from secondary reporting, not yet
-> read from primary sources. See [docs/policy-sources.md](docs/policy-sources.md).
-> Not compliance advice.
+> ⚠️ **Pre-release. Verification is partial.** `bsi-de` has been read from the
+> primary BSI PDF and is verified; the other five packs are still assembled from
+> secondary reporting and ship as `status: needs_verification`. Output computed
+> from an unverified rule carries a visible banner naming the packs involved.
+> See [docs/policy-sources.md](docs/policy-sources.md). Not compliance advice.
 
 <!-- badges: PyPI, CI, license -->
 
@@ -105,7 +106,10 @@ semantically versioned artifact with its own schema and changelog, so another
 tool can consume them without `cbomctl`. Every rule carries a primary-source
 URL, a `last_verified` date, a `binding` classification, and a `hybrid` stance.
 
-`bsi-de` · `anssi-fr` · `asd-au` · `cnsa-2.0` · `us-eo14412` · `eu-roadmap`
+| pack | state |
+|---|---|
+| `bsi-de` | ✅ verified against TR-02102-1 v2026-01 §2.1, §5.3.4 |
+| `anssi-fr` · `asd-au` · `cnsa-2.0` · `us-eo14412` · `eu-roadmap` | unverified |
 
 ## Install
 

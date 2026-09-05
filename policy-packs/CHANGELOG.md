@@ -3,6 +3,33 @@
 Semantic versioning on the pack collection. A change that can flip a verdict is
 never a patch. See [README](README.md#versioning).
 
+## [Unreleased]
+
+### bsi-de 0.2.0 — VERIFIED
+
+First pack verified against its primary source: BSI TR-02102-1 **Version
+2026-01 (January 23, 2026)**, English edition, read directly from the PDF.
+
+- `bsi-classical-key-agreement-sunset` — 2031-12-31 confirmed (§2.1).
+- `bsi-high-protection-2030` — 2030-12-31 confirmed and **distinct** from the
+  2031 date. The earlier suspicion that these were one date conflated across
+  editions was wrong; §2.1 states both.
+- `bsi-hybrid-key-agreement` — added. §2.1 recommends hybrid form for
+  quantum-safe key agreement.
+- `bsi-classical-signatures-2035` — 2035-12-31 confirmed (§2.1).
+- `bsi-hybrid-signatures` — **added.** §5.3.4 recommends a quantum-safe
+  signature scheme "only in combination with a classic signature scheme". The
+  field previously left `null` rather than assumed is now filled from the text.
+- `bsi-hash-based-standalone-permitted` — **added carve-out.** §5.3.4 permits
+  hash-based schemes (SLH-DSA, LMS, XMSS) to be used alone. A widely-cited
+  secondary summary claims BSI wants hybrid for all PQC including hash-based;
+  the primary text says otherwise.
+- Binding confirmed as `guideline_recommendation` throughout — TR-02102-1
+  *recommends*. No rule in this pack can produce FAIL.
+
+Schema addition: `applies_to.exclude_algorithm`, needed to express the §5.3.4
+carve-out.
+
 ## [Unreleased] — 0.1.0
 
 Initial six packs. **Nothing in this release is verified**; every rule ships

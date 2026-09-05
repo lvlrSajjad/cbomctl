@@ -1,14 +1,14 @@
 # Policy sources, corrections, and open questions
 
-**No rule in any pack is verified. Every claim below still needs a primary
-source read.**
+**`bsi-de` is verified. The other five packs are not — every claim in them
+still needs a primary source read.**
 
 Everything here was assembled from secondary reporting — vendor blogs, law-firm
 summaries, consultancy explainers — which is frequently wrong about exactly the
 details that matter: whether a date binds a requirement or a recommendation,
 which population it binds, and whether the edition being quoted is current.
 
-Accordingly every rule ships `status: needs_verification`. `cbomctl` prints a
+Accordingly every *unverified* rule ships `status: needs_verification`. `cbomctl` prints a
 banner; `--require-verified-policy` refuses to run. That is the honest default:
 better a tool that admits its rules are unconfirmed than one that renders a
 confident verdict from a blog post.
@@ -100,41 +100,105 @@ each would have produced a materially misleading verdict.
    category names. (Design decision already settled: undeclared ⇒ `INDET`; the
    2027 gate is its own flag.)
 
-## 3. `bsi-de` — Germany, BSI
+## 3. `bsi-de` — Germany, BSI ✅ VERIFIED
 
-**Primary source**
-BSI TR-02102-1, *"Cryptographic Mechanisms: Recommendations and Key Lengths"*,
-**version 2026-01 (published 2026-01-23)** —
-<https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.html>
+**Verified 2026-09-06 by Sadjad Asadi against the primary PDF.**
 
-English and German editions are published; the German is normative.
+Source: BSI TR-02102-1, *"Cryptographic Mechanisms: Recommendations and Key
+Lengths"*, **Version 2026-01, dated January 23, 2026**, English edition —
+<https://www.bsi.bund.de/SharedDocs/Downloads/EN/BSI/Publications/TechGuidelines/TG02102/BSI-TR-02102-1.pdf>
 
-**What the pack asserts** — `binding: guideline_recommendation`,
-`hybrid: recommended`
+| # | claim | status | where |
+|---|---|---|---|
+| B1 | **Recommends**, does not mandate. Operative verb throughout is *recommends* → `guideline_recommendation` | ✅ verified | §2.1, §5.3.4 |
+| B2 | Sole use of classical key agreement recommended only until **2031-12-31** | ✅ verified | §2.1 |
+| B3 | Very high protection requirements: transition by **2030-12-31** | ✅ verified | §2.1 |
+| B4 | Classical signatures recommended only until **2035-12-31**, following the EU roadmap | ✅ verified | §2.1 |
+| B5 | Quantum-safe **key agreement** should be used in hybrid form | ✅ verified | §2.1, §2.2 |
+| B6 | Quantum-safe **signatures** recommended only in combination with a classical signature | ✅ verified | §5.3.4 |
+| B7 | **Hash-based signatures may be used standalone** — an explicit carve-out from B6 | ✅ verified | §5.3.4 |
 
-| # | claim | status |
-|---|---|---|
-| B1 | It **recommends** hybrid key establishment during the transition. **Not a mandate** — TR-02102-1 is a technical guideline, not a statute | `needs_verification` |
-| B2 | Sole use of classical key agreement recommended only until **2031-12-31** | `needs_verification` |
-| B3 | **Very high protection requirements**: complete by **2030-12-31** | `needs_verification` |
-| B4 | Classical **signatures** follow the EU **2035** horizon | `needs_verification` |
+### The operative sentences
 
-**Open questions**
+**B2 / B3** — §2.1:
 
-1. **B1 was previously wrong in our drafts** ("mandatory") and is now corrected
-   to *recommends*. Verify the verb in the German text. The pack's verdict for a
-   non-hybrid deployment is `WARN`, not `FAIL`, and that follows from `binding` —
-   if it turns out to bind BSI-approved or government-facing systems more
-   strongly, add a second rule with `binding: agency_requirement` scoped to that
-   population rather than changing B1.
-2. **B2 vs B3** — two deadlines by protection level, or has one superseded the
-   other? 2030 and 2031 appearing together smells like a conflation of the
-   2025-01 and 2026-01 editions.
-3. **Scope** — does TR-02102-1 carry the migration timeline at all, or does it
-   live in a separate BSI publication? Do not attribute a deadline to the wrong
-   guideline.
-4. **B4** — confirm BSI adopts the EU roadmap's date rather than setting its
-   own, and cite the roadmap as a second source (see §6 Q3).
+> "The sole use of classic key agreement mechanisms is only recommended until
+> the end of 2031, see also Section 2.3. For applications with very high
+> protection requirements, the transition to quantum-safe mechanisms should
+> already take place by the end of 2030."
+
+This settles the earlier open question: 2030 and 2031 are **two distinct
+deadlines by protection level**, not a conflation of the 2025-01 and 2026-01
+editions.
+
+**B5** — §2.1:
+
+> "The quantum-safe mechanisms recommended in Section 2.4 should be used in
+> 'hybrid' form, i.e., in a suitable combination with a classical method."
+
+**B6** — §5.3.4:
+
+> "This Technical Guideline recommends the use of a quantum-safe signature
+> scheme only in combination with a classic signature scheme. Hybridisation
+> should be implemented in such a way that the hybrid signature scheme is
+> secure as long as at least one of the schemes is secure."
+
+**B7, the carve-out** — §5.3.4:
+
+> "The security of hash-based signature schemes is only based on
+> complexity-theoretical assumptions about cryptographic hash functions.
+> Therefore, hash-based signatures can, provided that the implementation
+> security of stateful and stateless hash-based mechanisms is carefully
+> considered, in principle also be used alone (i.e. not in hybrid form)."
+
+### A secondary source we can now show to be wrong
+
+A widely-circulated PQShield/ECCG-derived summary states that BSI recommends
+classical algorithms in conjunction with **all** PQC algorithms, *including
+hash-based ones*. The primary text says the opposite for that specific family:
+SLH-DSA, LMS and XMSS may be used alone. The pack encodes this as
+`applies_to.exclude_algorithm` on `bsi-hybrid-signatures`, plus an explicit
+permission rule.
+
+This is the clearest available argument for the primary-source rule. A pack
+built from that summary would have warned on every standalone SLH-DSA signature
+in Germany, incorrectly, and no one would have caught it.
+
+### What BSI confirms about the two axes
+
+Both are stated in the guideline itself, which is the best possible evidence for
+modelling them separately:
+
+**Urgency** — §2.1 names the mechanism and the asymmetry:
+
+> "…encrypted data can already be stored for later decryption ('Store Now,
+> Decrypt Later')."
+> "In contrast to key agreement, classic signatures are still trustworthy as
+> long as no cryptographically relevant quantum computer exists."
+
+**Assurance** — §5.3.4's hybridisation requirement is about the *new* scheme
+possibly being wrong ("secure as long as at least one of the schemes is
+secure"), not about timing. Hence 2035 for signatures against 2030/2031 for key
+agreement, *and* a hybrid recommendation covering both.
+
+### Consequence for the conflict matrix
+
+F4 is not an ANSSI quirk. **Both** BSI and ANSSI recommend hybrid for
+signatures; NSA requires neither hybrid nor permits sub-1024 ML-KEM; ASD
+recommends against hybrids for both purposes. The split is Europe versus the
+anglophone agencies, on both rows of a purpose × jurisdiction grid — pending
+ANSSI's own primary-source confirmation (§4, F4).
+
+### Still open
+
+- Whether BSI's forward-looking statement — §2.1: *"In future versions,
+  signature methods that are not quantum-safe will therefore only be
+  recommended for hybrid use"* — should be encoded now as a scheduled change or
+  left until the edition that makes it operative. Currently not encoded.
+- §2.4 lists FrodoKEM, Classic McEliece, ML-KEM and HQC as recommended
+  quantum-safe key agreement mechanisms. HQC is **not yet a final FIPS**, so it
+  must not appear as a `migration_target`; BSI's acceptance of FrodoKEM and
+  Classic McEliece is jurisdiction-specific and not yet encoded.
 
 ## 4. `anssi-fr` — France, ANSSI
 
@@ -290,4 +354,9 @@ A rule may only lose `needs_verification` with a row here.
 
 | rule | verified by | date | primary source + section | outcome |
 |---|---|---|---|---|
-| | | | | |
+| `bsi-classical-key-agreement-sunset` | Sadjad Asadi | 2026-09-06 | TR-02102-1 v2026-01 §2.1 | confirmed, 2031-12-31 |
+| `bsi-high-protection-2030` | Sadjad Asadi | 2026-09-06 | TR-02102-1 v2026-01 §2.1 | confirmed, distinct from 2031 |
+| `bsi-hybrid-key-agreement` | Sadjad Asadi | 2026-09-06 | TR-02102-1 v2026-01 §2.1, §2.2 | confirmed, *recommends* |
+| `bsi-classical-signatures-2035` | Sadjad Asadi | 2026-09-06 | TR-02102-1 v2026-01 §2.1 | confirmed, 2035-12-31 |
+| `bsi-hybrid-signatures` | Sadjad Asadi | 2026-09-06 | TR-02102-1 v2026-01 §5.3.4 | confirmed, *recommends* |
+| `bsi-hash-based-standalone-permitted` | Sadjad Asadi | 2026-09-06 | TR-02102-1 v2026-01 §5.3.4 | carve-out confirmed; contradicts a common secondary summary |

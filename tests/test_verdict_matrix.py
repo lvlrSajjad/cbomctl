@@ -98,9 +98,11 @@ class TestConflicts:
 
 
 class TestUnverifiedIsUnmissable:
-    def test_matrix_reports_unverified_packs(self, result):
+    def test_matrix_reports_exactly_the_unverified_packs(self, result):
+        """bsi-de has been verified against the primary PDF; the rest have not.
+        The warning must narrow as verification proceeds, not stay blanket."""
         matrix, _, _ = result
-        assert set(matrix.unverified_packs) == set(JURISDICTIONS)
+        assert set(matrix.unverified_packs) == {"anssi-fr", "asd-au", "cnsa-2.0"}
 
     def test_text_output_carries_the_banner(self, result):
         matrix, conflicts, _ = result
@@ -121,14 +123,27 @@ class TestUnverifiedIsUnmissable:
         matrix, conflicts, _ = result
         doc = json.loads(sarif.render(matrix, conflicts))
         rules = doc["runs"][0]["tool"]["driver"]["rules"]
-        policy_rules = [r for r in rules if r["id"] != "cbomctl/jurisdiction-conflict"]
-        assert policy_rules
-        for rule in policy_rules:
+        unverified = [r for r in rules
+                      if r.get("properties", {}).get("status") == "needs_verification"]
+        assert unverified
+        for rule in unverified:
             assert "[UNVERIFIED RULE]" in rule["fullDescription"]["text"]
+        verified = [r for r in rules
+                    if r.get("properties", {}).get("status") == "verified"]
+        for rule in verified:
+            assert "[UNVERIFIED RULE]" not in rule["fullDescription"]["text"]
 
 
 class TestStrict:
-    def test_strict_downgrades_every_verdict_to_indeterminate(self):
+    def test_strict_spares_verified_rules(self):
+        """--strict blocks unverified rules from asserting a verdict. A rule
+        read from its primary source is not affected."""
+        assets, _ = read_assets(FIXTURES / "conflict-hybrid.json")
+        matrix = build(assets, [load_pack("bsi-de")], Config(), strict=True, today=TODAY)
+        assert any(c.verdict is Verdict.WARN
+                   for r in matrix.rows for c in r.cells.values())
+
+    def test_strict_downgrades_unverified_verdicts_to_indeterminate(self):
         assets, _ = read_assets(FIXTURES / "conflict-hybrid.json")
         packs = [load_pack(j) for j in JURISDICTIONS]
         matrix = build(assets, packs, Config(), strict=True, today=TODAY)

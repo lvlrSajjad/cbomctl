@@ -192,6 +192,13 @@
               "items": {
                 "type": "string"
               }
+            },
+            "exclude_algorithm": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Algorithms the rule explicitly does NOT reach. Needed for real carve-outs: BSI TR-02102-1 s5.3.4 recommends hybrid signatures but permits hash-based schemes (SLH-DSA, LMS, XMSS) standalone, because their security rests only on hash-function assumptions."
             }
           }
         },

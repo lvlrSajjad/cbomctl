@@ -25,15 +25,29 @@ class TestPacksAreHonest:
                                   "eu-roadmap", "us-eo14412"}
 
     @pytest.mark.parametrize("pid", ALL_PACKS)
-    def test_every_rule_is_unverified(self, pid):
-        """Condition of building on stubs: nothing may claim to be verified."""
-        pack = load_pack(pid)
-        assert all(r.status is RuleStatus.NEEDS_VERIFICATION for r in pack.rules)
+    def test_every_unverified_rule_states_its_open_question(self, pid):
+        """An unverified rule must say what would settle it."""
+        for rule in load_pack(pid).rules:
+            if rule.status is RuleStatus.NEEDS_VERIFICATION:
+                assert rule.open_question, f"{pid}/{rule.id} has no open question"
 
     @pytest.mark.parametrize("pid", ALL_PACKS)
-    def test_every_unverified_rule_states_its_open_question(self, pid):
+    def test_every_verified_rule_names_its_reader_and_section(self, pid):
+        """Verified means a person read the primary text. Prove it: a named
+        verifier, a pinned edition, and a section in the source title."""
         for rule in load_pack(pid).rules:
-            assert rule.open_question, f"{pid}/{rule.id} has no open question"
+            if rule.status is not RuleStatus.VERIFIED:
+                continue
+            assert rule.verified_by, f"{pid}/{rule.id} claims verified with no verifier"
+            assert rule.source_edition, f"{pid}/{rule.id} has no pinned edition"
+            assert "§" in rule.source_title, (
+                f"{pid}/{rule.id} cites no section — 'verified' means a specific "
+                f"passage was read, not that the document was skimmed")
+
+    def test_bsi_is_verified_and_the_rest_are_not(self):
+        """Verification proceeds pack by pack; this pins where it has reached."""
+        verified = {p for p in ALL_PACKS if load_pack(p).is_verified}
+        assert verified == {"bsi-de"}
 
     @pytest.mark.parametrize("pid", ALL_PACKS)
     def test_every_pack_declares_who_it_binds(self, pid):
@@ -41,6 +55,13 @@ class TestPacksAreHonest:
 
 
 class TestBindingDecidesSeverity:
+    def test_bsi_recommends_and_therefore_cannot_fail(self):
+        """TR-02102-1's operative verb is 'recommends'. Verified against the
+        primary PDF, so this is not an assumption about its force."""
+        pack = load_pack("bsi-de")
+        assert all(r.binding is Binding.GUIDELINE_RECOMMENDATION for r in pack.rules)
+        assert all(r.effective_verdict is not Verdict.FAIL for r in pack.rules)
+
     def test_a_recommendation_cannot_fail(self):
         """The review found our drafts overstating guidance as mandates. A
         guideline_recommendation is downgraded to WARN whatever the YAML says."""
@@ -104,11 +125,37 @@ class TestHybridIsPerPurpose:
         assert rule.hybrid is HybridStance.RECOMMENDED
         assert rule.rationale is Rationale.ALGORITHM_MATURITY
 
-    def test_bsi_signature_hybrid_stance_is_deliberately_unset(self):
-        """Not yet read from TR-02102-1 2026-01, so not asserted."""
+    def test_bsi_recommends_hybrid_signatures(self):
+        """Verified: §5.3.4 recommends a quantum-safe signature scheme "only in
+        combination with a classic signature scheme". So Europe splits from the
+        anglophone agencies on signatures as well as key establishment."""
+        from cbomctl.models import HybridStance, Rationale
+
         rule = next(r for r in load_pack("bsi-de").rules
-                    if r.applies_to.purpose == [Purpose.SIGNATURE])
-        assert rule.hybrid is None
+                    if r.id == "bsi-hybrid-signatures")
+        assert rule.hybrid is HybridStance.RECOMMENDED
+        assert rule.rationale is Rationale.ALGORITHM_MATURITY
+
+    def test_bsi_exempts_hash_based_signatures_from_hybrid(self):
+        """§5.3.4 carve-out: hash-based schemes "can ... in principle also be
+        used alone (i.e. not in hybrid form)". A widely-cited secondary summary
+        says BSI wants hybrid for *all* PQC including hash-based; the primary
+        text does not."""
+        from cbomctl.models import Construction, QuantumStatus
+
+        slh = asset(purpose=Purpose.SIGNATURE, construction=Construction.PURE_PQC,
+                    status=QuantumStatus.PQ_SECURE, name="SLH-DSA-SHA2-192s")
+        fired = {r.rule_id for r in evaluate(load_pack("bsi-de"), slh).rules}
+        assert "bsi-hybrid-signatures" not in fired
+
+    def test_bsi_still_wants_hybrid_for_lattice_signatures(self):
+        """The carve-out is specific to hash-based schemes."""
+        from cbomctl.models import Construction, QuantumStatus
+
+        mldsa = asset(purpose=Purpose.SIGNATURE, construction=Construction.PURE_PQC,
+                      status=QuantumStatus.PQ_SECURE, name="ML-DSA-65")
+        fired = {r.rule_id for r in evaluate(load_pack("bsi-de"), mldsa).rules}
+        assert "bsi-hybrid-signatures" in fired
 
     def test_hybrid_construction_satisfies_a_recommending_pack(self):
         cell = evaluate(load_pack("anssi-fr"),

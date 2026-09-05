@@ -35,6 +35,8 @@ class AppliesTo(BaseModel):
     quantum_status: list[QuantumStatus] = Field(default_factory=list)
     construction: list[Construction] = Field(default_factory=list)
     algorithm: list[str] = Field(default_factory=list)
+    #: Algorithms a rule explicitly does not reach — real carve-outs exist.
+    exclude_algorithm: list[str] = Field(default_factory=list)
     system_category: list[str] = Field(default_factory=list)
     security_level: list[str] = Field(default_factory=list)
 
