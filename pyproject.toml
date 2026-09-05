@@ -1,0 +1,38 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "cbomctl"
+version = "0.1.0"
+description = "Evaluate a CycloneDX CBOM against multiple national post-quantum policies and report where their verdicts contradict."
+readme = "README.md"
+requires-python = ">=3.11"
+license = "Apache-2.0"
+authors = [{ name = "Sadjad Asadi" }]
+keywords = ["cbom", "cyclonedx", "post-quantum", "pqc", "compliance", "sbom"]
+classifiers = [
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Topic :: Security :: Cryptography",
+  "Programming Language :: Python :: 3.11",
+]
+dependencies = ["typer>=0.12", "pydantic>=2.7", "pyyaml>=6.0"]
+
+[project.optional-dependencies]
+llm = ["anthropic>=0.40"]
+test = ["pytest>=8.0", "jsonschema>=4.21"]
+
+[project.scripts]
+cbomctl = "cbomctl.cli:app"
+
+[project.urls]
+Homepage = "https://github.com/lvlrSajjad/cbomctl"
+Issues = "https://github.com/lvlrSajjad/cbomctl/issues"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/cbomctl"]
+artifacts = ["src/cbomctl/packs/*.yaml"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
