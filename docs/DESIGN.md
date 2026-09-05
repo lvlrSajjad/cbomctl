@@ -96,7 +96,7 @@ behind a flag, has its own fixture, and creates no dependency —
 `sbom-tools` is MIT, pre-1.0 (v0.2.0), and its Python binding is an in-tree
 wrapper that is not published to PyPI (the `sbomtools` package that *is* on
 PyPI is an unrelated project — do not depend on it). We have
-[asked upstream](../upstream/issue-draft.md) whether that payload is a stable
+[asked upstream](https://github.com/lvlrSajjad/cbomctl/blob/main/upstream/issue-draft.md) whether that payload is a stable
 contract; until they answer, the adapter is best-effort and says so.
 
 **Data lifetimes** come from `cbomctl.yaml` or from CycloneDX component
@@ -304,10 +304,10 @@ Deterministic: same inputs ⇒ byte-identical output.
 
 ## 9. Policy packs
 
-Packs live in [`policy-packs/`](../policy-packs/) as a **standalone, semantically
+Packs live in [`policy-packs/`](https://github.com/lvlrSajjad/cbomctl/tree/main/policy-packs) as a **standalone, semantically
 versioned artifact** with its own schema and CHANGELOG, designed so another tool
 can consume them without `cbomctl`. Full field reference in
-[`policy-packs/README.md`](../policy-packs/README.md); the two load-bearing
+[`policy-packs/README.md`](https://github.com/lvlrSajjad/cbomctl/blob/main/policy-packs/README.md); the two load-bearing
 fields are `binding` (statute … guideline_recommendation) and `hybrid`
 (required … silent). `source_url` must be a primary source from an allowlisted
 host.

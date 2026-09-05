@@ -5,8 +5,7 @@ the packs make compliance-adjacent claims under your name.
 
 ## One-time setup (yours, not mine)
 
-1. **Create the GitHub repository** — `lvlrSajjad/cbomctl`, public, no
-   auto-generated README (one exists).
+1. ~~**Create the GitHub repository**~~ — done: <https://github.com/lvlrSajjad/cbomctl>
 2. **PyPI trusted publishing.** On PyPI, add a *pending publisher* for project
    `cbomctl`: owner `lvlrSajjad`, repository `cbomctl`, workflow
    `release.yml`, environment `pypi`. No API token is stored anywhere.
@@ -17,12 +16,13 @@ the packs make compliance-adjacent claims under your name.
 ## Pre-flight
 
 ```bash
-pytest -q                                   # 331 tests
-python scripts/gen_pack_docs.py --check
-python scripts/gen_article_blocks.py --check
-mkdocs build --strict
-python -m build && ls dist/
+./scripts/check.sh
 ```
+
+Runs everything CI runs, with honest exit codes. Written after a
+`mkdocs build --strict 2>/dev/null && echo ok` reported a green docs build that
+CI then failed — stderr was discarded and the exit code checked belonged to
+`grep`. Do not hand-roll the check.
 
 Confirm the identity one more time, since this is the irreversible step:
 
@@ -35,8 +35,10 @@ Expect `Sadjad Asadi <lvlr.xaus@gmail.com>` and account `lvlrSajjad`.
 
 ## Publish
 
+The repository is already public and `main` is pushed. Releasing is the tag:
+
 ```bash
-gh repo create lvlrSajjad/cbomctl --public --source=. --remote=origin --push
+./scripts/check.sh                     # must be green
 git tag -a v0.1.0 -m "v0.1.0 — all seven policy packs verified from primary sources"
 git push origin v0.1.0
 ```
