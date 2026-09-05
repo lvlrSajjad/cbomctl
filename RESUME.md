@@ -9,7 +9,7 @@ cbomctl verdict tests/fixtures/conflict-hybrid.json -c cbomctl.yaml.example
 cbomctl prioritize|plan|normalize <cbom>
 cbomctl policies list|show <id>
 ```
-135 tests pass. Wheel builds with packs inside; verified in a clean venv.
+260 tests pass. Wheel builds with packs inside; verified in a clean venv.
 JSON output byte-identical across runs. Exit codes: 0/1/2/3.
 
 ## The two conditions on building against stubs — both enforced and tested
@@ -37,27 +37,39 @@ algorithm family cannot do, the result is AMBIGUOUS with the disagreement
 recorded. Measured share of unresolved algorithm assets in the real Keycloak
 CBOM: **8 of 22**. Docs corrected from "roughly a quarter" to "more than a third".
 
-## Policy verification — 6 of 7 packs done, from primary sources
+## Policy verification — 6 of 7 packs verified, packs at 1.0.0
 Extracted primary texts are in `.research/` (`bsi.txt`, `anssi.txt`,
 `eo14412.clean.txt`, `ir8547.txt`, `eu_117507.txt`).
 
 | pack | state |
 |---|---|
 | `bsi-de` 6/6 | TR-02102-1 v2026-01 §2.1, §5.3.4 |
-| `anssi-fr` 5/6 | 2023 follow-up §1.1, §1.2, §2, §3.2, §4 |
+| `anssi-fr` 5/5 | 2023 follow-up §1.1, §1.2, §2, §3.2, §4 |
 | `asd-au` 6/6 | ISM Guidelines for Cryptography, page dated 2026-09-03 |
 | `eu-roadmap` 6/6 | Coordinated Implementation Roadmap Part 1 v1.1 |
 | `us-eo14412` 3/3 | 91 FR 38483 §4(b), §5(c) |
 | `nist-ir8547` 4/4 | IR 8547 **ipd** Tables 2 and 4 — verified as a draft |
-| `cnsa-2.0` 0/5 | **BLOCKED** — nsa.gov and media.defense.gov return 403 |
+| `cnsa-2.0` 0/7 | **BLOCKED** — nsa.gov and media.defense.gov return 403 |
 
-**The one remaining job needs you, not more effort.** Open the CNSA 2.0 FAQ in
-a browser and check the seven claims listed in `docs/policy-sources.md` §2.
-Priority: whether CNSA requires ML-KEM-**1024** (BSI and ANSSI accept 768 —
-that is a `parameter` conflict independent of hybrid), and whether NSA merely
-does not require hybrid or actively discourages it. Also open:
-`anssi-certification-2027`, whose 2027 date is press-only and not in the
-primary paper.
+## THE ONE REMAINING BLOCKER — needs you and a browser
+Open the CNSA 2.0 FAQ (reported U/OO/194427-22, PP-24-4014, v2.1, Dec 2024) at
+`media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF`.
+Seven rules are already *structured* for the reading; each `open_question` names
+the sentence to find. Record the page number per rule. Priority:
+
+1. **The hybrid sentence.** If NSA says hybrids should not be used on NSS
+   mission systems except for named interop exceptions, the stance is
+   `not_permitted_except_interop`, not `silent` — and then **no single
+   construction satisfies all jurisdictions**, which the conflict output states
+   instead of naming a compromise. Currently encoded as that hypothesis,
+   unverified, so the difference is visible.
+2. **Parameter sets** — ML-KEM-1024 / ML-DSA-87 required or merely preferred,
+   and at all classification levels? BSI and ANSSI accept 768/65 (verified).
+3. **SLH-DSA** — excluded or approved? BSI and ANSSI both exempt hash-based
+   signatures from hybrid, so exclusion is a second contradiction.
+4. Category deadlines against the FAQ's own table; the "all NSS by 2031" claim.
+
+Then flip the five to seven rules, and nothing else blocks release.
 
 ## What the verification changed
 - **`eu-roadmap` `hybrid: silent` was wrong** — the roadmap recommends hybrids.
