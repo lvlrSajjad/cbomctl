@@ -73,9 +73,27 @@ Demo: `cbomctl verdict` showing a signature asset ranked low urgency while
 `anssi-fr` still requires a hybrid target, with the `rationale` field naming
 `algorithm_maturity` as the reason.
 
-**Verify before publishing:** ANSSI F4 (the signature-hybrid stance and its
-stated reasoning), and BSI's 2026-01 signature-hybrid language, which may or may
-not mirror its key-agreement position.
+**Both dependencies are now verified**, and they made the article stronger than
+planned:
+
+- **BSI TR-02102-1 v2026-01 §5.3.4** — "recommends the use of a quantum-safe
+  signature scheme only in combination with a classic signature scheme."
+- **ANSSI 2023 follow-up §1.1** — post-quantum algorithms are "still not mature
+  enough to solely ensure the security", citing Beullens, *Breaking Rainbow
+  takes a weekend on a laptop*.
+
+So the maturity argument is not a French quirk: it is the European position,
+stated by both authorities, and ANSSI names the Rainbow break as its reason.
+Meanwhile both still put signatures on a **later** horizon (2035) than key
+establishment (2030/2031). Urgency and assurance appear in the same documents
+and point different directions — which is the article.
+
+**Also worth a paragraph:** both authorities exempt hash-based signatures
+(SLH-DSA, XMSS, LMS) from the hybrid recommendation, because their security
+rests only on hash-function assumptions. That is the maturity argument being
+applied consistently rather than as a blanket rule, and a widely-circulated
+secondary summary gets it wrong — a concrete illustration of why the packs cite
+primary sources.
 
 ## Dropped
 
