@@ -47,11 +47,31 @@ def test_pack_id_matches_filename(path):
 
 
 @pytest.mark.parametrize("path", PACKS, ids=lambda p: p.stem)
-def test_no_pack_claims_a_mandate_it_does_not_have(path):
-    """The review found drafts calling BSI and ANSSI guidance 'mandatory'."""
-    text = path.read_text().lower()
+def test_a_recommendation_never_describes_itself_as_a_mandate(path):
+    """The review found drafts calling BSI and ANSSI guidance "mandatory".
+
+    Scoped to the binding rather than to the whole file: ANSSI's security-visa
+    rule quotes its source's own "mandatory hybridation", which is correct --
+    it *is* a certification requirement. Banning the word outright would have
+    forced a paraphrase of a primary source, which is worse than the problem.
+    """
     for rule in yaml.safe_load(path.read_text())["rules"]:
-        if rule["binding"] == "guideline_recommendation":
-            assert "mandator" not in rule["description"].lower()
-            assert "must " not in rule["description"].lower()
-    assert "mandatory" not in text
+        if rule["binding"] != "guideline_recommendation":
+            continue
+        text = f"{rule['description']} {rule.get('rationale_note', '')}".lower()
+        for word in ("mandator", "must ", "obliged", "required to"):
+            assert word not in text, (
+                f"{path.stem}/{rule['id']} is a guideline_recommendation but "
+                f"its own text says {word!r}")
+
+
+@pytest.mark.parametrize("path", PACKS, ids=lambda p: p.stem)
+def test_verified_rules_quote_their_source(path):
+    """A verified rule carries the sentence it was verified against, so a
+    reviewer can check the reading without re-fetching the PDF."""
+    for rule in yaml.safe_load(path.read_text())["rules"]:
+        if rule["status"] != "verified":
+            continue
+        blob = f"{rule['description']} {rule.get('rationale_note', '')}"
+        assert '"' in blob or "\u201c" in blob, (
+            f"{path.stem}/{rule['id']} claims verified but quotes nothing")

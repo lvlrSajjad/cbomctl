@@ -10,8 +10,8 @@ independent checkboxes — and no tool will show you the collision.
 `cbomctl` takes a CBOM from any generator, runs it against several national PQC
 policies at once, and reports the matrix and the conflicts.
 
-> ⚠️ **Pre-release. Verification is partial.** `bsi-de` has been read from the
-> primary BSI PDF and is verified; the other five packs are still assembled from
+> ⚠️ **Pre-release. Verification is partial.** `bsi-de` and `anssi-fr` have been
+> read from their primary PDFs; the other four packs are still assembled from
 > secondary reporting and ship as `status: needs_verification`. Output computed
 > from an unverified rule carries a visible banner naming the packs involved.
 > See [docs/policy-sources.md](docs/policy-sources.md). Not compliance advice.
@@ -108,8 +108,9 @@ URL, a `last_verified` date, a `binding` classification, and a `hybrid` stance.
 
 | pack | state |
 |---|---|
-| `bsi-de` | ✅ verified against TR-02102-1 v2026-01 §2.1, §5.3.4 |
-| `anssi-fr` · `asd-au` · `cnsa-2.0` · `us-eo14412` · `eu-roadmap` | unverified |
+| `bsi-de` | ✅ verified — TR-02102-1 v2026-01 §2.1, §5.3.4 |
+| `anssi-fr` | ✅ verified 5/6 — ANSSI 2023 follow-up §1.1, §1.2, §2, §3.2, §4 |
+| `asd-au` · `cnsa-2.0` · `us-eo14412` · `eu-roadmap` | unverified |
 
 ## Install
 

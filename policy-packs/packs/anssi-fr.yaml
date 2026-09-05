@@ -2,74 +2,149 @@ id: anssi-fr
 name: "ANSSI — France"
 authority: "Agence nationale de la sécurité des systèmes d'information"
 jurisdiction: FR
-pack_version: "0.1.0"
+pack_version: "0.2.0"
 applicability: >-
-  ANSSI's position papers are guidance. The certification rule binds only
-  products seeking ANSSI certification (CSPN, Critères Communs) — a far narrower
-  population than French industry generally.
+  Two different obligations, deliberately kept as separate rules. ANSSI's
+  general position is guidance and produces WARN. Its security-visa evaluation
+  requirement is a certification condition and binds only products seeking a
+  French security visa (CSPN, Critères Communs) — a far narrower population
+  than French industry.
 notes: >-
-  STUB. The signature-hybrid rule below is the most consequential unverified
-  claim in this repository: it is the only jurisdiction reportedly recommending
-  hybrid for signatures, and it does so on maturity grounds rather than harvest
-  grounds. See docs/policy-sources.md F4.
+  Rules verified 2026-09-06 against "ANSSI views on the Post-Quantum
+  Cryptography transition (2023 follow up)", December 21 2023, read from the
+  primary PDF. The 2027 certification deadline reported in 2026 press coverage
+  is NOT in this document and remains unverified.
 
 rules:
-  - id: anssi-hybrid-key-establishment
+  - id: anssi-hybridation-necessary
     description: >-
-      Strongly recommends hybrid (post-quantum + classical) key establishment
-      for products protecting information beyond 2030, or deployed without
-      updates past 2030.
+      Hybridation is emphasised as necessary wherever post-quantum mitigation
+      is needed, short and medium term. §1.1: "ANSSI still strongly emphasizes
+      the necessity of hybridation wherever post-quantum mitigation is needed
+      both in the short and medium term."
     binding: guideline_recommendation
-    status: needs_verification
+    status: verified
     source_url: "https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition"
-    source_title: "ANSSI views on the Post-Quantum Cryptography transition (2023 follow-up)"
-    last_verified: 2026-09-05
+    source_title: "ANSSI views on the Post-Quantum Cryptography transition (2023 follow up), §1.1"
+    source_edition: "2023 follow-up, December 21 2023"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
     applies_to:
-      purpose: [key-agreement]
-      quantum_status: [broken-by-shor, pq-secure]
-    hybrid: recommended
-    rationale: harvest_now_decrypt_later
-    migration_target: { kem: "ML-KEM-768", construction: hybrid }
-    verdict: warn
-    open_question: >-
-      'Strongly recommends' is not 'requires'. Confirm the verb — the conflict
-      narrative must not claim France mandates hybrid.
-
-  - id: anssi-hybrid-signatures
-    description: >-
-      Extends the hybrid recommendation to signatures, on the grounds that
-      post-quantum signature schemes are newer and less battle-tested than
-      post-quantum key establishment.
-    binding: guideline_recommendation
-    status: needs_verification
-    source_url: "https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition"
-    source_title: "ANSSI views on the Post-Quantum Cryptography transition (2023 follow-up)"
-    last_verified: 2026-09-05
-    applies_to:
-      purpose: [signature]
+      purpose: [key-agreement, encryption]
+      quantum_status: [pq-secure, broken-by-shor]
     hybrid: recommended
     rationale: algorithm_maturity
     rationale_note: >-
-      Not a harvest-now-decrypt-later argument — a signature cannot be
-      harvested. The concern is that ML-DSA and SLH-DSA are young: Rainbow and
-      SIKE both fell to classical cryptanalysis during the NIST competition, and
-      that risk does not diminish as the CRQC date approaches. This is why
-      urgency and assurance are modelled as separate axes.
+      Stated in the document: "even if the post-quantum algorithms have gained
+      a lot of attention, they are still not mature enough to solely ensure the
+      security. For example, several post-quantum schemes have suffered from
+      classical attacks in the past years" — citing Beullens, "Breaking Rainbow
+      takes a weekend on a laptop". Not a harvest argument.
+    migration_target: { kem: "ML-KEM-768", construction: hybrid }
+    verdict: warn
+
+  - id: anssi-hybridation-signatures
+    description: >-
+      The hybridation requirement covers signatures. §4: "any product that
+      includes post-quantum mitigation shall implement hybridation except if
+      the quantum mitigation only relies on hash-based signatures".
+    binding: guideline_recommendation
+    status: verified
+    source_url: "https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition"
+    source_title: "ANSSI views on the Post-Quantum Cryptography transition (2023 follow up), §3.2, §4"
+    source_edition: "2023 follow-up, December 21 2023"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    applies_to:
+      purpose: [signature]
+      quantum_status: [pq-secure]
+      # §2, §4: hybridation is optional for hash-based schemes.
+      exclude_algorithm: ["XMSS", "LMS", "HSS", "SPHINCS", "SLH-DSA"]
+    hybrid: recommended
+    rationale: algorithm_maturity
     migration_target: { signature: "ML-DSA-65", construction: hybrid }
     verdict: warn
-    open_question: >-
-      THE key claim to verify. If confirmed, article 3 needs a section on the
-      maturity argument; if not, this rule is removed.
+
+  - id: anssi-hash-based-hybridation-optional
+    description: >-
+      Hybridation is optional for hash-based signatures. §2 on XMSS/LMS:
+      "Hybridation (see Section 3 for more information) is optional for this
+      signature." §4 repeats the exception for XMSS, LMS and SPHINCS+.
+    binding: guideline_recommendation
+    status: verified
+    source_url: "https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition"
+    source_title: "ANSSI views on the Post-Quantum Cryptography transition (2023 follow up), §2, §4"
+    source_edition: "2023 follow-up, December 21 2023"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    applies_to:
+      purpose: [signature]
+      algorithm: ["XMSS", "LMS", "HSS", "SPHINCS", "SLH-DSA"]
+    hybrid: silent
+    rationale: algorithm_maturity
+    rationale_note: >-
+      Same carve-out as BSI TR-02102-1 §5.3.4, for the same reason: hash-based
+      security "is very minimalist … based on the security of hash functions".
+    verdict: info
+
+  - id: anssi-visa-hybridation-mandatory
+    description: >-
+      For a French security visa, phase-2 evaluation requires hybridation of
+      post-quantum algorithms. §4: evaluation "comprise[s] an analysis of all
+      cryptographic algorithms including the post-quantum algorithms with
+      mandatory hybridation"; end products "shall implement hybridation"
+      except where mitigation relies only on hash-based signatures.
+    binding: certification_requirement
+    status: verified
+    source_url: "https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition"
+    source_title: "ANSSI views on the Post-Quantum Cryptography transition (2023 follow up), §4"
+    source_edition: "2023 follow-up, December 21 2023"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    applies_to:
+      purpose: [key-agreement, encryption, signature]
+      quantum_status: [pq-secure]
+      exclude_algorithm: ["XMSS", "LMS", "HSS", "SPHINCS", "SLH-DSA"]
+    hybrid: required
+    rationale: algorithm_maturity
+    rationale_note: >-
+      "mandatory" and "shall" are the document's own words, but they apply
+      inside the security-visa process. Outside it, anssi-hybridation-necessary
+      governs and is a recommendation. Modelled separately for that reason.
+    migration_target: { construction: hybrid }
+    verdict: fail
+
+  - id: anssi-longlived-protection-2030
+    description: >-
+      §1.2: "The use of hybrid post-quantum mitigation is recommended
+      especially for security products aimed at offering a long-lasting
+      protection of information (until after 2030) or that will potentially be
+      used after 2030 without updates."
+    binding: guideline_recommendation
+    status: verified
+    source_url: "https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition"
+    source_title: "ANSSI views on the Post-Quantum Cryptography transition (2023 follow up), §1.2"
+    source_edition: "2023 follow-up, December 21 2023"
+    last_verified: 2026-09-06
+    verified_by: "Sadjad Asadi"
+    deadline: 2030-12-31
+    deadline_state: complete
+    applies_to:
+      purpose: [key-agreement, encryption]
+      quantum_status: [broken-by-shor]
+    hybrid: recommended
+    rationale: harvest_now_decrypt_later
+    verdict: warn
 
   - id: anssi-certification-2027
     description: >-
-      From 2027, ANSSI will not certify security products lacking
+      Reported: from 2027 ANSSI will not certify security products lacking
       quantum-resistant cryptography.
     binding: certification_requirement
     status: needs_verification
     source_url: "https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition"
-    source_title: "ANSSI certification position (2026)"
-    last_verified: 2026-09-05
+    source_title: "ANSSI certification position (2026) — primary document not yet located"
+    last_verified: 2026-09-06
     deadline: 2027-01-01
     deadline_state: acquisition_gate
     applies_to:
@@ -77,5 +152,7 @@ rules:
     rationale: unstated
     verdict: fail
     open_question: >-
-      Find the primary 2026 communication; the position papers may predate it.
-      Confirm which certification schemes are covered.
+      NOT in the 2023 follow-up, which instead describes a 3-phase visa roadmap
+      with phase-2 visas "expected to be delivered around 2024-2025". The 2027
+      date comes only from 2026 press coverage. Find the primary 2026 ANSSI
+      communication, or drop this rule.

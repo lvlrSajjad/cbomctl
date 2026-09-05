@@ -1,7 +1,7 @@
 # Policy sources, corrections, and open questions
 
-**`bsi-de` is verified. The other five packs are not — every claim in them
-still needs a primary source read.**
+**`bsi-de` and `anssi-fr` are verified. The other four packs are not — every
+claim in them still needs a primary source read.**
 
 Everything here was assembled from secondary reporting — vendor blogs, law-firm
 summaries, consultancy explainers — which is frequently wrong about exactly the
@@ -200,48 +200,84 @@ ANSSI's own primary-source confirmation (§4, F4).
   must not appear as a `migration_target`; BSI's acceptance of FrodoKEM and
   Classic McEliece is jurisdiction-specific and not yet encoded.
 
-## 4. `anssi-fr` — France, ANSSI
+## 4. `anssi-fr` — France, ANSSI ✅ VERIFIED (5 of 6 rules)
 
-**Primary sources**
-- ANSSI, *"ANSSI views on the Post-Quantum Cryptography transition"* — 2022
-  position paper and 2023 follow-up —
-  <https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition>
-- Any 2026 ANSSI communication on certification (see F1).
+**Verified 2026-09-06 by Sadjad Asadi against the primary PDF:** *"ANSSI views
+on the Post-Quantum Cryptography transition (2023 follow up)"*, **December 21,
+2023** —
+<https://cyber.gouv.fr/publications/anssi-views-post-quantum-cryptography-transition>
 
-**What the pack asserts** — `hybrid: recommended`, with a second rule at
-`binding: certification_requirement`
+| # | claim | status | where |
+|---|---|---|---|
+| F3 | Hybridation emphasised as **necessary** wherever PQ mitigation is needed | ✅ verified | §1.1 |
+| F4 | The requirement **covers signatures** | ✅ verified | §3.2, §4 |
+| F4b | **Hash-based signatures exempt** — hybridation optional for XMSS/LMS/SPHINCS+ | ✅ verified | §2, §4 |
+| F7 | For a **security visa**, hybridation is *mandatory* — "shall implement" | ✅ verified | §4 |
+| F2 | Hybrid recommended especially for protection lasting past **2030** | ✅ verified | §1.2 |
+| F1 | 2027 certification cut-off | ❌ **not in this document** | — |
 
-| # | claim | status |
-|---|---|---|
-| F1 | From **2027**, ANSSI will not certify security products lacking quantum-resistant cryptography → `binding: certification_requirement` | `needs_verification` |
-| F2 | Full compliance with PQC standards expected by **2030** | `needs_verification` |
-| F3 | **Strongly recommends** hybrid for products protecting information beyond 2030, or deployed without updates past 2030. **Not "required" unqualified** | `needs_verification` |
-| F4 | The hybrid recommendation **extends to signatures**, because PQ signature schemes are less battle-tested than PQ key establishment | `needs_verification` |
-| F5 | Three-phase transition; phase 3 not before the early 2030s | `needs_verification` |
-| F6 | ML-KEM and ML-DSA accepted post FIPS 203/204; explicit preference for **FrodoKEM** at highest assurance | `needs_verification` |
+### The operative sentences
 
-**Open questions**
+**F3** — §1.1:
 
-1. **F4 cuts against our own thesis and is the most important item on this
-   page.** Every other jurisdiction puts signatures on a later, looser horizon —
-   which is the premise of DESIGN §7 and of the "key exchange is urgent,
-   signatures aren't" article. ANSSI reportedly wants hybrid signatures *because
-   PQ signatures are immature*, which is a maturity argument, not a
-   harvest-now-decrypt-later one, and it points the other way. If confirmed, the
-   article needs a paragraph conceding that harvest risk and migration urgency
-   come apart here, and `anssi-fr` needs a `hybrid` stance that applies to
-   signatures as well as key establishment.
-2. **F1's scope.** "Will not certify" binds products seeking ANSSI certification
-   (CSPN, Critères Communs) — a far narrower population than French industry.
-   The `applicability` banner must say so.
-3. **F3 vs BSI's B1.** If both merely recommend, they are not interchangeable
-   with a mandate in the conflict narrative, and the launch article cannot say
-   "France requires".
-4. **F6 FrodoKEM.** If ANSSI genuinely prefers FrodoKEM at high assurance, the
-   pack's `migration_target` is jurisdiction-specific and not simply ML-KEM.
-   Confirm the assurance threshold.
-5. Confirm which paper is current — the 2026 certification news suggests
-   movement the published papers may not reflect.
+> "ANSSI still strongly emphasizes the necessity of hybridation wherever
+> post-quantum mitigation is needed both in the short and medium term."
+
+**F4 / F4b** — §4, on end products:
+
+> "any product that includes post-quantum mitigation shall implement
+> hybridation except if the quantum mitigation only relies on hash-based
+> signatures like XMSS, LMS or SPHINCS+ for which hybridation is optional"
+
+**F7** — §4, on the security-visa process:
+
+> the evaluation tasks "comprise an analysis of all cryptographic algorithms
+> including the post-quantum algorithms with **mandatory hybridation**"
+
+"Mandatory" and "shall" are ANSSI's own words, but they sit inside the
+security-visa process. Outside it the position paper *recommends*. The pack
+models these as two rules with different `binding` — `certification_requirement`
+and `guideline_recommendation` — because they bind different populations, and a
+tool that merged them would tell an uncertified French vendor it had failed a
+mandate that does not reach it.
+
+### F4 resolved: it is an assurance argument, and ANSSI says so
+
+The question that had been open since the first draft — whether ANSSI's
+signature stance is a harvest argument or a maturity one — is answered in §1.1:
+
+> "even if the post-quantum algorithms have gained a lot of attention, they are
+> still not mature enough to solely ensure the security. For example, several
+> post-quantum schemes have suffered from classical attacks in the past years,
+> e.g. [3, 6]."
+
+Reference **[3] is Beullens, "Breaking Rainbow takes a weekend on a laptop"**.
+So the `algorithm_maturity` rationale is not our inference — ANSSI cites the
+Rainbow break as its reason. This is primary-source support for modelling
+urgency and assurance as separate axes.
+
+§1.1 also notes the alignment explicitly: *"This position is aligned with the
+one of other European cybersecurity agencies like BSI in Germany."*
+
+### Two jurisdictions, one carve-out, independently confirmed
+
+BSI §5.3.4 and ANSSI §2/§4 both exempt hash-based signatures from the hybrid
+recommendation, for the same stated reason — their security rests only on
+hash-function assumptions. Encoded identically in both packs via
+`applies_to.exclude_algorithm`. That two independent authorities landed on the
+same exception is a good sign the reading is right.
+
+### Still open
+
+- **F1 — the 2027 certification deadline is not in this document.** The 2023
+  follow-up describes a 3-phase visa roadmap with phase-2 visas *"expected to be
+  delivered around 2024-2025"*, and says ANSSI is "speeding-up the original
+  agenda". The 2027 date appears only in 2026 press coverage. The rule stays
+  `needs_verification`; find the 2026 ANSSI communication or drop it.
+- The **2022** position paper (referenced as [1]) has not been read. F5's
+  three-phase structure and any FrodoKEM preference (F6) live there. §2 of the
+  follow-up does describe FrodoKEM as "a more conservative variant of
+  CRYSTALS-Kyber" but states no preference ordering, so F6 is not encoded.
 
 ## 5. `asd-au` — Australia, ASD / ACSC
 
@@ -360,3 +396,9 @@ A rule may only lose `needs_verification` with a row here.
 | `bsi-classical-signatures-2035` | Sadjad Asadi | 2026-09-06 | TR-02102-1 v2026-01 §2.1 | confirmed, 2035-12-31 |
 | `bsi-hybrid-signatures` | Sadjad Asadi | 2026-09-06 | TR-02102-1 v2026-01 §5.3.4 | confirmed, *recommends* |
 | `bsi-hash-based-standalone-permitted` | Sadjad Asadi | 2026-09-06 | TR-02102-1 v2026-01 §5.3.4 | carve-out confirmed; contradicts a common secondary summary |
+| `anssi-hybridation-necessary` | Sadjad Asadi | 2026-09-06 | ANSSI 2023 follow-up §1.1 | confirmed; rationale is maturity, citing the Rainbow break |
+| `anssi-hybridation-signatures` | Sadjad Asadi | 2026-09-06 | ANSSI 2023 follow-up §3.2, §4 | confirmed, covers signatures |
+| `anssi-hash-based-hybridation-optional` | Sadjad Asadi | 2026-09-06 | ANSSI 2023 follow-up §2, §4 | carve-out confirmed, matches BSI |
+| `anssi-visa-hybridation-mandatory` | Sadjad Asadi | 2026-09-06 | ANSSI 2023 follow-up §4 | confirmed "mandatory"/"shall", scoped to security visas |
+| `anssi-longlived-protection-2030` | Sadjad Asadi | 2026-09-06 | ANSSI 2023 follow-up §1.2 | confirmed |
+| `anssi-certification-2027` | — | — | — | **not found in the 2023 follow-up**; stays unverified |
