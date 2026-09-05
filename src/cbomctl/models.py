@@ -215,21 +215,19 @@ class CryptoAsset(BaseModel):
 
     @property
     def display(self) -> str:
-        """Prefer the raw name for hybrids.
+        """What the generator called it.
 
-        A hybrid's family token names only half of it — ``X25519MLKEM768``
-        resolves to family ``ML-KEM``, which hides the classical component that
-        is the entire reason the asset is interesting to a policy engine.
+        Deliberately not the canonical algorithm name. Canonicalisation exists
+        for policy matching and it *loses* the parameter: `RSA-2048` and
+        `RSA-3072` both canonicalise to `RSA`, and `ECDSA-P224` and
+        `ECDSA-P256` both resolve through their shared OID to `ECDSA-SHA256`.
+        Those pairs have different transition dates under NIST IR 8547, so a
+        report that displays them identically hides the finding.
+
+        The raw name is also what the reader will recognise from their own
+        codebase. Fall back to the canonical name only when there is no name.
         """
-        if self.construction is Construction.HYBRID:
-            return self.raw_name
-        # Prefer the generator's name when it carries a parameter the canonical
-        # family name drops -- "RSA-2048" and "RSA-3072" must not both read
-        # as "RSA" when their transition dates differ.
-        if self.algorithm and any(c.isdigit() for c in self.raw_name):
-            if not any(c.isdigit() for c in self.algorithm):
-                return self.raw_name
-        return self.algorithm or self.raw_name
+        return self.raw_name or self.algorithm or "<unnamed>"
 
 
 class Risk(BaseModel):

@@ -53,6 +53,22 @@ Z is a planning assumption matching the NSM-10 and EU horizons, **not a
 prediction**. It is stamped into every output, so a verdict can never be read
 without the assumption behind it. Change it with `--crqc-year`.
 
+### Strength, not algorithm name
+
+NIST IR 8547 scopes its 2030 deprecation to **112 bits of security strength**,
+not to an algorithm. RSA-2048 and P-224 are deprecated after 2030; RSA-3072 and
+P-256 are not — they are only disallowed after 2035. Same table, same document,
+different rows.
+
+`cbomctl` derives strength from modulus size, elliptic curve, or the CBOM's
+`classicalSecurityLevel` field. When it cannot be derived, the finding is
+**indeterminate rather than the stricter date**, and that choice is deliberate:
+
+> False urgency competes for budget with real urgency. A team that believes
+> RSA-3072 dies in 2030 builds a migration schedule five years tighter than it
+> needs, against work that genuinely is on a 2030 clock. Crying wolf has a cost,
+> and it is paid by the findings that were real.
+
 Grover is not Shor. SHA-256 retains roughly 128 bits of quantum security and is
 not a migration target; AES-128 is weakened, not broken. `cbomctl` bands those
 `low` no matter how long the data lives. SHA-1 is a real finding but a

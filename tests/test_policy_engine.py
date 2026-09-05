@@ -339,24 +339,59 @@ class TestSecurityStrengthScoping:
         pack = load_pack("nist-ir8547")
         return {a.display: evaluate(pack, a) for a in assets}
 
-    def test_rsa_2048_is_deprecated_in_2030(self):
-        ids = {r.rule_id for r in self._cells()["RSA-2048"].rules}
-        assert "nist-112bit-key-establishment-deprecated-2030" in ids
+    @pytest.mark.parametrize("name,rule", [
+        ("RSA-2048", "nist-112bit-key-establishment-deprecated-2030"),
+        ("ECDSA-P224", "nist-112bit-signatures-deprecated-2030"),
+    ])
+    def test_112_bit_assets_are_deprecated_in_2030(self, name, rule):
+        assert rule in {r.rule_id for r in self._cells()[name].rules}
 
-    def test_rsa_3072_is_not_deprecated_in_2030(self):
-        """The half of "RSA is deprecated in 2030" that is false."""
-        ids = {r.rule_id for r in self._cells()["RSA-3072"].rules}
-        assert "nist-112bit-key-establishment-deprecated-2030" not in ids
+    @pytest.mark.parametrize("name,rule", [
+        ("RSA-3072", "nist-112bit-key-establishment-deprecated-2030"),
+        ("ECDSA-P256", "nist-112bit-signatures-deprecated-2030"),
+    ])
+    def test_128_bit_assets_escape_the_2030_deprecation(self, name, rule):
+        """The half of "RSA is deprecated in 2030" that is false -- and it is
+        false for P-256 too, because IR 8547 scopes by strength rather than by
+        algorithm."""
+        assert rule not in {r.rule_id for r in self._cells()[name].rules}
 
-    def test_both_are_disallowed_in_2035(self):
-        for name in ("RSA-2048", "RSA-3072"):
-            ids = {r.rule_id for r in self._cells()[name].rules}
-            assert "nist-key-establishment-disallowed-2035" in ids
+    @pytest.mark.parametrize("name,rule", [
+        ("RSA-2048", "nist-key-establishment-disallowed-2035"),
+        ("RSA-3072", "nist-key-establishment-disallowed-2035"),
+        ("ECDSA-P224", "nist-signatures-disallowed-2035"),
+        ("ECDSA-P256", "nist-signatures-disallowed-2035"),
+    ])
+    def test_everything_is_disallowed_in_2035(self, name, rule):
+        assert rule in {r.rule_id for r in self._cells()[name].rules}
 
     def test_names_stay_distinguishable(self):
-        """Both canonicalise to family RSA; the display must not collapse them
-        or the distinction is invisible in every report."""
-        assert set(self._cells()) == {"RSA-2048", "RSA-3072"}
+        """Canonicalisation loses the parameter: both RSA sizes collapse to
+        `RSA`, and both ECDSA curves resolve through one OID to
+        `ECDSA-SHA256`. Display must not, or the distinction is invisible in
+        every report."""
+        assert set(self._cells()) == {"RSA-2048", "RSA-3072",
+                                      "ECDSA-P224", "ECDSA-P256"}
+
+    def test_the_right_cbom_field_is_read_for_strength(self):
+        """`classicalSecurityLevel` is in bits. `nistQuantumSecurityLevel` is a
+        category from 1 to 5. Reading the second as the first would score
+        ML-KEM-768 as 3-bit security."""
+        from cbomctl.loader import read_assets
+        import json, tempfile, pathlib
+
+        doc = {
+            "bomFormat": "CycloneDX", "specVersion": "1.6", "version": 1,
+            "components": [{
+                "type": "cryptographic-asset", "bom-ref": "k", "name": "ML-KEM-768",
+                "cryptoProperties": {"assetType": "algorithm", "algorithmProperties": {
+                    "primitive": "kem", "nistQuantumSecurityLevel": 3,
+                    "classicalSecurityLevel": 192}}}]}
+        with tempfile.TemporaryDirectory() as d:
+            f = pathlib.Path(d) / "c.json"
+            f.write_text(json.dumps(doc))
+            assets, _ = read_assets(f)
+        assert assets[0].security_strength == 192
 
     def test_underivable_strength_is_indeterminate_not_stricter(self):
         """Erring strict is not safe: it competes for budget with real work."""
