@@ -1,12 +1,11 @@
 # Policy sources, corrections, and open questions
 
-**Verified from primary sources: `bsi-de`, `asd-au`, `eu-roadmap`,
-`us-eo14412`, `nist-ir8547` (as a draft), and `anssi-fr` (5 of 6 rules).**
+**All seven packs are verified against primary sources.** Every rule cites the
+section or page it was read from, names its verifier, and pins the edition.
 
-**Not verified: `cnsa-2.0`** — nsa.gov and media.defense.gov refuse automated
-access (HTTP 403) and the PDF will not render in a browser pane. That one needs
-a human with a browser, not more effort. One `anssi-fr` rule also remains
-unverified because the date it asserts is not in the primary document.
+The unverified machinery — the banner, the `status` field, `--strict` and
+`--require-verified-policy` — stays in place and is exercised by a synthetic
+test fixture, because it is what keeps the *next* rule honest.
 
 Everything here was assembled from secondary reporting — vendor blogs, law-firm
 summaries, consultancy explainers — which is frequently wrong about exactly the
@@ -92,83 +91,123 @@ software element."* That may define the input format this tool consumes. It is
 recorded in the pack's notes rather than as a rule — a rule with no selector
 would fire on every asset and mask real findings.
 
-## 2. `cnsa-2.0` — United States, NSA ❌ BLOCKED — needs a human
+## 2. `cnsa-2.0` — United States, NSA ✅ VERIFIED
 
-**Verification attempted 2026-09-06 and failed. Not for lack of trying, and not
-because the source is unclear — because it cannot be fetched.**
+**Verified 2026-09-06 by Sadjad Asadi** against the primary PDF: *"The
+Commercial National Security Algorithm Suite 2.0 and Quantum Computing FAQ"*,
+**U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1**.
 
-`media.defense.gov` and `nsa.gov` return **HTTP 403** to every automated
-request, including with browser user-agents and a referer. Opening the PDF in
-the browser triggers a file download rather than rendering it. Attempted:
-
-- `https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF` → 403
-- `https://www.nsa.gov/Cybersecurity-Guidance/` → 403
-- the same PDF via a real browser engine → download dialog, no text
-
-**This is a ten-minute job for a human with a browser.** Open the CNSA 2.0 FAQ,
-find the timeline table, and check the seven claims below. Until then every
-`cnsa-2.0` rule stays `needs_verification` and the pack triggers the banner.
-
-**What the pack currently asserts** — `binding: agency_requirement`, **NSS only**
+NSA's servers return HTTP 403 to automated requests; the PDF was downloaded and
+opened by hand. Every rule cites a page.
 
 | # | claim | status |
 |---|---|---|
-| C1 | Applies to **National Security Systems** only | `needs_verification` |
-| C2 | **2027-01-01** acquisition gate | `needs_verification` |
-| C3 | Software/firmware signing and networking: exclusive use by **2030** | `needs_verification` |
-| C4 | Browsers, servers, cloud, operating systems: exclusive use by **2033** | `needs_verification` |
-| C5 | "All NSS by **2031** unless excepted" | `needs_verification` |
-| C6 | **ML-KEM-1024, ML-DSA-87, AES-256, SHA-384/512, LMS/XMSS** | `needs_verification` |
-| C7 | Hybrid **not required** → `hybrid: silent` | `needs_verification` |
+| C1 | NSS only — "NSA is not using these requirements to dictate to any other entity outside of NSS" | ✅ p. 1 |
+| C2 | **2027-01-01** acquisition gate (per CNSSP 15) | ✅ p. 6 |
+| C3 | ~~signing/networking exclusive 2030~~ | ❌ **not in this document** |
+| C4 | ~~browsers/cloud/OS exclusive 2033~~ | ❌ **not in this document** |
+| C5 | **2030-12-31** phase-out of equipment that cannot support CNSA 2.0 | ✅ p. 6 |
+| C6 | **2031-12-31** CNSA 2.0 mandated for use | ✅ p. 6 |
+| C7 | ML-KEM-1024, ML-DSA-87, AES-256, SHA-384/512 "for all classification levels" | ✅ p. 2 |
+| C8 | Hybrids: "Do not use … except for those exceptions NSA specifically recommends" | ✅ pp. 19–20 |
+| C9 | **SLH-DSA "is not part of CNSA and is not approved for any use in NSS"** | ✅ p. 8 |
+| C10 | LMS/XMSS approved for firmware and software signing only; **HSS and XMSSMT "are not allowed"** | ✅ pp. 3, 8 |
 
-**The seven rules are now structured for the reading rather than asserted by
-it.** Each `open_question` in the pack names the sentence to find. Record the
-page number for each rule you confirm.
+### Two claims removed: there are no category deadlines, and no 2033
 
-**Priority order when you open it:**
+The pre-release stub carried per-product-category rows — software/firmware
+signing 2030, browsers and operating systems 2033 — assembled from secondary
+reporting. **Neither is in v2.1.** The strings "browser", "operating system"
+and "networking equipment" do not appear, and **"2033" does not appear anywhere
+in the document.**
 
-1. **The hybrid sentence — this is the one that changes the tool's output.**
-   Secondary reporting (an IETF TLS list quotation) suggests NSA's position is
-   *stronger* than "not required": that hybrid or other non-standardised
-   quantum-resistant solutions should not be used on NSS mission systems except
-   where NSA specifically recommends them for standardisation or
-   interoperability, with IKEv2 cited as such an exception, and separately that
-   because NSA is confident in the CNSA 2.0 algorithms it does not require
-   hybrid for security purposes.
+Those figures come from the September 2022 announcement's chart. The December
+2024 FAQ supersedes them with the CNSSP 15 dates:
 
-   If that is what the FAQ says, the stance is `not_permitted_except_interop`,
-   not `silent`, and the consequence is concrete: paired with BSI, ANSSI or the
-   EU roadmap, **no single construction satisfies all selected jurisdictions**,
-   and the conflict output says so instead of naming a compromise. The pack is
-   currently encoded that way, unverified, precisely so the difference is
-   visible — but the encoding is a hypothesis until you read it.
+> "CNSSP 15 states that by January 1, 2027, all new acquisitions for NSS will be
+> required to be CNSA 2.0 compliant unless otherwise noted. By December 31,
+> 2030, all equipment and services that cannot support CNSA 2.0 must be phased
+> out unless otherwise noted, and by December 31, 2031, CNSA 2.0 algorithms are
+> mandated for use unless otherwise noted." — p. 6
 
-   This also makes the hybrid axis a **three-step gradient** rather than a
-   binary: recommended (BSI, ANSSI, EU) → not recommended but permitted (ASD) →
-   not permitted outside named exceptions (NSA). That is a better story than
-   "Europe versus the anglophone agencies", and it is worth getting exactly
-   right.
+A useful consequence: the `system_category` INDETERMINATE machinery is no longer
+needed for this pack at all. It still applies to `us-eo14412` and `eu-roadmap`.
 
-2. **Parameter sets (`cnsa2-parameter-set-highest-only`).** Reported as
-   ML-KEM-1024 and ML-DSA-87 only, at *all* classification levels. BSI and
-   ANSSI both accept ML-KEM-768 and ML-DSA-65 (verified). Confirm whether these
-   are *required* or merely *preferred*, and whether the "all classification
-   levels" part holds. This conflict is independent of hybrid: a deployment
-   could satisfy every jurisdiction's construction preference and still fail on
-   strength alone.
+### C8 — the hybrid position, and an ambiguity worth stating
 
-3. **SLH-DSA (`cnsa2-slh-dsa-status`).** Secondary sources disagree about
-   whether CNSA 2.0 excludes it outright or approves it for specific uses. It
-   matters because BSI and ANSSI both *exempt* hash-based signatures from their
-   hybrid recommendations (both verified) — so if NSA excludes SLH-DSA, that is
-   a second independent contradiction on the same algorithm family. The rule
-   currently returns INDETERMINATE rather than guessing either way.
+The FAQ answers the hybrid question **twice**, and the two answers do not carry
+the same force.
 
-4. **C3/C4 category deadlines**, against the FAQ's own table rather than any
-   transcription, and whether a separate "all NSS by 2031 unless excepted"
-   milestone exists alongside them.
+The position question (p. 19):
 
-5. **C1 scoping**, so the applicability banner is right.
+> "NSA has confidence in CNSA 2.0 algorithms and **will not require** NSS
+> developers to use hybrid certified products for security purposes. However,
+> product availability and interoperability requirements may lead to adopting
+> hybrid solutions."
+
+The other, framed *"while waiting for a final NIST post-quantum standard"*
+(p. 20):
+
+> "**Do not use** a hybrid or other non-standardized QR solution on NSS mission
+> systems **except for those exceptions NSA specifically recommends** to meet
+> standardization or interoperability requirements. … Except as noted above,
+> hybrid solutions will not be integrated into eventual deployable solutions."
+
+**The ambiguity:** the second question's premise — waiting for a final NIST
+standard — arguably expired when FIPS 203/204/205 were finalised in August 2024,
+four months before this edition published. Its closing sentence, though, is
+unconditional and forward-looking.
+
+Encoded at the **stronger** reading (`not_permitted_except_interop`), because
+"Do not use" is imperative and "will not be integrated into eventual deployable
+solutions" is not time-scoped. Flagging it here rather than resolving it
+silently: if you read it the other way, the correct value is `silent`, and the
+conflict output would then name a satisfies-all target instead of saying none
+exists.
+
+NSA's reasoning is cost, not doubt about the benefit — which is the same
+argument ASD makes:
+
+> "Because more security products fail due to implementation or configuration
+> errors than failures in their underlying cryptographic algorithms, spending
+> limited resources to add cryptographic complexity can at times weaken security
+> rather than improve it." — p. 19
+
+**The named exception is IKEv2** (p. 20), and it is a message-size constraint,
+not a security judgement: ML-KEM-1024's public key does not fit, so NSA's
+profile keeps CNSA 1.0 key establishment "fortified by key establishment using
+ML-KEM-1024". Encoded as its own rule so an IKEv2 hybrid does not inherit the
+prohibition.
+
+### C9/C10 — the second contradiction, on hash-based signatures
+
+> "Q: Can I use SLH-DSA (aka SPHINCS+) to sign software? A: While SLH-DSA is
+> hash-based, **it is not part of CNSA and is not approved for any use in
+> NSS**." — p. 8
+
+BSI §5.3.4 and ANSSI §2/§4 both *explicitly permit* hash-based signatures
+standalone, exempting them from their hybrid recommendations. NSA does not
+approve SLH-DSA at all. Same algorithm family, opposite treatment, and entirely
+independent of the hybrid disagreement.
+
+NSA also splits the family further than anyone else: LMS and XMSS are approved
+but only "for digitally signing firmware and software", with LMS SHA-256/192
+preferred, while "the multi-tree algorithms HSS and XMSSMT are not allowed"
+(p. 8).
+
+### The three-step gradient, now fully verified
+
+| stance | jurisdictions | consequence |
+|---|---|---|
+| `recommended` | BSI, ANSSI, EU roadmap | — |
+| `not_recommended` — discouraged, permitted | ASD | a satisfies-all target exists, at a documented cost |
+| `not_permitted_except_interop` | NSA | **no** single construction satisfies everyone |
+
+### Still open
+
+- **Whether v2.1 is current.** Check for a later revision; NSA rehosts these.
+- The scope question on C8, above. Worth watching whether a future revision
+  drops the "while waiting" framing.
 
 ## 3. `bsi-de` — Germany, BSI ✅ VERIFIED
 

@@ -1,0 +1,43 @@
+# Test-only pack. Exists so the unverified-policy machinery -- banner, JSON
+# warning, SARIF marking, --strict downgrade, --require-verified-policy -- stays
+# under test now that all seven shipped packs are verified. Without it, that
+# machinery would rot and the next unverified rule would ship silently.
+id: synthetic-unverified
+name: "Synthetic — test fixture"
+authority: "Nobody. This is a test fixture."
+jurisdiction: XX
+pack_version: "0.0.0"
+applicability: >-
+  Not a real jurisdiction. Used only to exercise the unverified-rule paths.
+
+rules:
+  - id: synthetic-classical-broken
+    description: "Quantum-vulnerable asymmetric cryptography is not permitted."
+    binding: agency_requirement
+    status: needs_verification
+    source_url: "https://csrc.nist.gov/projects/post-quantum-cryptography"
+    source_title: "Not a real source"
+    last_verified: 2026-09-06
+    applies_to:
+      purpose: [key-agreement, encryption, signature]
+      quantum_status: [broken-by-shor]
+    rationale: unstated
+    verdict: fail
+    open_question: "This pack is a test fixture and is never verified."
+
+  - id: synthetic-draft-rule
+    description: "A rule citing a draft, to exercise the draft notice."
+    binding: guideline_recommendation
+    status: needs_verification
+    is_draft: true
+    source_url: "https://csrc.nist.gov/projects/post-quantum-cryptography"
+    source_title: "Not a real draft"
+    last_verified: 2026-09-06
+    deadline: 2030-12-31
+    deadline_state: deprecated
+    applies_to:
+      purpose: [key-agreement]
+      quantum_status: [broken-by-shor]
+    rationale: unstated
+    verdict: warn
+    open_question: "This pack is a test fixture and is never verified."

@@ -118,43 +118,57 @@ class TestConflicts:
 
 
 class TestUnverifiedIsUnmissable:
-    def test_matrix_reports_exactly_the_unverified_packs(self, result):
-        """The warning must narrow as verification proceeds, not stay blanket.
+    """All seven shipped packs are now verified, so a synthetic fixture pack
+    carries these tests. The machinery must not rot just because nothing
+    currently triggers it -- the next unverified rule would ship silently."""
 
-        Only cnsa-2.0 remains: NSA's servers refuse automated access, so it is
-        the one pack still built from secondary reporting. See
-        docs/policy-sources.md §2."""
+    @pytest.fixture
+    def unverified(self):
+        from cbomctl.policy.schema import Pack
+
+        pack = Pack.from_file(FIXTURES / "packs" / "synthetic-unverified.yaml")
+        assets, _ = read_assets(FIXTURES / "conflict-hybrid.json")
+        matrix = build(assets, [pack], Config(), today=TODAY)
+        return matrix, detect(matrix, [pack]), pack
+
+    def test_no_shipped_pack_is_unverified(self, result):
+        """Where verification has actually reached."""
         matrix, _, _ = result
-        assert set(matrix.unverified_packs) == {"cnsa-2.0"}
+        assert matrix.unverified_packs == []
 
-    def test_text_output_carries_the_banner(self, result):
-        matrix, conflicts, _ = result
+    def test_matrix_reports_the_unverified_pack(self, unverified):
+        matrix, _, _ = unverified
+        assert matrix.unverified_packs == ["synthetic-unverified"]
+        assert matrix.has_unverified
+
+    def test_text_output_carries_the_banner(self, unverified):
+        matrix, conflicts, _ = unverified
         out = matrix_text.render(matrix, conflicts)
         assert "UNVERIFIED POLICY PACK" in out
         assert "NOT FOR COMPLIANCE USE" in out
 
-    def test_json_output_carries_a_machine_readable_warning(self, result):
-        matrix, conflicts, _ = result
+    def test_json_output_carries_a_machine_readable_warning(self, unverified):
+        matrix, conflicts, _ = unverified
         doc = json.loads(json_out.render(matrix, conflicts))
         assert doc["policy_warning"]["level"] == "unverified"
 
-    def test_markdown_output_carries_the_warning(self, result):
-        matrix, conflicts, _ = result
+    def test_markdown_output_carries_the_warning(self, unverified):
+        matrix, conflicts, _ = unverified
         assert "UNVERIFIED POLICY PACK" in markdown.render(matrix, conflicts)
 
-    def test_sarif_marks_every_unverified_rule(self, result):
-        matrix, conflicts, _ = result
+    def test_sarif_marks_every_unverified_rule(self, unverified):
+        matrix, conflicts, _ = unverified
         doc = json.loads(sarif.render(matrix, conflicts))
         rules = doc["runs"][0]["tool"]["driver"]["rules"]
-        unverified = [r for r in rules
-                      if r.get("properties", {}).get("status") == "needs_verification"]
-        assert unverified
-        for rule in unverified:
+        policy = [r for r in rules if r["id"] != "cbomctl/jurisdiction-conflict"]
+        assert policy
+        for rule in policy:
             assert "[UNVERIFIED RULE]" in rule["fullDescription"]["text"]
-        verified = [r for r in rules
-                    if r.get("properties", {}).get("status") == "verified"]
-        for rule in verified:
-            assert "[UNVERIFIED RULE]" not in rule["fullDescription"]["text"]
+
+    def test_draft_sources_are_announced(self, unverified):
+        matrix, conflicts, _ = unverified
+        assert matrix.draft_rules
+        assert "DRAFT SOURCE" in matrix_text.render(matrix, conflicts)
 
 
 class TestStrict:
@@ -167,12 +181,22 @@ class TestStrict:
                    for r in matrix.rows for c in r.cells.values())
 
     def test_strict_downgrades_unverified_verdicts_to_indeterminate(self):
+        from cbomctl.policy.schema import Pack
+
+        pack = Pack.from_file(FIXTURES / "packs" / "synthetic-unverified.yaml")
         assets, _ = read_assets(FIXTURES / "conflict-hybrid.json")
-        packs = [load_pack(j) for j in JURISDICTIONS]
-        matrix = build(assets, packs, Config(), strict=True, today=TODAY)
+        matrix = build(assets, [pack], Config(), strict=True, today=TODAY)
         assert all(c.verdict is not Verdict.FAIL
                    for r in matrix.rows for c in r.cells.values())
         assert matrix.exit_code == 3
+
+    def test_strict_leaves_verified_packs_asserting(self):
+        """--strict blocks unverified rules, not verified ones."""
+        assets, _ = read_assets(FIXTURES / "conflict-hybrid.json")
+        packs = [load_pack(j) for j in JURISDICTIONS]
+        matrix = build(assets, packs, Config(), strict=True, today=TODAY)
+        assert any(c.verdict in (Verdict.FAIL, Verdict.WARN)
+                   for r in matrix.rows for c in r.cells.values())
 
 
 class TestOutputs:

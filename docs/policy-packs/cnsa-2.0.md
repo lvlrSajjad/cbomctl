@@ -1,107 +1,121 @@
 # CNSA 2.0 — NSA
 
-`cnsa-2.0` · pack version 1.0.0 · ⚠️ **Unverified**
-
-!!! danger "Not for compliance use"
-    7 of 7 rules in this pack have not been read from a primary source. `cbomctl` prints a banner when this pack is used, and `--require-verified-policy` refuses to run against it.
+`cnsa-2.0` · pack version 1.0.0 · ✅ **Verified**
 
 ## Who this binds
 
-CNSA 2.0 governs US National Security Systems. It does not govern federal IT generally — those fall under EO 14412, which explicitly excludes NSS — and it does not govern the private sector. Run against a commercial CBOM, the honest output is that these rules do not apply to you.
+CNSA 2.0 governs US National Security Systems. The FAQ is explicit: "NSA is not using these requirements to dictate to any other entity outside of NSS what algorithms they should use, although NSA recognizes that interoperability requirements or other interests may lead to scenarios where these recommendations are used by a larger community." Federal IT generally falls under EO 14412, which excludes NSS. Run against a commercial CBOM, the honest output is that these rules do not apply to you.
 
 ## Notes
 
-⚠️ NOT VERIFIED. Verification was attempted 2026-09-06 and failed: nsa.gov and media.defense.gov return HTTP 403 to every automated request, and the FAQ PDF triggers a download rather than rendering in a browser pane. This pack is the only one in the set still built from secondary reporting.
-The rules below are STRUCTURED for the reading, not asserted by it. Each open_question names the sentence to find. The document to open is the CNSA 2.0 FAQ (reported as U/OO/194427-22, PP-24-4014, Version 2.1, December 2024) at media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF — record the page number for each rule you confirm.
+VERIFIED 2026-09-06 against the primary PDF: "The Commercial National Security Algorithm Suite 2.0 and Quantum Computing FAQ", U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1.
+Two corrections to the pre-release stub, which had been assembled from secondary reporting. There are NO per-product-category deadlines in v2.1 — no browsers, operating systems or networking rows — and the string "2033" does not appear in the document at all. Those came from the September 2022 announcement's chart and are superseded here by the CNSSP 15 dates: 2027-01-01, 2030-12-31, 2031-12-31, with a 2035 NSM-10 backstop.
 
 ## Rules
 
-### ⚠️ `cnsa2-classical-asymmetric`
+### ✅ `cnsa2-classical-asymmetric`
 
-Quantum-vulnerable asymmetric algorithms are not on the CNSA 2.0 allowlist.
+Quantum-vulnerable asymmetric algorithms are not in the CNSA 2.0 suite. "CNSA 2.0 algorithms will be required for all products that employ public-standard algorithms in NSS, whether a future design or currently fielded. Any usage of Suite B or CNSA 1.0 algorithms will be required to transition to CNSA 2.0."
 
 **Binding:** `agency_requirement` · **Verdict:** `FAIL` · **Rationale:** `unstated`
 
 **Migration target:** `ML-KEM-1024` · `ML-DSA-87` · `AES-256` · `SHA-384` · as `pure-pqc`
 
-**Source:** [NSA CNSA 2.0 FAQ](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF)
+**Source:** [NSA CNSA 2.0 and Quantum Computing FAQ, §CNSA 2.0 (p. 2)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
+**Verified:** 2026-09-06 by Sadjad Asadi
 
-!!! question "Open question"
-    Confirm the allowlist and that it is exclusive (nothing else approved).
+### ✅ `cnsa2-parameter-set-highest-only`
 
-### ⚠️ `cnsa2-parameter-set-highest-only`
-
-CNSA 2.0 is reported to require the highest parameter sets only — ML-KEM-1024 for key establishment and ML-DSA-87 for signatures — at all classification levels.
+The CNSA 2.0 table requires the highest parameter sets only: "ML-KEM-1024 for all classification levels", "ML-DSA-87 for all classification levels", "Use 256-bit keys for all classification levels" (AES), and "Use SHA-384 or SHA-512 for all classification levels".
 
 **Binding:** `agency_requirement` · **Verdict:** `FAIL` · **Rationale:** `key_length`
 
-> A parameter conflict with BSI and ANSSI, which both accept ML-KEM-768 and ML-DSA-65 (verified). It is independent of the hybrid disagreement: a deployment could satisfy every jurisdiction's construction preference and still fail this on strength alone.
+> A parameter conflict with BSI and ANSSI, which both accept ML-KEM-768 and ML-DSA-65 (both verified). It is independent of the hybrid disagreement: a deployment could satisfy every jurisdiction's construction preference and still fail this on strength alone. "for all classification levels" means there is no lower tier where 768 becomes acceptable.
 
 **Migration target:** `ML-KEM-1024` · `ML-DSA-87`
 
-**Source:** [NSA CNSA 2.0 FAQ — approved algorithms and parameter sets](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF)
+**Source:** [NSA CNSA 2.0 FAQ, Table: Commercial National Security Algorithm Suite 2.0 (p. 2)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
+**Verified:** 2026-09-06 by Sadjad Asadi
 
-!!! question "Open question"
-    Confirm ML-KEM-1024 and ML-DSA-87 are required rather than merely preferred, and that this holds at ALL classification levels rather than only the highest. Record the page.
+### ✅ `cnsa2-hybrid-not-permitted`
 
-### ⚠️ `cnsa2-hybrid-not-permitted`
-
-NSA is reported to direct that hybrid or other non-standardised quantum-resistant solutions not be used on NSS mission systems, except where NSA specifically recommends them for standardisation or interoperability (IKEv2 is cited as such an exception), and to state that because it is confident in the CNSA 2.0 algorithms it does not require a hybrid solution for security purposes.
+"Do not use a hybrid or other non-standardized QR solution on NSS mission systems except for those exceptions NSA specifically recommends to meet standardization or interoperability requirements. … Except as noted above, hybrid solutions will not be integrated into eventual deployable solutions."
 
 **Binding:** `agency_requirement` · **Verdict:** `FAIL` · **Hybrid:** `not_permitted_except_interop` · **Rationale:** `unstated`
 
-> If confirmed, this is a stronger stance than ASD's "not recommended; however, it is not prohibited" (verified), and it makes the hybrid axis a three-step gradient rather than a binary: recommended (BSI, ANSSI, EU) → not recommended but permitted (ASD) → not permitted outside named exceptions (NSA). It also removes the satisfies-all target: no single construction can clear both a recommending and a forbidding jurisdiction.
+> READ THE SCOPE CAVEAT. The FAQ gives two answers on hybrids and they are not identical in force. The position answer says only: "NSA has confidence in CNSA 2.0 algorithms and will not require NSS developers to use hybrid certified products for security purposes. However, product availability and interoperability requirements may lead to adopting hybrid solutions." The imperative quoted in this rule's description comes from a question framed "while waiting for a final NIST post-quantum standard" — a period that arguably ended when FIPS 203/204/205 were finalised in August 2024, four months before this edition published. Its closing sentence, however, is unconditional and forward-looking.
+> Encoded at the stronger reading because "Do not use" is imperative and "will not be integrated into eventual deployable solutions" is not time-scoped. NSA's reasoning is cost, not doubt about hybrids' benefit: "spending limited resources to add cryptographic complexity can at times weaken security rather than improve it."
 
-**Source:** [NSA CNSA 2.0 FAQ — hybrid solutions](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF)
+**Source:** [NSA CNSA 2.0 FAQ, §Hybrids (pp. 19–20)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
+**Verified:** 2026-09-06 by Sadjad Asadi
 
-!!! question "Open question"
-    THE key sentence for this pack. Get NSA's exact words on hybrids and record the page. "Does not require" and "shall not use except…" are different stances: the first would be `silent`, the second `not_permitted_except_interop`, and the difference decides whether a satisfies-all target exists in the conflict output. Confirm the IKEv2 exception too.
+### ✅ `cnsa2-hybrid-ikev2-exception`
 
-### ⚠️ `cnsa2-signing-exclusive-2030`
+IKEv2 is the named exception. "Due to difficulties introduced when unencrypted IKEv2 messages exceed a certain byte size… NSA's profile of this solution will continue the use of CNSA 1.0 key establishment algorithms, but fortified by key establishment using ML-KEM-1024."
 
-Software and firmware signing, and networking equipment: exclusive CNSA 2.0 use by 2030.
+**Binding:** `agency_requirement` · **Verdict:** `INFO` · **Hybrid:** `required` · **Rationale:** `unstated`
 
-**Binding:** `agency_requirement` · **Verdict:** `FAIL` · **Rationale:** `unstated` · **Deadline:** 2030-12-31 (exclusive_use)
+> The one place NSA affirmatively wants a hybrid, and it is a size constraint rather than a security judgement. Encoded so an IKEv2 hybrid does not inherit the general prohibition.
 
-**Source:** [NSA CNSA 2.0 FAQ — timeline table](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF)
+**Migration target:** `ML-KEM-1024` · as `hybrid`
 
-!!! question "Open question"
-    Verify each category deadline against the FAQ's own table; do not trust transcription.
+**Source:** [NSA CNSA 2.0 FAQ, §Hybrids (p. 20)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
+**Verified:** 2026-09-06 by Sadjad Asadi
 
-### ⚠️ `cnsa2-web-os-exclusive-2033`
+### ✅ `cnsa2-acquisition-gate-2027`
 
-Browsers, servers, cloud services and operating systems: exclusive CNSA 2.0 use by 2033.
-
-**Binding:** `agency_requirement` · **Verdict:** `FAIL` · **Rationale:** `unstated` · **Deadline:** 2033-12-31 (exclusive_use)
-
-**Source:** [NSA CNSA 2.0 FAQ — timeline table](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF)
-
-!!! question "Open question"
-    Confirm the category names so the cbomctl.yaml enum matches the FAQ's own wording, and check whether a separate "all NSS by 2031 unless excepted" milestone exists alongside these — that may be a conflation in secondary sources.
-
-### ⚠️ `cnsa2-acquisition-gate-2027`
-
-From 2027-01-01 new NSS acquisitions are expected to be CNSA 2.0 compliant by default. A procurement condition, not an algorithm deadline, so it sits behind --cnsa-acquisition-gate.
+"CNSSP 15 states that by January 1, 2027, all new acquisitions for NSS will be required to be CNSA 2.0 compliant unless otherwise noted."
 
 **Binding:** `agency_requirement` · **Verdict:** `FAIL` · **Rationale:** `unstated` · **Deadline:** 2027-01-01 (acquisition_gate)
 
-**Source:** [NSA CNSA 2.0 FAQ — acquisition](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF)
+**Source:** [NSA CNSA 2.0 FAQ, §Timeframe (p. 6)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
+**Verified:** 2026-09-06 by Sadjad Asadi
 
-!!! question "Open question"
-    Confirm the gate's scope and wording.
+### ✅ `cnsa2-phase-out-2030`
 
-### ⚠️ `cnsa2-slh-dsa-status`
+"By December 31, 2030, all equipment and services that cannot support CNSA 2.0 must be phased out unless otherwise noted."
 
-SLH-DSA (FIPS 205) status under CNSA 2.0 is disputed in secondary sources — excluded outright, or approved only for specific uses such as firmware signing.
+**Binding:** `agency_requirement` · **Verdict:** `FAIL` · **Rationale:** `unstated` · **Deadline:** 2030-12-31 (disallowed)
 
-**Binding:** `agency_requirement` · **Verdict:** `INDET` · **Rationale:** `unstated`
+**Migration target:** `ML-KEM-1024` · `ML-DSA-87`
 
-> Worth getting right: BSI and ANSSI both *exempt* hash-based signatures from their hybrid recommendations (verified), so if NSA excludes SLH-DSA outright that is a second, independent contradiction on the same family.
+**Source:** [NSA CNSA 2.0 FAQ, §Timeframe (p. 6)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
+**Verified:** 2026-09-06 by Sadjad Asadi
 
-**Source:** [NSA CNSA 2.0 FAQ — hash-based signatures](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF)
+### ✅ `cnsa2-mandated-2031`
 
-!!! question "Open question"
-    Does the FAQ approve SLH-DSA, exclude it, or approve LMS/XMSS (SP 800-208) instead? Secondary sources disagree. Until read, this rule deliberately returns INDETERMINATE rather than guessing either way.
+"by December 31, 2031, CNSA 2.0 algorithms are mandated for use unless otherwise noted." NSA separately intends all NSS to be quantum-resistant by 2035, per NSM-10.
+
+**Binding:** `agency_requirement` · **Verdict:** `FAIL` · **Rationale:** `unstated` · **Deadline:** 2031-12-31 (exclusive_use)
+
+**Source:** [NSA CNSA 2.0 FAQ, §Timeframe (p. 6)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
+**Verified:** 2026-09-06 by Sadjad Asadi
+
+### ✅ `cnsa2-slh-dsa-not-approved`
+
+"Q: Can I use SLH-DSA (aka SPHINCS+) to sign software? A: While SLH-DSA is hash-based, it is not part of CNSA and is not approved for any use in NSS."
+
+**Binding:** `agency_requirement` · **Verdict:** `FAIL` · **Rationale:** `unstated`
+
+> A second, independent contradiction on the same algorithm family. BSI §5.3.4 and ANSSI §2/§4 both explicitly permit hash-based signatures standalone, exempting them from their hybrid recommendations. NSA does not approve SLH-DSA for any use in NSS at all. Same algorithm, three positions: exempt-and-approved (BSI, ANSSI), and not approved (NSA).
+
+**Migration target:** `ML-DSA-87`
+
+**Source:** [NSA CNSA 2.0 FAQ, §Quantum alternatives (p. 8)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
+**Verified:** 2026-09-06 by Sadjad Asadi
+
+### ✅ `cnsa2-hash-based-firmware-signing-only`
+
+LMS and XMSS are approved, but only "for digitally signing firmware and software". "From NIST SP 800-208, NSA has only approved LMS and XMSS for use in NSS. The multi-tree algorithms HSS and XMSSMT are not allowed." NSA's preferred parameter set is LMS with SHA-256/192.
+
+**Binding:** `agency_requirement` · **Verdict:** `FAIL` · **Rationale:** `unstated`
+
+> ANSSI names XMSS, LMS and SPHINCS+ together as acceptable hash-based options; NSA splits that family three ways — LMS and XMSS approved for firmware/software signing only, HSS and XMSSMT not allowed, SLH-DSA not approved at all.
+
+**Migration target:** `LMS-SHA-256/192`
+
+**Source:** [NSA CNSA 2.0 FAQ, Table 'Algorithms Allowed in Specific Applications' (p. 3) and §Quantum alternatives (p. 8)](https://media.defense.gov/2022/Sep/07/2003071836/-1/-1/0/CSA_CNSA_2.0_FAQ_.PDF) — U/OO/194427-22 | PP-24-4014 | December 2024 Ver. 2.1
+**Verified:** 2026-09-06 by Sadjad Asadi
 
 ---
 

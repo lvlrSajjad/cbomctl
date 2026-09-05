@@ -52,9 +52,15 @@ def rule_applies(rule: Rule, asset: CryptoAsset, *, system_category: str | None)
             return False, None
 
     if a.algorithm:
-        names = {n.upper() for n in a.algorithm}
-        candidates = {(asset.algorithm or "").upper(), asset.raw_name.upper()}
-        if not (names & candidates):
+        # Canonical substring, matching exclude_algorithm. Exact matching was
+        # brittle: a rule naming "SLH-DSA" silently failed to reach an asset
+        # called "SLH-DSA-SHA2-192s", because real names carry parameters.
+        from cbomctl.normalize.identity import canonical_name
+
+        wanted = {canonical_name(n) for n in a.algorithm}
+        candidates = [canonical_name(asset.algorithm or ""),
+                      canonical_name(asset.raw_name)]
+        if not any(w and (w in c or c in w) for w in wanted for c in candidates if c):
             return False, None
 
     if a.parameter_set:

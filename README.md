@@ -10,9 +10,9 @@ independent checkboxes — and no tool will show you the collision.
 `cbomctl` takes a CBOM from any generator, runs it against several national PQC
 policies at once, and reports the matrix and the conflicts.
 
-> ⚠️ **Pre-release.** Six of seven packs have been read from their primary
-> sources. `cnsa-2.0` has not — NSA's servers refuse automated access — and it
-> ships as `status: needs_verification`. Output computed
+> ⚠️ **Pre-release.** All seven policy packs have now been read from their
+> primary sources — every rule cites a section or page. Still not compliance
+> advice: read the sources yourself before acting on a verdict.
 > from an unverified rule carries a visible banner naming the packs involved.
 > See [docs/policy-sources.md](docs/policy-sources.md). Not compliance advice.
 
@@ -118,7 +118,7 @@ URL, a `last_verified` date, a `binding` classification, and a `hybrid` stance.
 | `eu-roadmap` | ✅ Coordinated Implementation Roadmap Part 1 v1.1 |
 | `us-eo14412` | ✅ 91 FR 38483 §4(b), §5(c) |
 | `nist-ir8547` | ✅ **as a draft** — IR 8547 ipd Tables 2 and 4 |
-| `cnsa-2.0` | ❌ blocked — nsa.gov returns 403 to automated fetches |
+| `cnsa-2.0` | ✅ CNSA 2.0 FAQ v2.1 (Dec 2024), pp. 2, 6, 8, 19–20 |
 
 ## Install
 

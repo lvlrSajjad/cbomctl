@@ -40,17 +40,20 @@ class TestPacksAreHonest:
                 continue
             assert rule.verified_by, f"{pid}/{rule.id} claims verified with no verifier"
             assert rule.source_edition, f"{pid}/{rule.id} has no pinned edition"
-            assert "§" in rule.source_title, (
-                f"{pid}/{rule.id} cites no section — 'verified' means a specific "
-                f"passage was read, not that the document was skimmed")
+            import re as _re
+
+            assert "§" in rule.source_title or _re.search(
+                r"\bp{1,2}\.\s*\d", rule.source_title), (
+                f"{pid}/{rule.id} cites neither a section nor a page — "
+                f"'verified' means a specific passage was read, not that the "
+                f"document was skimmed")
 
     def test_verification_progress_is_pinned(self):
         """Verification proceeds pack by pack and rule by rule. This pins where
         it has reached, so a pack cannot quietly claim verification it has not
         earned -- and so the reverse (a rule regressing) is also caught."""
         fully = {p for p in ALL_PACKS if load_pack(p).is_verified}
-        assert fully == {"bsi-de", "anssi-fr", "asd-au", "eu-roadmap",
-                         "us-eo14412", "nist-ir8547"}
+        assert fully == set(ALL_PACKS), "all seven packs are now verified"
 
         partial = {p: (len(load_pack(p).rules) - len(load_pack(p).unverified_rules),
                        len(load_pack(p).rules))
@@ -59,7 +62,7 @@ class TestPacksAreHonest:
         # its date came only from press coverage.
         assert partial["anssi-fr"] == (5, 5)
         assert partial["asd-au"] == (6, 6)
-        assert partial["cnsa-2.0"] == (0, 7)
+        assert partial["cnsa-2.0"] == (9, 9)
         assert partial["eu-roadmap"] == (6, 6)
 
     @pytest.mark.parametrize("pid", ALL_PACKS)
@@ -100,24 +103,37 @@ class TestNeverSilentlyPass:
         cell = evaluate(load_pack(pid), asset(purpose=p))
         assert cell.verdict is not Verdict.PASS
 
-    def test_undeclared_cnsa_category_is_indeterminate(self):
-        cell = evaluate(load_pack("cnsa-2.0"),
-                        asset(purpose=Purpose.HASH, status=QuantumStatus.WEAKENED_BY_GROVER,
-                              name="SHA256"),
-                        system_category=None)
+    def test_undeclared_system_category_is_indeterminate(self):
+        """EO 14412 scopes every rule to HVAs and high impact systems, which is
+        not derivable from a CBOM. With nothing declared there is nothing else
+        to fall back on, so the cell is INDETERMINATE.
+
+        (CNSA 2.0 carried category rules in the pre-release stub; the real FAQ
+        v2.1 has none, so this mechanism now lives in the EO and EU packs.)"""
+        cell = evaluate(load_pack("us-eo14412"), asset(), system_category=None)
         assert cell.verdict is Verdict.INDETERMINATE
         assert "system_category" in (cell.note or "")
 
+    def test_undeclared_category_is_still_reported_beside_a_real_verdict(self):
+        """The EU roadmap has both category-scoped and unscoped rules. The
+        unscoped ones still produce a verdict, and the undeclared category is
+        reported alongside rather than erasing it -- a WARN plus "one rule
+        could not be evaluated" is more actionable than INDETERMINATE alone."""
+        cell = evaluate(load_pack("eu-roadmap"), asset(), system_category=None)
+        assert cell.verdict is Verdict.WARN
+        assert "system_category" in (cell.note or "")
+
     def test_strict_turns_unverified_rules_indeterminate(self):
-        """Second condition of building on stubs."""
-        # Uses a pack that is still unverified. CNSA rules are scoped to
-        # system categories, so declare one -- otherwise the cell would be
-        # INDETERMINATE for a different reason and prove nothing.
-        kw = {"system_category": "web-cloud"}
-        plain = evaluate(load_pack("cnsa-2.0"), asset(), **kw)
-        strict = evaluate(load_pack("cnsa-2.0"), asset(), strict=True, **kw)
-        assert plain.verdict is Verdict.FAIL
-        assert strict.verdict is Verdict.INDETERMINATE
+        """All seven shipped packs are verified, so this uses the synthetic
+        fixture pack -- the mechanism must stay tested regardless."""
+        from pathlib import Path
+
+        from cbomctl.policy.schema import Pack
+
+        pack = Pack.from_file(Path(__file__).parent / "fixtures" / "packs"
+                              / "synthetic-unverified.yaml")
+        assert evaluate(pack, asset()).verdict is Verdict.FAIL
+        assert evaluate(pack, asset(), strict=True).verdict is Verdict.INDETERMINATE
 
     def test_acquisition_gate_is_off_by_default(self):
         ids = {r.rule_id for r in evaluate(load_pack("cnsa-2.0"), asset(),
@@ -322,6 +338,55 @@ class TestSourceDiscipline:
 
         for rule in load_pack(pid).rules:
             assert any(h in rule.source_url for h in ALLOWED_SOURCE_HOSTS), rule.id
+
+
+class TestCnsaContradictions:
+    """CNSA 2.0 contradicts the European packs on two independent axes, both
+    verified from the December 2024 FAQ v2.1."""
+
+    def test_slh_dsa_is_not_approved_at_all(self):
+        """BSI and ANSSI both exempt hash-based signatures from their hybrid
+        recommendations -- i.e. approve them standalone. NSA does not approve
+        SLH-DSA for any use in NSS."""
+        from cbomctl.models import Construction, QuantumStatus
+
+        slh = CryptoAsset(bom_ref="s", raw_name="SLH-DSA-SHA2-192s",
+                          algorithm="SLH-DSA", purpose=Purpose.SIGNATURE,
+                          construction=Construction.PURE_PQC,
+                          quantum_status=QuantumStatus.PQ_SECURE)
+        fired = {r.rule_id for r in evaluate(load_pack("cnsa-2.0"), slh).rules}
+        assert "cnsa2-slh-dsa-not-approved" in fired
+
+        for pid in ("bsi-de", "anssi-fr"):
+            cell = evaluate(load_pack(pid), slh)
+            assert cell.verdict is not Verdict.FAIL, pid
+
+    def test_ml_kem_768_fails_cnsa_and_passes_europe(self):
+        """"for all classification levels" -- there is no lower tier where 768
+        becomes acceptable."""
+        from cbomctl.models import Construction, QuantumStatus
+
+        kem = asset(purpose=Purpose.KEY_AGREEMENT, construction=Construction.HYBRID,
+                    status=QuantumStatus.PQ_SECURE, name="X25519MLKEM768")
+        assert evaluate(load_pack("cnsa-2.0"), kem).verdict is Verdict.FAIL
+        assert evaluate(load_pack("bsi-de"), kem).verdict is Verdict.PASS
+
+    def test_ikev2_hybrid_is_the_named_exception(self):
+        """The one place NSA affirmatively wants a hybrid. It must not inherit
+        the general prohibition."""
+        from cbomctl.models import Construction, HybridStance
+
+        rule = next(r for r in load_pack("cnsa-2.0").rules
+                    if r.id == "cnsa2-hybrid-ikev2-exception")
+        assert rule.hybrid is HybridStance.REQUIRED
+
+    def test_no_category_deadlines_survive_from_the_stub(self):
+        """v2.1 has no per-product-category rows and never says 2033. Those
+        came from the superseded 2022 chart."""
+        pack = load_pack("cnsa-2.0")
+        assert not any(r.applies_to.system_category for r in pack.rules)
+        assert not any(r.deadline and r.deadline.year == 2033 for r in pack.rules)
+        assert {r.deadline.year for r in pack.rules if r.deadline} == {2027, 2030, 2031}
 
 
 class TestSecurityStrengthScoping:

@@ -52,20 +52,29 @@ def _construction_conflict(row: Row, packs: dict[str, Pack], cid: str) -> Confli
         return None
 
     required = any(stances[j] is HybridStance.REQUIRED for j in pro)
+    # Do not lump "discourages" in with "forbids" -- the gradient is the point,
+    # and it is the difference between a costly compromise and no compromise.
     forbidding = sorted(j for j in anti if not stances[j].permits_hybrid)
+    discouraging = [j for j in anti if j not in forbidding]
 
     if forbidding:
         # A jurisdiction that does not permit hybrids at all cannot be
         # reconciled with one that recommends them. Saying so is the honest
         # output; inventing a compromise here would be worse than useless.
         satisfies = None
+        also = ""
+        if discouraging:
+            also = (f" {', '.join(discouraging)} would permit a hybrid but "
+                    f"recommends against it, so even dropping "
+                    f"{', '.join(forbidding)} leaves a documented cost.")
         cost = (f"{', '.join(forbidding)} does not permit a hybrid construction "
                 f"outside named interoperability exceptions, while "
                 f"{', '.join(pro)} "
                 f"{'require' if required else 'recommend'} one. **No single "
                 f"configuration satisfies all selected jurisdictions.** You "
                 f"will need different builds, or to drop a jurisdiction from "
-                f"scope. This is a business decision, not a technical one.")
+                f"scope.{also} This is a business decision, not a technical "
+                f"one.")
     else:
         # Discouraged-but-permitted: hybrid clears everyone, at a cost.
         satisfies = "hybrid (classical + PQC)"
@@ -76,13 +85,19 @@ def _construction_conflict(row: Row, packs: dict[str, Pack], cid: str) -> Confli
                 f"is the only one compliant with all. This is a business "
                 f"decision.")
 
+    opposed = []
+    if discouraging:
+        opposed.append(f"{', '.join(discouraging)} recommend against it")
+    if forbidding:
+        opposed.append(f"{', '.join(forbidding)} does not permit one outside "
+                       f"named interoperability exceptions")
+
     return Conflict(
         id=cid, kind="construction", bom_ref=row.bom_ref, display=row.display,
         summary=(f"{', '.join(pro)} "
                  f"{'require' if required else 'recommend'} a hybrid "
                  f"construction for {row.purpose}; "
-                 f"{', '.join(anti)} "
-                 f"{'do not permit one' if forbidding else 'recommend against it'}."),
+                 + "; ".join(opposed) + "."),
         jurisdictions=sorted(stances),
         satisfies_all=satisfies, cost_note=cost,
     )
