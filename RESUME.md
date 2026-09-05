@@ -37,28 +37,43 @@ algorithm family cannot do, the result is AMBIGUOUS with the disagreement
 recorded. Measured share of unresolved algorithm assets in the real Keycloak
 CBOM: **8 of 22**. Docs corrected from "roughly a quarter" to "more than a third".
 
-## Policy verification — 2 of 6 packs done
-Primary PDFs are in `.research/` (`bsi.txt`, `anssi.txt`) if you want to re-read.
+## Policy verification — 6 of 7 packs done, from primary sources
+Extracted primary texts are in `.research/` (`bsi.txt`, `anssi.txt`,
+`eo14412.clean.txt`, `ir8547.txt`, `eu_117507.txt`).
 
-**✅ `bsi-de` 6/6** — TR-02102-1 v2026-01 (Jan 23 2026). Recommends, never
-mandates. 2030 and 2031 are two real distinct dates (the "conflated editions"
-suspicion was wrong). Signatures 2035. §5.3.4 recommends hybrid signatures —
-the field left `null` rather than assumed is now filled from the text. Carve-out
-found: hash-based schemes may be used standalone, contradicting a widely-cited
-secondary summary.
+| pack | state |
+|---|---|
+| `bsi-de` 6/6 | TR-02102-1 v2026-01 §2.1, §5.3.4 |
+| `anssi-fr` 5/6 | 2023 follow-up §1.1, §1.2, §2, §3.2, §4 |
+| `asd-au` 6/6 | ISM Guidelines for Cryptography, page dated 2026-09-03 |
+| `eu-roadmap` 6/6 | Coordinated Implementation Roadmap Part 1 v1.1 |
+| `us-eo14412` 3/3 | 91 FR 38483 §4(b), §5(c) |
+| `nist-ir8547` 4/4 | IR 8547 **ipd** Tables 2 and 4 — verified as a draft |
+| `cnsa-2.0` 0/5 | **BLOCKED** — nsa.gov and media.defense.gov return 403 |
 
-**✅ `anssi-fr` 5/6** — 2023 follow-up (Dec 21 2023). Same hash-based carve-out,
-independently. Split into two rules: `certification_requirement` ("mandatory",
-"shall", inside the visa process) vs `guideline_recommendation` (everywhere
-else). **F4 resolved**: §1.1 gives the maturity reason itself and cites the
-Rainbow break, so `algorithm_maturity` is ANSSI's reasoning, not our inference.
-The 2027 certification date is **not in the document** — press-only, still
-unverified.
+**The one remaining job needs you, not more effort.** Open the CNSA 2.0 FAQ in
+a browser and check the seven claims listed in `docs/policy-sources.md` §2.
+Priority: whether CNSA requires ML-KEM-**1024** (BSI and ANSSI accept 768 —
+that is a `parameter` conflict independent of hybrid), and whether NSA merely
+does not require hybrid or actively discourages it. Also open:
+`anssi-certification-2027`, whose 2027 date is press-only and not in the
+primary paper.
 
-**Remaining, in order:** EO 14412 on federalregister.gov (the split 2030/2031
-dates), CNSA 2.0 FAQ (media.defense.gov — C6 ML-KEM-1024), NIST IR 8547 draft
-status, ASD ISM A2 (the literal "not recommended" sentence), EU roadmap E4
-(binding force).
+## What the verification changed
+- **`eu-roadmap` `hybrid: silent` was wrong** — the roadmap recommends hybrids.
+  Our own assumption, caught by reading. All three European sources now
+  verified as recommending hybrid.
+- **BSI and ANSSI both exempt hash-based signatures** (SLH-DSA, LMS, XMSS) from
+  the hybrid recommendation, independently, for the same stated reason. A
+  widely-cited secondary summary says the opposite about BSI.
+- **ASD is not disputing the facts.** It grants the European premise verbatim
+  and prices complexity and overhead higher, adding that post-CRQC the
+  classical half contributes nothing. Same axis, opposite conclusion.
+- **IR 8547's 2030 deprecation only reaches 112-bit strength.** "RSA deprecated
+  in 2030" is true for RSA-2048 and false for RSA-3072.
+- **EO 14412 splits key establishment (2030) from signatures (2031)** in
+  consecutive clauses of one sentence — the cleanest primary-source support for
+  the urgency asymmetry anywhere in these packs.
 
 ## Article 3 is now stronger, and sourced
 Both BSI and ANSSI recommend hybrid signatures on maturity grounds, both citing

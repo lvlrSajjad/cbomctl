@@ -5,6 +5,32 @@ never a patch. See [README](README.md#versioning).
 
 ## [Unreleased]
 
+### asd-au 0.2.0, eu-roadmap 0.2.0, us-eo14412 0.2.0, nist-ir8547 0.1.0 — VERIFIED
+
+Six of seven packs are now read from primary sources.
+
+**Breaking (verdict-flipping) — would be MAJOR on release:**
+- `eu-roadmap` `hybrid` corrected from `silent` to `recommended`. The stub
+  assumed the roadmap did not address hybrids; Part 1 v1.1 recommends them
+  explicitly. Any asset previously passing on a non-hybrid construction under
+  this pack now warns.
+- `bsi-de` gained `bsi-hybrid-signatures`, so pure-PQC signatures now warn.
+
+**Added:**
+- `nist-ir8547` — new pack, verified **as a draft**. Deprecated and disallowed
+  as separate states, with the 112-bit qualifier that most coverage drops.
+- `asd-au` — ML-DSA-65 sunset, and the SHA-256/AES-128/HMAC-SHA256 sunsets that
+  ASD states are interoperability rather than quantum concerns.
+- `eu-roadmap` — medium-risk 2035 tier, firmware-signing rule.
+- `us-eo14412` — split key-establishment 2030 / signatures 2031 deadlines.
+
+**Removed:**
+- `eo14412-cisa-cbom-guidance`. It had an empty selector, so it fired on every
+  asset and masked real findings. The provision now lives in the pack notes.
+
+**Still unverified:** `cnsa-2.0` (nsa.gov returns 403 to automated requests)
+and `anssi-certification-2027` (the date is not in the primary document).
+
 ### bsi-de 0.2.0 — VERIFIED
 
 First pack verified against its primary source: BSI TR-02102-1 **Version
