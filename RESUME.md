@@ -1,10 +1,10 @@
 # Session state — ready to release, nothing pushed
 
-`~/Coding/ME/pqc-audit` · branch `main` · **28 commits, no remote** · `cbomctl` v0.1.0
+`~/Coding/ME/pqc-audit` · branch `main` · **30 commits, no remote** · `cbomctl` v0.1.0
 
 ## Status: everything is done except the irreversible parts
 
-331 tests pass. Wheel builds with all 7 packs inside. Docs site builds
+339 tests pass. Wheel builds with all 7 packs inside. Docs site builds
 `--strict`. All generated content diff-checked.
 
 **All seven policy packs verified from primary sources**, each rule citing a
@@ -18,7 +18,7 @@ section or page:
 | `eu-roadmap` 6 | Coordinated Implementation Roadmap Part 1 v1.1 |
 | `us-eo14412` 3 | EO 14412, 91 FR 38483 §4(b), §5(c) |
 | `nist-ir8547` 4 | NIST IR 8547 **ipd** Tables 2, 4 — verified as a draft |
-| `cnsa-2.0` 9 | CNSA 2.0 FAQ v2.1 (Dec 2024), pp. 2, 6, 8, 19–20 |
+| `cnsa-2.0` 10 | CNSA 2.0 FAQ v2.1 (Dec 2024), pp. 2, 6, 8, 19–20 |
 
 Extracted primary texts are in `.research/` (gitignored) if you need to re-read.
 
@@ -45,16 +45,26 @@ wheel contains all seven packs.
 article 3 a week later. No article before the repo is public; every demo
 invokes `cbomctl`.
 
-## Two open judgement calls, both recorded
-1. **The CNSA hybrid reading.** The FAQ answers it twice with different force,
-   and the stronger answer is framed "while waiting for a final NIST
-   post-quantum standard" — a premise that arguably ended in Aug 2024. Encoded
-   at the stronger reading (`not_permitted_except_interop`). If you read it the
-   other way the value is `silent`, and the conflict output would name a
-   satisfies-all target instead of saying none exists. See
-   `docs/policy-sources.md` §2.
-2. **Staleness.** ASD's ISM is revised roughly monthly; IR 8547 may finalise and
-   move its dates. CI reports rules older than 180 days weekly.
+## The CNSA hybrid reading — resolved, and disclosed
+Confirmed at the stronger reading (`not_permitted_except_interop`), with
+evidence from the document: Ver. 2.1 postdates FIPS finalisation by four months
+and was demonstrably revised in that window ("NSA clarified the CNSA 2.0
+language when the FIPS documents were published"; it discusses HashML-DSA), and
+NSA kept the imperative through that revision.
+
+It is nonetheless marked `interpretation: contested` with `alt_reading: silent`,
+because encoding a quote is a judgement and this one decides what the tool tells
+people. Any conflict it drives prints **both** outcomes, computed rather than
+canned. The uncontested half ("will not require") is a separate rule so the
+matrix keeps an anchor.
+
+Unresolved and recorded: whether that answer is verbatim carry-over from Ver.
+2.0 (April 2024). The FAQ has no revision history; it would weaken, not
+overturn, the reading.
+
+## Remaining watch item
+**Staleness.** ASD's ISM is revised roughly monthly; IR 8547 is a draft that may
+finalise and move its dates. CI reports rules older than 180 days weekly.
 
 ## Things not to undo
 The unverified banner, the `status` field, and `--require-verified-policy` are
