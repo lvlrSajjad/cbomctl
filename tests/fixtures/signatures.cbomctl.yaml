@@ -1,0 +1,7 @@
+version: 1
+defaults: { data_lifetime_years: 5, migration_years: 3 }
+assets:
+  - match: { location: "firmware/**" }
+    verification_lifetime_years: 15
+  - match: { location: "src/tls/**" }
+    verification_lifetime_years: 0.01

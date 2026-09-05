@@ -130,7 +130,16 @@ def _parameter_conflict(row: Row, packs: dict[str, Pack], cid: str) -> Conflict 
             if r.id != rule_id or r.migration_target is None:
                 continue
             mt = r.migration_target
-            targets.update(x for x in (mt.kem, mt.signature, mt.symmetric, mt.hash) if x)
+            # Only offer targets that fit this asset's purpose. A signature
+            # conflict must not suggest ML-KEM-1024 just because the rule that
+            # fired also carries a KEM target for other assets.
+            if row.purpose == "signature":
+                fits = (mt.signature, mt.hash)
+            elif row.purpose in ("key-agreement", "encryption"):
+                fits = (mt.kem, mt.symmetric)
+            else:
+                fits = (mt.kem, mt.signature, mt.symmetric, mt.hash)
+            targets.update(x for x in fits if x)
 
     if targets:
         satisfies = " / ".join(sorted(targets))

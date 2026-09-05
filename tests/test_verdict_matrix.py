@@ -257,3 +257,18 @@ class TestSbomToolsAdapter:
         assets, _ = read_assets(FIXTURES / "sbom-tools-view.json")
         custom = next(a for a in assets if a.raw_name == "CustomKDF")
         assert custom.purpose.value == "unknown"
+
+
+class TestConflictTargetsFitThePurpose:
+    """A signature conflict must not offer a KEM as its resolution."""
+
+    def test_signature_conflict_offers_signature_targets_only(self):
+        assets, _ = read_assets(FIXTURES / "signatures.json")
+        packs = [load_pack(p) for p in ("bsi-de", "anssi-fr", "asd-au", "cnsa-2.0")]
+        matrix = build(assets, packs, Config(), today=TODAY)
+        for c in detect(matrix, packs):
+            if c.kind != "parameter" or not c.satisfies_all:
+                continue
+            row = next(r for r in matrix.rows if r.bom_ref == c.bom_ref)
+            if row.purpose == "signature":
+                assert "KEM" not in c.satisfies_all.upper(), c.satisfies_all

@@ -9,12 +9,18 @@ consecutive clauses and gives no reason. The pack records `rationale: unstated`.
 The articles do the same — "the order does not say why, but the obvious reading
 is…" rather than asserting the reasoning as the source's own.
 
-**Blocking:** `cnsa-2.0` is still unverified. Articles 1 and 3 both reference
-NSA's position, so neither publishes until that pack is read.
+**All seven packs are verified**, so nothing is blocked on sourcing. The
+remaining gate is publication order: every article's demo invokes `cbomctl`, so
+none publishes before the repository is public.
+
+Suggested order: **article 2 first** — it makes no claim about the tool being
+novel, it is the piece most likely to be linked by people who care about being
+right, and it establishes the sourcing discipline. Then article 1 as the launch
+post, with the Show HN. Article 3 a week later.
 
 ---
 
-## 1. "Everyone agrees on the risk. They disagree on the price." *(lead)*
+## 1. "Everyone agrees on the risk. They disagree on the price." *(lead)* — ✅ [drafted](01-everyone-agrees-on-the-risk.md)
 
 The old title was "One CBOM, three verdicts: why Germany, France and Australia
 disagree about hybrid PQC". Reading the sources killed that framing, because
@@ -60,7 +66,7 @@ process. Nor that nobody else evaluates multiple jurisdictions:
 [open-quantum-secure](https://github.com/jimbo111/open-quantum-secure) ships
 seven frameworks and documents the divergence in its README. Link it.
 
-## 2. "RSA-2048 and RSA-3072 have different futures"
+## 2. "RSA-2048 and RSA-3072 have different futures" — ✅ [drafted](02-rsa-2048-and-rsa-3072.md)
 
 Retitled from "Deprecated is not disallowed", and led with the concrete hook.
 NIST IR 8547's Tables 2 and 4 split by security strength:
@@ -86,7 +92,7 @@ credibility depends on not selling anything.
 Demo: two RSA assets at different strengths rendering differently, with the
 draft notice visible.
 
-## 3. "Signatures aren't urgent — but they aren't simple"
+## 3. "Signatures aren't urgent — but they aren't simple" — ✅ [drafted](03-signatures-arent-simple.md)
 
 **Part one, urgency.** Key establishment is time-critical because of
 harvest-now-decrypt-later. Signatures cannot be harvested: forging one needs the

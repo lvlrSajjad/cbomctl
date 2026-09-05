@@ -1,0 +1,29 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.7",
+  "version": 1,
+  "metadata": { "component": { "type": "application", "name": "signing-service" } },
+  "components": [
+    {
+      "type": "cryptographic-asset", "bom-ref": "tls-sig", "name": "ECDSA-P256",
+      "evidence": { "occurrences": [ { "location": "src/tls/handshake.go", "line": 61 } ] },
+      "cryptoProperties": { "assetType": "algorithm", "oid": "1.2.840.10045.4.3.2",
+        "algorithmProperties": { "primitive": "signature", "cryptoFunctions": ["sign", "verify"],
+          "ellipticCurve": "secg/secp256r1" } }
+    },
+    {
+      "type": "cryptographic-asset", "bom-ref": "fw-sig", "name": "ML-DSA-65",
+      "evidence": { "occurrences": [ { "location": "firmware/sign.c", "line": 118 } ] },
+      "cryptoProperties": { "assetType": "algorithm",
+        "algorithmProperties": { "primitive": "signature", "cryptoFunctions": ["sign"],
+          "algorithmFamily": "ML-DSA", "nistQuantumSecurityLevel": 3 } }
+    },
+    {
+      "type": "cryptographic-asset", "bom-ref": "fw-hash-sig", "name": "SLH-DSA-SHA2-192s",
+      "evidence": { "occurrences": [ { "location": "firmware/sign.c", "line": 204 } ] },
+      "cryptoProperties": { "assetType": "algorithm",
+        "algorithmProperties": { "primitive": "signature", "cryptoFunctions": ["sign"],
+          "algorithmFamily": "SLH-DSA", "nistQuantumSecurityLevel": 3 } }
+    }
+  ]
+}
