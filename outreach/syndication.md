@@ -1,5 +1,14 @@
 # Syndication
 
+**Always pin the locale when copying.** A bare `pbcopy` through a shell with no
+`LANG` set produced 206 mangled characters in the first dev.to paste — every
+em-dash and every box-drawing character in the demo block, decoded as Mac Roman.
+
+```bash
+LC_ALL=en_US.UTF-8 pbcopy < <file>
+```
+
+
 The canonical copy of every article is on the docs site. Syndicated copies must
 set a canonical URL back to it — these cite a **draft** standard, and when NIST
 IR 8547 finalises the dates may move. Only one copy can be corrected; make sure

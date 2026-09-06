@@ -55,6 +55,7 @@ nav:
       - CNSA 2.0 (NSA): policy-packs/cnsa-2.0.md
   - Writing:
       - Overview: writing/index.md
+      - Everyone agrees on the risk: writing/everyone-agrees-on-the-risk.md
       - RSA-2048 and RSA-3072: writing/rsa-2048-and-rsa-3072.md
   - CI integration: ci.md
   - Sources and open questions: policy-sources.md

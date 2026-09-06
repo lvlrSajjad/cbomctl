@@ -29,6 +29,14 @@ SITE = "https://lvlrsajjad.github.io/cbomctl"
 
 ARTICLES = [
     {
+        "src": ROOT / "docs" / "writing" / "everyone-agrees-on-the-risk.md",
+        "out": ROOT / "outreach" / "devto" / "everyone-agrees-on-the-risk.body.md",
+        "fields": ROOT / "outreach" / "devto" / "everyone-agrees-on-the-risk.fields.md",
+        "slug": "writing/everyone-agrees-on-the-risk",
+        "title": "Everyone agrees on the risk. They disagree on the price.",
+        "tags": "security, cryptography, postquantum, compliance",
+    },
+    {
         "src": ROOT / "docs" / "writing" / "rsa-2048-and-rsa-3072.md",
         "out": ROOT / "outreach" / "devto" / "rsa-2048-and-rsa-3072.body.md",
         "fields": ROOT / "outreach" / "devto" / "rsa-2048-and-rsa-3072.fields.md",

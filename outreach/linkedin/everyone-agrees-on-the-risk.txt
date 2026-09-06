@@ -1,0 +1,20 @@
+Germany, France and the EU recommend hybrid post-quantum key exchange. Australia recommends against it. The NSA does not permit it on national security systems at all, outside one named exception.
+
+The obvious reading is that the authorities disagree about whether hybrid cryptography is safe. That reading is wrong, and the real one is more useful.
+
+ANSSI wants a classical algorithm kept alongside the post-quantum one because "post-quantum algorithms ... are still not mature enough to solely ensure the security" — citing the classical break of Rainbow, a NIST finalist. BSI reaches the same conclusion.
+
+Now Australia's ASD, which recommends against hybrids:
+
+"Generally, such schemes have the advantage of the security offered by the traditional cryptographic algorithm if the post-quantum cryptographic algorithm is vulnerable to an implementation flaw or new attack."
+
+That is ANSSI's argument, in Australia's own words, in the paragraph where it declines to follow it. ASD is not disputing the benefit. It prices the complexity higher. The NSA goes further and says so explicitly: more products fail from implementation and configuration errors than from failures in the underlying algorithms.
+
+So it is not a disagreement about cryptography. It is a bet on which failure mode is likelier: a new lattice scheme falling to cryptanalysis, or an engineer misconfiguring a construction with twice the moving parts. Rainbow and SIKE are evidence for the first. Every TLS CVE ever filed is evidence for the second.
+
+Reasonable people land differently on that, and they have. If you ship into more than one of those markets, one common construction is currently unsatisfiable across them.
+
+Full piece, with the quotes and the sources:
+https://lvlrsajjad.github.io/cbomctl/writing/everyone-agrees-on-the-risk/
+
+#postquantum #cryptography

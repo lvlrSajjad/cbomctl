@@ -55,14 +55,17 @@ primary source, and the wheel contains all seven packs.
 4. **Publish article 2** (`RSA-2048 and RSA-3072 have different futures`). It
    makes no claim about the tool being novel and establishes the sourcing
    discipline. Best first impression.
-5. **Then article 1 and the Show HN**, same day, article live first so the
-   comment can link it. Be available for a few hours afterwards.
-6. **Article 3** a week later.
-7. **Upstream drafts** — the [sbom-tools issue](upstream/issue-draft.md) once
+5. **Article 1** — publish whenever; it is independent of the Show HN, which
+   links the repository rather than the article.
+6. **Show HN** — Tue–Thu, 09:00–11:00 America/New_York, which is 15:00–17:00
+   CEST. Not a weekend: Sunday is the weakest day there and it is one shot. Be
+   free for ~3 hours after posting.
+7. **Article 3** a week later.
+8. **Upstream drafts** — the [sbom-tools issue](upstream/issue-draft.md) once
    the repo is public so the context line resolves; the
    [CycloneDX Tool Center PR](outreach/cyclonedx-tool-center-pr.md) once
    `pip install` works.
-8. **CfP** — [PKI Consortium](outreach/pki-consortium-cfp.md), check the
+9. **CfP** — [PKI Consortium](outreach/pki-consortium-cfp.md), check the
    deadline first.
 
 ## Do not

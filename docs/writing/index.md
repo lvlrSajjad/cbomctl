@@ -10,6 +10,12 @@ yet — the story is in the first article below.
 
 ## Published
 
+- [**Everyone agrees on the risk. They disagree on the price.**](everyone-agrees-on-the-risk.md)
+  *2026-09-06* — Germany, France and the EU recommend hybrid post-quantum key
+  exchange. Australia recommends against it. The NSA does not permit it on
+  national security systems. They are not disagreeing about cryptography: ASD
+  grants the European premise in the paragraph where it declines to follow it.
+
 - [**RSA-2048 and RSA-3072 have different futures**](rsa-2048-and-rsa-3072.md)
   *2026-09-06* — NIST IR 8547 scopes its 2030 deprecation to 112 bits of
   security strength, not to an algorithm. Half of "RSA is deprecated in 2030"
@@ -17,11 +23,6 @@ yet — the story is in the first article below.
 
 ## Coming
 
-- **Everyone agrees on the risk. They disagree on the price.** Germany, France
-  and the EU recommend hybrid post-quantum key exchange; Australia recommends
-  against it; the NSA does not permit it on national security systems. They are
-  not disagreeing about cryptography — ASD grants the European premise in the
-  paragraph where it declines to follow it.
 - **Signatures aren't urgent — but they aren't simple.** Why key exchange comes
   first, and why that does not make signatures easy.
 
