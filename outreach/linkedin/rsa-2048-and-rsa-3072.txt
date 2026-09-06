@@ -1,0 +1,18 @@
+Everyone repeating "RSA is deprecated in 2030" is half right. The wrong half is the one people are budgeting around.
+
+NIST IR 8547 scopes that 2030 date to 112 bits of security strength — not to an algorithm.
+
+RSA-2048 is deprecated after 2030. RSA-3072 is not. It is only disallowed after 2035, and it has no 2030 row at all. Same table, same document. P-224 and P-256 split the same way.
+
+Two more things worth knowing.
+
+"Deprecated" and "disallowed" are different states in NIST's own glossary. Deprecated means the algorithm "may be used, but the user must accept some security risk." Disallowed means it is "no longer allowed for applying cryptographic protection." One is a risk acceptance. The other is a stop.
+
+And IR 8547 is still an initial public draft. Every date in it is proposed.
+
+If you are planning a migration, that distinction is worth roughly five years of schedule on part of your estate. A tool that reports the stricter date for everything is not being cautious — it is competing for budget with the findings that are genuinely urgent.
+
+Full piece, with the tables and the glossary text:
+https://lvlrsajjad.github.io/cbomctl/writing/rsa-2048-and-rsa-3072/
+
+#postquantum #cryptography

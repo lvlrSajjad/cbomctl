@@ -53,27 +53,42 @@ options and check.
 
 ## LinkedIn
 
-Post the hook, not the article. ~150 words, link at the end.
+Ready to paste, plain text, no markdown — LinkedIn renders `**bold**` and
+`[links](url)` literally:
 
-> Everyone repeating "RSA is deprecated in 2030" is half right, and the wrong
-> half is the one people are planning around.
->
-> NIST IR 8547 scopes that 2030 date to **112 bits of security strength**, not
-> to an algorithm. RSA-2048 is deprecated after 2030. RSA-3072 is not — it is
-> only disallowed after 2035, and there is no 2030 row for it at all. Same table.
-> P-224 and P-256 split the same way.
->
-> Two other things worth knowing: "deprecated" and "disallowed" are different
-> states in NIST's own glossary — one is a risk acceptance, the other is a stop —
-> and IR 8547 is still an initial public draft, so every date in it is proposed.
->
-> If you are budgeting a migration, that distinction is worth five years of
-> schedule on part of your estate.
->
-> Full piece, with the tables and the glossary text:
-> https://lvlrsajjad.github.io/cbomctl/writing/rsa-2048-and-rsa-3072/
+```bash
+LC_ALL=en_US.UTF-8 pbcopy < outreach/linkedin/rsa-2048-and-rsa-3072.txt
+```
 
-No hashtag spam. Two at most, if any.
+Pin the locale. A bare copy through a shell with no `LANG` set is how the
+dev.to paste arrived with every em-dash and box-drawing character mangled into
+Mac Roman.
+
+195 words, two hashtags, link at the end pointing at **your site** rather than
+dev.to — the canonical copy is the one to send people to.
+
+### Two choices worth making deliberately
+
+**The link.** LinkedIn has historically down-ranked posts with external links,
+and the standard workaround is to put the URL in the first comment instead.
+That is real but overstated, and it costs the reader a click plus a hunt. For a
+technical audience posting occasionally, in-post is fine. If you would rather
+test it: drop the last two lines before posting, then add
+`Full piece: <url>` as the first comment within a minute.
+
+**The fold.** LinkedIn truncates after roughly two lines behind "…see more", so
+the first two carry the whole post:
+
+> Everyone repeating "RSA is deprecated in 2030" is half right. The wrong half
+> is the one people are budgeting around.
+
+Do not add a greeting, a "🚨" or an "I'm excited to share" line above it. That
+is the fold, and spending it on throat-clearing wastes the post.
+
+### Not a carousel, not a newsletter
+
+Plain text post. The article is 1,500 words and lives on your site; LinkedIn's
+job here is the hook and the link.
 
 ## Where not to post this one
 
