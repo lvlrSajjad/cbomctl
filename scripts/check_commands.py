@@ -34,6 +34,11 @@ Commands run against a scratch directory seeded with the placeholder filenames
 the docs use (`app-cbom.json`, `cbomctl.yaml`, ...), so the documented line runs
 verbatim, standing in for the reader's own CBOM.
 
+Prose is checked too, not just fences: any `--flag` written anywhere in these
+files must be one the CLI has, or must be listed in FOREIGN_FLAGS with the tool
+it belongs to. Fences alone would have missed all three appearances of
+`--strict-unknown`.
+
 `pip install <name>` is resolved against the PyPI index — that is the whole of
 what the line claims. Installing into a clean venv and running the console
 script is a release step (`RELEASE.md`), not something to do on every commit;
@@ -70,6 +75,7 @@ SEARCH = [
     ROOT / "outreach",
     ROOT / "upstream",
     ROOT / "policy-packs" / "README.md",
+    ROOT / ".github" / "ISSUE_TEMPLATE",
 ]
 
 #: Byte-for-byte copies emitted by `gen_syndication.py`, which strips the
@@ -81,6 +87,23 @@ SEARCH = [
 GENERATED = {ROOT / "outreach" / "devto"}
 
 SHELL_LANGS = {"bash", "sh", "shell", "console", "zsh"}
+
+#: Flags in prose that belong to something else. Everything else written as
+#: `--flag` anywhere in the swept prose must be a flag `cbomctl` actually has.
+#:
+#: `--strict-unknown` sat in `docs/DESIGN.md` for four releases — twice in a
+#: table cell and once in a sentence, none of them in a fence. Checking only
+#: fenced commands would have left all three. Each entry here names an owner,
+#: because "that flag is somebody else's" is exactly the thing a reader can
+#: get wrong too.
+FOREIGN_FLAGS = {
+    "--cbom": "open-quantum-secure",
+    "--compliance": "open-quantum-secure",
+    "--data-lifetime-years": "open-quantum-secure",
+    "--sector": "open-quantum-secure",
+    "--check": "our own scripts/gen_*.py and scripts/check_commands.py",
+    "--infer-from-evidence": "unbuilt; docs/roadmap.md proposes it as future work",
+}
 
 #: Placeholder filename in the docs -> fixture that stands in for it.
 PLACEHOLDERS = {
@@ -97,6 +120,14 @@ COMMENT = re.compile(r"<!--(?P<body>.*?)-->", re.S)
 _pypi_cache: dict[str, str] = {}
 
 
+def shown(path: Path) -> Path:
+    """Repo-relative when we can, absolute for a scratch doc under test."""
+    try:
+        return path.relative_to(ROOT)
+    except ValueError:
+        return path
+
+
 class Block:
     def __init__(self, path: Path, line: int, lang: str, body: list[str], note: str):
         self.path, self.line, self.lang, self.body = path, line, lang, body
@@ -104,11 +135,7 @@ class Block:
 
     @property
     def where(self) -> str:
-        try:
-            shown = self.path.relative_to(ROOT)
-        except ValueError:               # a scratch document under test
-            shown = self.path
-        return f"{shown}:{self.line}"
+        return f"{shown(self.path)}:{self.line}"
 
     def annotation(self, kind: str) -> str | None:
         """The reason attached to `<!-- kind: reason -->`, or "" for a bare tag."""
@@ -337,6 +364,39 @@ def check_synopsis(b: Block, cwd: Path, report: list) -> bool:
     return ok
 
 
+def check_prose_flags(path: Path, cwd: Path, report: list, help_text: str) -> bool:
+    """Every `--flag` written in prose must be one the CLI has, or be foreign.
+
+    Fenced commands are only half the claims a page makes. The other half is
+    sentences and reference tables, and that is where `--strict-unknown`
+    survived four releases.
+    """
+    ok = True
+    for m in re.finditer(r"`(--[a-z][a-z0-9-]*)", path.read_text()):
+        flag = m.group(1)
+        if flag in FOREIGN_FLAGS or flag in help_text:
+            continue
+        line = path.read_text()[:m.start()].count("\n") + 1
+        report.append(("FAIL", f"{shown(path)}:{line}", (
+            f"`{flag}` is not a flag cbomctl has. If it belongs to another "
+            f"tool or is future work, add it to FOREIGN_FLAGS with its owner")))
+        ok = False
+    return ok
+
+
+def cli_help(cwd: Path) -> str:
+    """Every subcommand's --help, concatenated, at a width that never wraps."""
+    text = run_cbomctl(["--help"], cwd).stdout
+    for sub in ("verdict", "prioritize", "plan", "normalize", "policies"):
+        proc = subprocess.run(
+            [sys.executable, "-m", "cbomctl.cli", sub, "--help"],
+            capture_output=True, text=True, cwd=cwd,
+            env={**os.environ, "PYTHONPATH": str(SRC), "NO_COLOR": "1",
+                 "TERM": "dumb", "COLUMNS": "200"})
+        text += proc.stdout
+    return text
+
+
 def check_output(b: Block, cwd: Path, report: list) -> bool:
     """An untagged fence in prose has to say what it is.
 
@@ -450,6 +510,34 @@ def with_keys(body: list[str], uses: str) -> list[str]:
     return sorted(set(keys))
 
 
+def check_block(b: Block, cwd: Path, report: list) -> bool:
+    """Route one fence to the check its annotation and language call for.
+
+    One function, so `tests/test_check_commands.py` exercises the same routing
+    the script does. Duplicating this in the tests would let the thing that
+    proves the checker works drift from the checker.
+    """
+    if b.annotation("illustrative") is not None:
+        # Deliberately not a real thing, whatever it looks like — a layout
+        # drawing, or a blank for a bug reporter to fill in.
+        return check_output(b, cwd, report)
+    if b.annotation("synopsis") is not None:
+        return check_synopsis(b, cwd, report)
+    if b.lang in SHELL_LANGS or (not b.lang and all_commands(b.body)):
+        return check_shell(b, cwd, report)
+    if b.lang in ("", "text"):
+        return check_output(b, cwd, report)
+    if b.lang in ("yaml", "yml"):
+        return check_workflow(b, report)
+    reason = b.annotation("unverified")
+    if reason is not None:
+        if not reason:
+            report.append(("FAIL", b.where, "`unverified` with no reason given"))
+            return False
+        report.append(("SKIP", b.where, f"unverified — {reason}"))
+    return True
+
+
 def main() -> int:
     check = "--check" in sys.argv
     cwd = scratch()
@@ -459,26 +547,13 @@ def main() -> int:
         paths: list[Path] = []
         for base in SEARCH:
             paths += [base] if base.is_file() else sorted(base.rglob("*.md"))
+        help_text = cli_help(cwd)
         for path in paths:
             if any(g in path.parents for g in GENERATED):
                 continue
+            ok &= check_prose_flags(path, cwd, report, help_text)
             for b in blocks(path):
-                if b.annotation("synopsis") is not None:
-                    ok &= check_synopsis(b, cwd, report)
-                elif b.lang in SHELL_LANGS or (not b.lang and all_commands(b.body)):
-                    ok &= check_shell(b, cwd, report)
-                elif b.lang in ("", "text"):
-                    ok &= check_output(b, cwd, report)
-                elif b.lang in ("yaml", "yml"):
-                    ok &= check_workflow(b, report)
-                elif b.annotation("unverified") is not None:
-                    reason = b.annotation("unverified")
-                    if not reason:
-                        report.append(("FAIL", b.where,
-                                       "`unverified` with no reason given"))
-                        ok = False
-                    else:
-                        report.append(("SKIP", b.where, f"unverified — {reason}"))
+                ok &= check_block(b, cwd, report)
     finally:
         shutil.rmtree(cwd, ignore_errors=True)
 

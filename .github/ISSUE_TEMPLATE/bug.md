@@ -15,8 +15,10 @@ names, `primitive`, `cryptoFunctions` and `oid` are usually all that matter.
 
 ## Command and output
 
+<!-- illustrative: a blank for the reporter to fill in with their own
+     command and output, not a command to run. -->
 ```
-cbomctl verdict ... 
+cbomctl verdict ...
 ```
 
 ## Was a purpose resolved incorrectly?

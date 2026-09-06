@@ -31,14 +31,7 @@ def run_on(tmp_path: Path, name: str, text: str) -> tuple[bool, str]:
     ok = True
     try:
         for b in cc.blocks(doc):
-            if b.annotation("synopsis") is not None:
-                ok &= cc.check_synopsis(b, cwd, report)
-            elif b.lang in cc.SHELL_LANGS or (not b.lang and cc.all_commands(b.body)):
-                ok &= cc.check_shell(b, cwd, report)
-            elif b.lang in ("", "text"):
-                ok &= cc.check_output(b, cwd, report)
-            elif b.lang in ("yaml", "yml"):
-                ok &= cc.check_workflow(b, report)
+            ok &= cc.check_block(b, cwd, report)
     finally:
         import shutil
         shutil.rmtree(cwd, ignore_errors=True)
@@ -211,6 +204,54 @@ def test_a_script_that_does_not_exist_is_rejected(tmp_path):
     assert not ok, report
 
 
+def test_a_flag_in_prose_that_the_cli_does_not_have_is_rejected(tmp_path):
+    """`--strict-unknown` appeared three times in docs/DESIGN.md and not once
+    inside a fence. Checking only fenced commands would have missed all of
+    them."""
+    doc = tmp_path / "d.md"
+    doc.write_text("Pass `--strict-unknown` to make unknowns exit 3.\n")
+    cwd = cc.scratch()
+    report: list[tuple[str, str, str]] = []
+    try:
+        ok = cc.check_prose_flags(doc, cwd, report, cc.cli_help(cwd))
+    finally:
+        import shutil
+        shutil.rmtree(cwd, ignore_errors=True)
+    assert not ok
+    assert "--strict-unknown" in "\n".join(d for _, _, d in report)
+
+
+def test_a_flag_belonging_to_another_tool_is_accepted(tmp_path):
+    doc = tmp_path / "d.md"
+    doc.write_text("open-quantum-secure has `--data-lifetime-years`.\n")
+    cwd = cc.scratch()
+    report: list[tuple[str, str, str]] = []
+    try:
+        ok = cc.check_prose_flags(doc, cwd, report, cc.cli_help(cwd))
+    finally:
+        import shutil
+        shutil.rmtree(cwd, ignore_errors=True)
+    assert ok, report
+
+
+def test_the_repositorys_own_prose_declares_every_flag_it_names():
+    """Belt and braces for the sweep: run the prose check over the real docs."""
+    cwd = cc.scratch()
+    report: list[tuple[str, str, str]] = []
+    ok = True
+    try:
+        help_text = cc.cli_help(cwd)
+        for base in cc.SEARCH:
+            for p in ([base] if base.is_file() else sorted(base.rglob("*.md"))):
+                if any(g in p.parents for g in cc.GENERATED):
+                    continue
+                ok &= cc.check_prose_flags(p, cwd, report, help_text)
+    finally:
+        import shutil
+        shutil.rmtree(cwd, ignore_errors=True)
+    assert ok, "\n".join(f"{w} {d}" for v, w, d in report if v == "FAIL")
+
+
 @pytest.mark.parametrize("doc", sorted(
     p for base in cc.SEARCH
     for p in ([base] if base.is_file() else base.rglob("*.md"))
@@ -224,14 +265,7 @@ def test_every_swept_document_passes(doc):
     ok = True
     try:
         for b in cc.blocks(doc):
-            if b.annotation("synopsis") is not None:
-                ok &= cc.check_synopsis(b, cwd, report)
-            elif b.lang in cc.SHELL_LANGS or (not b.lang and cc.all_commands(b.body)):
-                ok &= cc.check_shell(b, cwd, report)
-            elif b.lang in ("", "text"):
-                ok &= cc.check_output(b, cwd, report)
-            elif b.lang in ("yaml", "yml"):
-                ok &= cc.check_workflow(b, report)
+            ok &= cc.check_block(b, cwd, report)
     finally:
         import shutil
         shutil.rmtree(cwd, ignore_errors=True)

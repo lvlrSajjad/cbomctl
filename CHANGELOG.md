@@ -3,6 +3,24 @@
 Semantic versioning. Policy-pack versions move independently — see
 [`policy-packs/CHANGELOG.md`](policy-packs/CHANGELOG.md).
 
+## [Unreleased]
+
+### Added
+- The command checker now reads **prose, not just fences**. Any `` `--flag` ``
+  written anywhere in the swept files must be one the CLI has, or must appear
+  in `FOREIGN_FLAGS` naming the tool it belongs to. `--strict-unknown` sat in
+  `docs/DESIGN.md` three times and not once inside a fence, so the 0.1.4
+  checker would still have missed all three. Today's six foreign flags all
+  belong to `open-quantum-secure` or are declared future work; none was fiction.
+- `.github/ISSUE_TEMPLATE/` is swept too — `bug.md` hands the reporter a
+  `cbomctl verdict ...` blank, now marked `illustrative` rather than looking
+  like something that runs.
+
+### Changed
+- The routing from a fence to its check is one function, `check_block`, called
+  by both the script and its tests. It was duplicated in three places, which
+  would have let the thing that proves the checker works drift from the checker.
+
 ## [0.1.4] — released 2026-09-06
 
 The docs said things nobody had run. Four releases of `docs/quickstart.md`
