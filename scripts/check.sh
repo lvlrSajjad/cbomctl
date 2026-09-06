@@ -17,6 +17,7 @@ step() {
 step "tests"                python3 -m pytest tests/ -q
 step "pack docs current"    python3 scripts/gen_pack_docs.py --check
 step "article blocks current" python3 scripts/gen_article_blocks.py --check
+step "documented commands run" python3 scripts/check_commands.py --check
 step "syndicated copies current" python3 scripts/gen_syndication.py --check
 step "docs build (strict)"  python3 -m mkdocs build --strict -d /tmp/cbomctl-site
 step "wheel builds"         python3 -m build --wheel -o /tmp/cbomctl-dist .

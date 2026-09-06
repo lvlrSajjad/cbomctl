@@ -13,6 +13,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }        # check_commands.py resolves release tags
       - uses: actions/setup-python@v5
         with: { python-version: "3.12" }
       - run: pip install -e . -r docs/requirements.txt
@@ -25,6 +26,12 @@ jobs:
           python scripts/gen_pack_docs.py --check
           python scripts/gen_article_blocks.py --check
           python scripts/gen_syndication.py --check
+
+      - name: Every documented command runs
+        # A command a reader copies off the docs site is a claim too, and
+        # nothing checked those until docs/quickstart.md shipped a pipeline
+        # that could never have worked.
+        run: python scripts/check_commands.py --check
 
       - run: mkdocs build --strict
 

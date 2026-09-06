@@ -1,15 +1,35 @@
 """Optional adapter for `sbom-tools` normalized JSON.
 
-Best-effort and clearly labelled as such. Their `Component` derives `Serialize`
-with no serde renames, so fields arrive snake_cased — but that is an
-implementation detail read from source, not a documented contract. We have
-asked upstream whether the payload is stable; until they answer this adapter
-may break, and it says so rather than failing silently.
+The shape is confirmed. The upstream maintainer answered our question in
+`sbom-tool/sbom-tools#362`: the normalized payload arrives "snake_case, no
+serde renames, `Option` fields as null, and `crypto_properties` itself omitted
+when the component has none". That is exactly what this module reads.
 
-Known lossy point: their parser maps an absent `primitive` and an explicit
-`primitive: "unknown"` to the same value, so this path cannot tell a generator
-that omitted the field from one that said it did not know. Both still resolve
-to Purpose.UNKNOWN, so no verdict changes — but the diagnostic is gone.
+**Where the payload comes from — and where it does not.** It is produced by the
+C ABI (`sbom_tools_parse_sbom_path_json` / `..._str_json`) and by the `parse`
+helpers in their Python, Node, Go and Swift bindings. It is *not* reachable
+from their CLI: `sbom-tools view -o json` is a curated projection carrying
+`name`, `version`, `ecosystem`, `licenses`, `supplier`, `dependency_kind`,
+`vulnerability_count`, `vulnerabilities[]` and EOL fields, and nothing derived
+from `cryptoProperties`. Feeding that projection here yields zero assets.
+
+**How firm the contract is**, per the same answer: their ABI snapshot tests pin
+only the *top-level* keys of each payload, in their
+`tests/fixtures/abi/contract_required_keys.json`; nested shape, including
+everything under `crypto_properties`, is not test-pinned. No schema version is
+separate from the crate version, and pre-1.0 a breaking JSON change is
+permitted in a minor release, listed under *Upgrade notes* in their CHANGELOG.
+A consumer of
+this path should therefore pin the `sbom-tools` crate version and read the
+upgrade notes on each bump. This adapter stays opt-in behind `--from
+sbom-tools` for that reason; raw CycloneDX is the supported path, and the
+maintainer's own advice was to parse raw CycloneDX rather than their JSON.
+
+Known lossy point, also confirmed upstream: their parser maps an absent
+`primitive` and an explicit `primitive: "unknown"` to the same value, so this
+path cannot tell a generator that omitted the field from one that said it did
+not know. They intend to document that rather than change it. Both still
+resolve to Purpose.UNKNOWN, so no verdict changes — but the diagnostic is gone.
 """
 
 from __future__ import annotations

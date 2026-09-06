@@ -14,8 +14,9 @@ text. So this emits two files:
   <slug>.fields.md  what to type into the surrounding fields
 
 Handled in the body: MkDocs `!!! info` admonitions become blockquotes, the
-`<!-- cbomctl: ... -->` generation markers are stripped, and the duplicate H1
-is removed because the title field supplies it.
+`<!-- cbomctl: ... -->`, `excerpt:`, `unverified:`, `illustrative:` and `synopsis`
+annotations are stripped, and the duplicate H1 is removed because the title
+field supplies it.
 """
 
 from __future__ import annotations
@@ -77,7 +78,10 @@ def admonition_to_quote(text: str) -> str:
 def render(article: dict) -> str:
     raw = article["src"].read_text()
     body = re.sub(r"^---\n.*?\n---\n", "", raw, count=1, flags=re.S)
-    body = re.sub(r"<!-- cbomctl:.*?-->\n", "", body)          # generation markers
+    # Every annotation `check_commands.py` and `gen_article_blocks.py` read
+    # above a fence. They are provenance for this repo, not for the reader.
+    body = re.sub(r"<!--\s*(?:cbomctl|excerpt|synopsis|unverified|illustrative)\b.*?-->\n",
+                  "", body, flags=re.S)
     # dev.to renders the title from frontmatter; a leading H1 duplicates it.
     body = re.sub(r"\A\s*# .*\n", "", body, count=1)
     body = admonition_to_quote(body).strip()

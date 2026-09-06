@@ -4,10 +4,11 @@
 `LANG` set produced 206 mangled characters in the first dev.to paste — every
 em-dash and every box-drawing character in the demo block, decoded as Mac Roman.
 
+<!-- unverified: writes to the macOS clipboard. Running it here would clobber
+     whatever you had copied, and the effect is not observable from a check. -->
 ```bash
 LC_ALL=en_US.UTF-8 pbcopy < <file>
 ```
-
 
 The canonical copy of every article is on the docs site. Syndicated copies must
 set a canonical URL back to it — these cite a **draft** standard, and when NIST
@@ -29,7 +30,7 @@ Two generated files, so nothing is hand-converted:
 ```bash
 python3 scripts/gen_syndication.py
 cat outreach/devto/rsa-2048-and-rsa-3072.fields.md    # what to type in the fields
-cat outreach/devto/rsa-2048-and-rsa-3072.body.md | pbcopy   # what goes in the body
+cat outreach/devto/rsa-2048-and-rsa-3072.body.md | pbcopy   # unverified: writes the clipboard
 ```
 
 ### Steps
@@ -65,6 +66,8 @@ options and check.
 Ready to paste, plain text, no markdown — LinkedIn renders `**bold**` and
 `[links](url)` literally:
 
+<!-- unverified: writes to the macOS clipboard. Running it here would clobber
+     whatever you had copied, and the effect is not observable from a check. -->
 ```bash
 LC_ALL=en_US.UTF-8 pbcopy < outreach/linkedin/rsa-2048-and-rsa-3072.txt
 ```

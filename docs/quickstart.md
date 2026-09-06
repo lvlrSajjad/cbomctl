@@ -92,11 +92,49 @@ disagreed.
 | `--cnsa-acquisition-gate` | include CNSA 2.0's January 2027 procurement gate (off by default — it is a procurement condition, not an algorithm deadline) |
 | `--format json\|md\|sarif` | machine-readable output |
 
-## Reading someone else's normalized output
+## Reading `sbom-tools` normalized output
 
-```bash
-sbom-tools view app-cbom.cdx.json -o json | cbomctl verdict - --from sbom-tools
+`cbomctl` can read the normalized JSON that
+[`sbom-tools`](https://github.com/sbom-tool/sbom-tools) produces. Two things to
+know before reaching for it.
+
+**It does not come from their CLI.** `sbom-tools view -o json` is a curated
+projection — `name`, `version`, `ecosystem`, `licenses`, `supplier`,
+`dependency_kind`, vulnerability counts and EOL fields — and carries nothing
+derived from `cryptoProperties`. Piping it here finds zero cryptographic
+assets. The normalized payload comes instead from their C ABI
+(`sbom_tools_parse_sbom_path_json` / `..._str_json`) and from the `parse`
+helpers in their Python, Node, Go and Swift bindings. Both points are
+[confirmed by the maintainer](https://github.com/sbom-tool/sbom-tools/issues/362).
+
+So the worked example is two steps, and the first one is theirs:
+
+!!! note "This first step has not been run here"
+    It needs the `sbom-tools` native library built and its in-tree Python
+    binding importable; neither is installable from PyPI. It is transcribed
+    from their binding's README, not captured from a run. The second step
+    below *is* executed on every CI run, against a fixture of that payload.
+
+<!-- unverified: needs the sbom-tools cdylib built and its in-tree `sbomtools`
+     binding importable; not installable from PyPI, so not executed here.
+     Transcribed from the binding README and sbom-tool/sbom-tools#362. -->
+```python
+import json
+from sbomtools import parse_path_json   # sbom-tools' in-tree binding
+
+with open("normalized.json", "w") as fh:
+    json.dump(parse_path_json("app-cbom.cdx.json"), fh)
 ```
 
-Optional and best-effort: that payload's shape is read from source, not from a
-documented contract. Raw CycloneDX is the supported path.
+The second step is ordinary `cbomctl`:
+
+```bash
+cbomctl verdict normalized.json --from sbom-tools
+```
+
+**Raw CycloneDX remains the supported path** — and it is what the `sbom-tools`
+maintainer recommends for this job as well. Their normalized payload is pinned
+by snapshot tests only at the top level; everything under `crypto_properties`
+may change in any pre-1.0 minor release, announced in their CHANGELOG's upgrade
+notes. Pin their crate version if you depend on it. That is why this adapter is
+behind a flag.

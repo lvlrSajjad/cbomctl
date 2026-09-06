@@ -19,6 +19,7 @@ jobs:
         python-version: ["3.11", "3.12", "3.13"]
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }        # check_commands.py resolves release tags
       - uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python-version }}
@@ -41,6 +42,12 @@ jobs:
           python scripts/gen_pack_docs.py --check
           python scripts/gen_article_blocks.py --check
           python scripts/gen_syndication.py --check
+
+      # Runs every copy-pasteable command in the prose. Needs the full history
+      # because it resolves the tags docs/ci.md tells readers to depend on.
+      - name: Documented commands actually run
+        if: matrix.python-version == '3.12'
+        run: python scripts/check_commands.py --check
 
   cbom-schema-conformance:
     # Hand-built fixtures must stay valid CycloneDX, or they stop proving

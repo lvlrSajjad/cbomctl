@@ -177,10 +177,10 @@ def normalize(
     except CbomParseError as exc:
         _fail(str(exc))
     typer.echo(f"# read as {detected}, {len(assets)} assets\n")
-    typer.echo(f"{'ASSET':<22}{'PURPOSE':<15}{'VIA':<18}{'CONSTRUCTION':<12}QUANTUM")
+    typer.echo(f"{'ASSET':<22}{'PURPOSE':<15}{'VIA':<18}{'CONSTRUCTION':<14}QUANTUM")
     for a in assets:
         typer.echo(f"{a.display:<22}{a.purpose.value:<15}{a.purpose_signal.value:<18}"
-                   f"{a.construction.value:<12}{a.quantum_status.value}")
+                   f"{a.construction.value:<14}{a.quantum_status.value}")
         for c in a.purpose_conflicts:
             typer.echo(f"  ! {c.note}")
         for ctx in a.corroborating[:1]:

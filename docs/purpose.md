@@ -90,11 +90,16 @@ Defaulting unknown to *low* hides exposure behind a green build. Defaulting to
 *high* trains people to ignore the output. The honest answer sends the user
 where the answer actually lives:
 
+<!-- cbomctl: verdict tests/fixtures/purpose-ambiguous.json -j bsi-de,anssi-fr,asd-au,cnsa-2.0 | head -8 -->
 ```
-RSA-2048  ambiguous  (primitive: pke)
-  as key transport → critical · as signature → medium
-  Declare the purpose in cbomctl.yaml, or regenerate the CBOM with a
-  generator that records cryptoFunctions.
+ASSET     PURPOSE    bsi-de    anssi-fr  asd-au    cnsa-2.0
+─────────────────────────────────────────────────────────────
+RSA-2048  ambiguous  INDET     INDET     INDET     INDET
+          └ unresolved: purpose-ambiguous (primitive:pke)
+          └ as key transport → critical · as signature → medium
+          └ Declare the purpose in cbomctl.yaml, or regenerate the CBOM with a generator that records
+            cryptoFunctions.
+          └ src/payments/keys.go:41
 ```
 
 The gap between those two readings is the entire severity scale. That is why

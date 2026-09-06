@@ -1,30 +1,48 @@
 # cbomctl — Design
 
-> **Status:** Phase 1, revised after an independent competitive and regulatory
-> review. Regulatory claims are tracked in
-> [`policy-sources.md`](policy-sources.md); **no rule is verified yet.**
+> **Status:** shipped as 0.1.3. This document is the design as built;
+> where it describes intent rather than code it says so. Regulatory claims
+> are tracked in [`policy-sources.md`](policy-sources.md); **all seven packs
+> are now verified from primary sources**, and the unverified-rule machinery
+> stays in place for the next pack that is not.
 
 ## 1. What this is
 
 `cbomctl` evaluates one CBOM against several national PQC policies at once and
 reports **where their verdicts contradict each other**.
 
+<!-- cbomctl: verdict tests/fixtures/conflict-hybrid.json -j bsi-de,anssi-fr,asd-au,cnsa-2.0 | head -30 -->
 ```
-$ cbomctl verdict app-cbom.json --jurisdictions bsi-de,anssi-fr,asd-au,cnsa-2.0
+ASSET           PURPOSE        bsi-de    anssi-fr  asd-au    cnsa-2.0
+───────────────────────────────────────────────────────────────────────
+ECDH            key-agreement  WARN      WARN      WARN      FAIL        ⚠ c1
+                └ bsi-de · disallowed 2031-12-31
+                └ anssi-fr · complete 2030-12-31
+                └ asd-au · disallowed 2030-12-31 · complete 2030-12-31
+                └ cnsa-2.0 · disallowed 2030-12-31 · exclusive_use 2031-12-31
+                └ src/payments/legacy.go:12
+X25519MLKEM768  key-agreement  PASS      PASS      WARN      FAIL        ⚠ c2,c3
+                └ asd-au · deprecated 2030-12-31
+                └ src/payments/tls.go:88
+ML-DSA-65       signature      WARN      WARN      WARN      FAIL        ⚠ c4,c5
+                └ asd-au · deprecated 2030-12-31
+                └ src/payments/sign.go:7
+RSA-2048        ambiguous      INDET     INDET     INDET     INDET
+                └ unresolved: purpose-ambiguous (primitive:pke)
+                └ as key transport → critical · as signature → medium
+                └ Declare the purpose in cbomctl.yaml, or regenerate the CBOM with a generator that records
+                  cryptoFunctions.
+                └ src/payments/keys.go:41
 
-ASSET                          bsi-de    anssi-fr  asd-au    cnsa-2.0
-X25519MLKEM768 (key-agree)     PASS      PASS      WARN      FAIL
-  └ hybrid: recommended        ✓         ✓         discouraged  needs ML-KEM-1024
-ECDH secp256r1 (key-agree)     FAIL      FAIL      FAIL      FAIL
-  └ classical, broken by Shor  2031-12   2030      2030-12   2027 gate
-RSA-2048 (ambiguous)           INDET     INDET     INDET     INDET
-
-CONFLICTS (1)
-c1  X25519MLKEM768 — no single construction satisfies all four.
-    bsi-de and anssi-fr recommend a hybrid construction; asd-au does not
-    recommend hybrids; cnsa-2.0 requires ML-KEM-1024 rather than -768.
-    Closest satisfies-all: hybrid X25519+ML-KEM-1024 — compliant under
-    bsi-de, anssi-fr and cnsa-2.0, at a documented cost under asd-au.
+CONFLICTS (5)
+  c1  [construction]  ECDH
+      anssi-fr, bsi-de recommend a hybrid construction for key-agreement; asd-au recommend
+      against it; cnsa-2.0 does not permit one outside named interoperability exceptions.
+      cnsa-2.0 does not permit a hybrid construction outside named interoperability exceptions,
+      while anssi-fr, bsi-de recommend one. **No single configuration satisfies all selected
+      jurisdictions.** You will need different builds, or to drop a jurisdiction from scope.
+      asd-au would permit a hybrid but recommends against it, so even dropping cnsa-2.0 leaves a
+      documented cost. This is a business decision, not a technical one.
 ```
 
 That matrix and that conflict block are the product. Everything else in this
@@ -95,9 +113,16 @@ open-quantum-secure, or hand-authored. No external tool is required to run
 behind a flag, has its own fixture, and creates no dependency —
 `sbom-tools` is MIT, pre-1.0 (v0.2.0), and its Python binding is an in-tree
 wrapper that is not published to PyPI (the `sbomtools` package that *is* on
-PyPI is an unrelated project — do not depend on it). We have
-[asked upstream](https://github.com/lvlrSajjad/cbomctl/blob/main/upstream/issue-draft.md) whether that payload is a stable
-contract; until they answer, the adapter is best-effort and says so.
+PyPI is an unrelated project — do not depend on it).
+
+Upstream [has now answered](https://github.com/sbom-tool/sbom-tools/issues/362).
+The normalized shape is exactly as we read it from their structs, but it is
+reachable only through the C ABI and the language bindings — **not** through
+`sbom-tools view -o json`, which is a curated projection with no crypto fields
+in it at all. Their snapshot tests pin only the top-level keys, there is no
+schema version separate from the crate version, and a breaking JSON change is
+permitted in any pre-1.0 minor release. So the adapter stays behind a flag and
+a consumer of this path should pin their crate version.
 
 **Data lifetimes** come from `cbomctl.yaml` or from CycloneDX component
 `properties` (`cbomctl:data_lifetime_years`), so the annotation can live next to
@@ -225,8 +250,8 @@ pretending the tension is resolved. Choosing is a business decision.
 
 | bucket | trigger | exit |
 |---|---|---|
-| `unscored` | purpose `UNKNOWN` or `AMBIGUOUS` | 3 under `--strict-unknown` |
-| `indeterminate` | rule needs an undeclared fact (e.g. CNSA category) | 3 under `--strict-unknown` |
+| `unscored` | purpose `UNKNOWN` or `AMBIGUOUS` | 3 under `--strict` |
+| `indeterminate` | rule needs an undeclared fact (e.g. CNSA category) | 3 under `--strict` |
 | `not-applicable` | pack demonstrably does not bind | never |
 
 Defaulting unknown to *low* hides exposure behind a green build; defaulting to
@@ -298,7 +323,7 @@ descending, then earliest governing deadline, then `bom_ref` for stability.
 Output is JSON, Markdown, or SARIF (**our findings only**, with `locations` from
 `evidence.occurrences`, so they sit beside other tools' findings in the GitHub
 Security tab rather than duplicating them). Exit: `0` pass · `1` policy failure ·
-`2` usage/parse error · `3` unscored or indeterminate under `--strict-unknown`.
+`2` usage/parse error · `3` unscored or indeterminate under `--strict`.
 
 Deterministic: same inputs ⇒ byte-identical output.
 
@@ -324,12 +349,13 @@ procurement condition on new NSS acquisitions rather than an algorithm deadline.
 
 ## 10. CLI
 
+<!-- synopsis -->
 ```
 cbomctl verdict <cbom|-> --jurisdictions bsi-de,anssi-fr,asd-au,cnsa-2.0,eu-roadmap,us-eo14412
                          [--format matrix|md|json|sarif] [--config cbomctl.yaml]
-                         [--from cyclonedx|sbom-tools] [--strict-unknown]
+                         [--from cyclonedx|sbom-tools] [--strict]
                          [--require-verified-policy] [--fail-on-warn]
-                         [--cnsa-acquisition-gate]
+                         [--cnsa-acquisition-gate] [--crqc-year YYYY]
 cbomctl prioritize <cbom|->      # Mosca ranking          (§7)
 cbomctl plan <cbom|->            # ordered migration plan (§8)
 cbomctl normalize <cbom|->       # purpose resolution, for debugging
@@ -338,34 +364,38 @@ cbomctl policies list | show <id>
 
 ## 11. Optional
 
-`cbomctl plan --llm` can draft a prose narrative from findings the deterministic
-core already produced; it is a separate extra (`pip install cbomctl[llm]`),
-consumes the finished report object, cannot reach a scoring or policy path, and
-its output is watermarked.
+**Not built.** `cbomctl plan --llm` would draft a prose narrative from findings
+the deterministic core already produced — a separate extra
+(`pip install cbomctl[llm]`, declared in `pyproject.toml`), consuming the
+finished report object, unable to reach a scoring or policy path, and
+watermarked. As of 0.1.3 neither the flag nor the module exists; the extra is
+a placeholder. This paragraph is intent, not description.
 
 ## 12. Repository layout
 
+<!-- illustrative: repository layout, not tool output. Pinned by
+     tests/test_docs_layout.py, which asserts every module drawn here
+     exists and that no module exists which is not drawn. -->
 ```
 cbomctl/
 ├── src/cbomctl/
 │   ├── cli.py                    # typer — subcommands only
 │   ├── models.py
 │   ├── loader/{cyclonedx.py,sbom_tools.py}
-│   ├── normalize/{purpose.py,oids.py,aliases.py}
+│   ├── normalize/{purpose.py,oids.py,identity.py}
 │   ├── verdict/{matrix.py,conflicts.py}      # §6 — the product
 │   ├── scoring/mosca.py
-│   ├── plan/builder.py
+│   ├── plan.py
 │   ├── policy/{schema.py,engine.py}          # loads ../policy-packs
-│   ├── report/{matrix,markdown,sarif,json_out}.py
-│   ├── config.py
-│   └── llm/plan.py
+│   ├── report/{matrix_text,markdown,sarif,json_out}.py
+│   └── config.py
 ├── policy-packs/                 # standalone versioned artifact
 │   ├── schema/pack.schema.json · CHANGELOG.md · README.md
-│   └── packs/{bsi-de,anssi-fr,asd-au,cnsa-2.0,us-eo14412,eu-roadmap}.yaml
+│   └── packs/{bsi-de,anssi-fr,asd-au,cnsa-2.0,us-eo14412,eu-roadmap,nist-ir8547}.yaml
 ├── tests/fixtures/
 ├── action.yml · .github/workflows/ci.yml
 ├── cbomctl.yaml.example · pyproject.toml · LICENSE (Apache-2.0)
-├── docs/ · articles/ · upstream/
+├── docs/ · articles/ · outreach/ · upstream/
 ```
 
 **Fixtures**, provenance stated in each:
@@ -375,9 +405,10 @@ cbomctl/
 | `cbomkit-keycloak.json` | real CBOMkit output, 56 components — the messy case |
 | `cbomkit-kafka.json` | real CBOMkit output, 11 components |
 | `spec-conformance-1.6.json` | CycloneDX `valid-cryptography-full-1.6.json` |
-| `synthetic-1.7-pqc.json` | **hand-built**, schema-validated: ML-KEM, ML-DSA, hybrid combiners |
+| `purpose-ambiguous.json` | **hand-built**: the RSA-2048 component of `conflict-hybrid.json`, alone |
+| `signatures.json` · `rsa-strength-split.json` | **hand-built**; see `tests/fixtures/PROVENANCE.md` |
 | `conflict-hybrid.json` | **hand-built**: X25519MLKEM768, the four-way conflict case |
-| `sbom-tools-view.json` | **constructed** from their Rust struct definitions, not captured |
+| `sbom-tools-normalized.json` | **constructed** from their Rust struct definitions, not captured — shape since [confirmed upstream](https://github.com/sbom-tool/sbom-tools/issues/362) |
 
 Fixtures validate against the official schemas in CI so hand-built files cannot
 drift out of spec.

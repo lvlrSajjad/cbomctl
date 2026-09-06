@@ -16,12 +16,17 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      # Bring a CBOM from whatever generator you use.
+      # Bring a CBOM from whatever generator you use. CBOMkit-action takes no
+      # `with:` inputs — it is configured by environment variables and writes
+      # the consolidated CBOM to `cbom.json` in the workspace. Read their
+      # README before copying this; it is the half of this file we cannot run.
       - uses: cbomkit/cbomkit-action@main
-        with: { output: cbom.json }
+        id: cbom
+        env:
+          CBOMKIT_LANGUAGES: java, python
 
       # v0 is a moving major tag: patch fixes arrive, breaking changes do not.
-      # Pin an exact release (v0.1.2) instead if you want the tool frozen.
+      # Pin an exact release (v0.1.3) instead if you want the tool frozen.
       - uses: lvlrSajjad/cbomctl@v0
         with:
           cbom: cbom.json
@@ -37,6 +42,15 @@ jobs:
 
 The action always prints the matrix to the job log, even when the
 machine-readable report goes to a file — the matrix is the part a human reads.
+
+!!! note "How much of this workflow is checked"
+    `scripts/check_commands.py` resolves the `cbomctl` step on every run: it
+    asserts that `@v0` is a tag that exists and that every `with:` key is an
+    input `action.yml` actually declares. It cannot execute a GitHub workflow,
+    so the CBOMkit step is transcribed from
+    [their README](https://github.com/cbomkit/cbomkit-action) and read against
+    their `action.yml` — not run. Until 2026-09-06 this page passed
+    `with: { output: cbom.json }` to an action that declares no inputs at all.
 
 ## Exit codes
 

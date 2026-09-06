@@ -241,20 +241,20 @@ class TestRealGeneratorOutput:
 
 class TestSbomToolsAdapter:
     def test_adapter_is_detected_and_reads_crypto_properties(self):
-        assets, fmt = read_assets(FIXTURES / "sbom-tools-view.json")
+        assets, fmt = read_assets(FIXTURES / "sbom-tools-normalized.json")
         assert fmt == "sbom-tools"
         ecdh = next(a for a in assets if a.raw_name == "ECDH")
         assert ecdh.purpose.value == "key-agreement"
 
     def test_adapter_preserves_ambiguity(self):
-        assets, _ = read_assets(FIXTURES / "sbom-tools-view.json")
+        assets, _ = read_assets(FIXTURES / "sbom-tools-normalized.json")
         rsa = next(a for a in assets if a.raw_name == "RSA-2048")
         assert rsa.purpose.value == "ambiguous"
 
     def test_absent_and_explicit_unknown_are_indistinguishable_here(self):
         """Documented loss: their parser collapses both to Unknown. No verdict
         changes, but the diagnostic is gone."""
-        assets, _ = read_assets(FIXTURES / "sbom-tools-view.json")
+        assets, _ = read_assets(FIXTURES / "sbom-tools-normalized.json")
         custom = next(a for a in assets if a.raw_name == "CustomKDF")
         assert custom.purpose.value == "unknown"
 

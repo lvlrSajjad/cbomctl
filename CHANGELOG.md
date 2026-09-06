@@ -3,6 +3,110 @@
 Semantic versioning. Policy-pack versions move independently — see
 [`policy-packs/CHANGELOG.md`](policy-packs/CHANGELOG.md).
 
+## [Unreleased]
+
+### Fixed
+- **`docs/quickstart.md` told readers to run a pipeline that could never have
+  worked.** `sbom-tools view app-cbom.cdx.json -o json | cbomctl verdict -
+  --from sbom-tools` was on the page for four releases. The maintainer's answer
+  in [sbom-tool/sbom-tools#362](https://github.com/sbom-tool/sbom-tools/issues/362)
+  settles it: `view -o json` is a curated projection carrying `name`,
+  `version`, `ecosystem`, `licenses`, `supplier`, `dependency_kind`,
+  vulnerability and EOL fields — **and nothing from `cryptoProperties`**. That
+  pipeline feeds `cbomctl` a document with no crypto assets in it. Nobody had
+  ever run it.
+
+  The quickstart now shows what actually produces the normalized payload —
+  their C ABI, or the `parse_path_json` helper in their bindings — and says
+  plainly that the step could not be executed here and why.
+
+- **`docs/index.md`, the docs-site landing page, carried a fabricated matrix.**
+  Hand-edited, never generated, and wrong: it showed `ECDH ⚠ c1,c2` and
+  `X25519MLKEM768 ⚠ c3,c4` where the tool emits `c1` and `c2,c3` for that
+  input, renamed `RSA-2048` to `RSA`, dropped the rule-detail lines and
+  reordered the rows. It is generated now.
+
+- **`docs/purpose.md`** showed a paraphrase of an unresolved-purpose finding as
+  though it were output. Generated now, from a new fixture
+  (`tests/fixtures/purpose-ambiguous.json`) that isolates the ambiguous RSA
+  component.
+
+- **`docs/ci.md` passed an input to CBOMkit's action that the action does not
+  have.** `cbomkit/cbomkit-action` declares no `with:` inputs at all — it is
+  configured by environment variables and writes `cbom.json` to the workspace —
+  so `with: { output: cbom.json }` was meaningless. Corrected against their
+  `action.yml`, and the page now states which half of the workflow is checked
+  and which is only transcribed.
+
+- **`docs/DESIGN.md` advertised `--strict-unknown`**, a flag that has never
+  existed; the flag is `--strict`. Its §1 demo block was a pre-implementation
+  sketch in a format the tool never emitted, printed behind a `$` prompt as
+  though captured — now generated. Its §12 module tree named four files that do
+  not exist and omitted one that does. Its status line still read "no rule is
+  verified yet", nine months after all seven packs were verified. §11 described
+  `cbomctl plan --llm` in the present tense; it is unbuilt, and now says so.
+
+- **`cbomctl normalize` printed `CONSTRUCTIONQUANTUM`** as a column header — the
+  field width was exactly the length of the word, so no space separated it from
+  the next column. Found by running a command the quickstart tells readers to
+  run, which is the first time anyone had.
+
+### Changed
+- `tests/fixtures/sbom-tools-view.json` is renamed
+  **`sbom-tools-normalized.json`**. The old name was the root cause of the
+  quickstart bug: it holds the normalized `parse` payload, and calling it
+  `view` is what made a `view -o json` pipeline look plausible to write.
+- The `sbom-tools` adapter's docstring no longer says "we have asked upstream
+  whether the payload is stable; until they answer this adapter may break".
+  They answered. It now records what they said: nested shape under
+  `crypto_properties` is **not** test-pinned (only top-level keys are, in their
+  `tests/fixtures/abi/contract_required_keys.json`), there is no schema version
+  separate from the crate version, and pre-1.0 a breaking JSON change is
+  permitted in a minor release with a note in their CHANGELOG upgrade notes —
+  so pin their crate version. The `primitive` absent-vs-`"unknown"` conflation
+  is confirmed, and they intend to document rather than change it, so our note
+  on it stands.
+
+### Added
+- **`scripts/check_commands.py`, and it runs in `check.sh` and in CI.** Every
+  copy-pasteable command in `README.md`, `docs/`, `articles/`, `outreach/`,
+  `RELEASE.md` and `CONTRIBUTING.md` is now executed, against a scratch
+  directory seeded with the placeholder filenames the docs use, so the
+  documented line runs verbatim. Anything that cannot be run here must carry
+  `<!-- unverified: reason -->` and is reported as unverified rather than
+  looking checked. Untagged fences are rejected outright: a fence declares
+  itself generated, an excerpt of a named command, a synopsis, illustrative, or
+  unverified.
+
+  This is the same class of gap that `aa7e3d0` closed for the README.
+  `gen_article_blocks.py` regenerates blocks that claim to be *output*; nothing
+  had ever checked a block that claims to be *input*, which is why a broken
+  pipeline sat in the quickstart for four releases. Flag names in usage
+  synopses are checked against `--help`, quoted excerpts are checked against
+  the full output of the command they name, and a workflow snippet's `with:`
+  keys are checked against `action.yml`.
+
+- `tests/test_check_commands.py` — thirteen cases asserting the checker
+  *rejects* fiction, including the exact quickstart pipeline, the invented
+  `--strict-unknown`, an untagged matrix, a drifted excerpt and an undeclared
+  action input. A check that cannot fail is not a check.
+- `tests/test_docs_layout.py` — the module tree drawn in `docs/DESIGN.md` §12
+  must match `src/cbomctl` in both directions.
+- `tests/fixtures/purpose-ambiguous.json` — the ambiguous RSA-2048 component of
+  `conflict-hybrid.json`, alone.
+
+### Kept
+- **The `--from sbom-tools` adapter stays.** The maintainer's advice was "for
+  what you're building, parse raw CycloneDX, not our JSON", and that is right
+  for the primary path — which is already what `cbomctl` does. The adapter is
+  opt-in behind a flag, adds no dependency, is 100 lines, and its shape is now
+  confirmed rather than guessed. What it buys is a user who already runs
+  `sbom-tools` in a pipeline and has a normalized document in hand. What it
+  costs is a breakage in any pre-1.0 minor release of theirs, announced in
+  their upgrade notes — bounded, visible, and behind a flag nobody reaches by
+  accident. Dropping it would remove a real path to save a maintenance risk we
+  can now see the exact shape of. If it breaks twice, drop it then.
+
 ## [0.1.3] — released 2026-09-06
 
 No change to the Python package; `cbomctl` 0.1.3 and 0.1.2 are identical. The
@@ -102,6 +206,7 @@ checked, and are exercised by a synthetic test fixture.
   NSA's position is a separate rule so the matrix keeps an anchor.
 - The `sbom-tools` adapter's payload shape is inferred from their Rust struct
   definitions, not captured from a run. Its fixture is labelled constructed.
+  **Superseded** — see [Unreleased]; upstream answered and the shape is confirmed.
 - cdxgen is unverified as a CBOM producer; a code search of their repository
   finds no `cryptoProperties` handling.
 - `security_level` selectors always evaluate to INDETERMINATE — there is no

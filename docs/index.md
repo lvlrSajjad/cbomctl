@@ -16,17 +16,38 @@ policies at once, and reports the matrix and the conflicts.
     rule cites the section or page it came from. Still not compliance advice —
     read the sources before acting on a verdict.
 
+<!-- cbomctl: verdict tests/fixtures/conflict-hybrid.json -j bsi-de,anssi-fr,asd-au,cnsa-2.0 | head -30 -->
 ```
 ASSET           PURPOSE        bsi-de    anssi-fr  asd-au    cnsa-2.0
-X25519MLKEM768  key-agreement  PASS      PASS      WARN      FAIL      ⚠ c3,c4
-ECDH            key-agreement  WARN      WARN      WARN      FAIL      ⚠ c1,c2
-RSA             ambiguous      INDET     INDET     INDET     INDET
+───────────────────────────────────────────────────────────────────────
+ECDH            key-agreement  WARN      WARN      WARN      FAIL        ⚠ c1
+                └ bsi-de · disallowed 2031-12-31
+                └ anssi-fr · complete 2030-12-31
+                └ asd-au · disallowed 2030-12-31 · complete 2030-12-31
+                └ cnsa-2.0 · disallowed 2030-12-31 · exclusive_use 2031-12-31
+                └ src/payments/legacy.go:12
+X25519MLKEM768  key-agreement  PASS      PASS      WARN      FAIL        ⚠ c2,c3
+                └ asd-au · deprecated 2030-12-31
+                └ src/payments/tls.go:88
+ML-DSA-65       signature      WARN      WARN      WARN      FAIL        ⚠ c4,c5
+                └ asd-au · deprecated 2030-12-31
+                └ src/payments/sign.go:7
+RSA-2048        ambiguous      INDET     INDET     INDET     INDET
+                └ unresolved: purpose-ambiguous (primitive:pke)
+                └ as key transport → critical · as signature → medium
+                └ Declare the purpose in cbomctl.yaml, or regenerate the CBOM with a generator that records
+                  cryptoFunctions.
+                └ src/payments/keys.go:41
 
-CONFLICTS
-  c3  [construction]  X25519MLKEM768
-      anssi-fr, bsi-de recommend a hybrid construction for key-agreement;
-      asd-au, cnsa-2.0 do not permit one.
-      No single configuration satisfies all selected jurisdictions.
+CONFLICTS (5)
+  c1  [construction]  ECDH
+      anssi-fr, bsi-de recommend a hybrid construction for key-agreement; asd-au recommend
+      against it; cnsa-2.0 does not permit one outside named interoperability exceptions.
+      cnsa-2.0 does not permit a hybrid construction outside named interoperability exceptions,
+      while anssi-fr, bsi-de recommend one. **No single configuration satisfies all selected
+      jurisdictions.** You will need different builds, or to drop a jurisdiction from scope.
+      asd-au would permit a hybrid but recommends against it, so even dropping cnsa-2.0 leaves a
+      documented cost. This is a business decision, not a technical one.
 ```
 
 ## Three things it does that inventory tools cannot

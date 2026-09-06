@@ -206,6 +206,7 @@ and discusses a FIPS 204 variant — and NSA kept the imperative through that
 revision. But the encoding is a judgement, and it is the judgement that decides
 whether the tool tells you a compromise exists. So the conflict says both:
 
+<!-- excerpt: verdict tests/fixtures/conflict-hybrid.json -c cbomctl.yaml.example -j bsi-de,anssi-fr,eu-roadmap,asd-au,cnsa-2.0 -->
 ```
 ⚖ This conflict depends on a contested encoding. Under the alternative reading
   (cnsa-2.0 silent), a hybrid construction would satisfy all selected

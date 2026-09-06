@@ -1,6 +1,15 @@
 # DRAFT — GitHub issue for `sbom-tool/sbom-tools`
 
-**Do not post.** For Sadjad to review and post from his own account.
+**POSTED AND CLOSED.** Filed as
+[sbom-tool/sbom-tools#362](https://github.com/sbom-tool/sbom-tools/issues/362)
+and answered in full by the maintainer; they documented the outcome in their
+#364 and closed it. Kept as the record of what was asked. The answer is
+summarised in `src/cbomctl/loader/sbom_tools.py` and in the CHANGELOG entry
+that supersedes our earlier "shape inferred from their structs" disclosure.
+
+The one follow-up it invited — normalized JSON from their CLI — is drafted
+separately in [`normalized-json-from-cli.md`](normalized-json-from-cli.md),
+**unposted**.
 
 **Repo:** <https://github.com/sbom-tool/sbom-tools>
 **Suggested title:** `Is the normalized JSON payload a stable contract for downstream consumers?`
