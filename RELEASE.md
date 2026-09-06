@@ -65,8 +65,9 @@ primary source, and the wheel contains all seven packs.
    the repo is public so the context line resolves; the
    [CycloneDX Tool Center PR](outreach/cyclonedx-tool-center-pr.md) once
    `pip install` works.
-9. **CfP** — [PKI Consortium](outreach/pki-consortium-cfp.md), check the
-   deadline first.
+9. ~~**CfP** — PKI Consortium Amsterdam~~ — **declined 2026-09-06**: speakers
+   must attend in person and self-fund; travel is not possible in this window.
+   The [abstract](outreach/pki-consortium-cfp.md) is kept as reusable material.
 
 ## Do not
 

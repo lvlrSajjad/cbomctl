@@ -62,6 +62,12 @@ Unresolved and recorded: whether that answer is verbatim carry-over from Ver.
 2.0 (April 2024). The FAQ has no revision history; it would weaken, not
 overturn, the reading.
 
+## Conferences — closed for now
+PKI Consortium Amsterdam (Dec 1–3) requires in-person, self-funded speakers;
+remote presentation explicitly not permitted. Declined. Any future venue must
+stream speakers, not just attendees — check that term first, it is the one that
+disqualifies.
+
 ## Remaining watch item
 **Staleness.** ASD's ISM is revised roughly monthly; IR 8547 is a draft that may
 finalise and move its dates. CI reports rules older than 180 days weekly.

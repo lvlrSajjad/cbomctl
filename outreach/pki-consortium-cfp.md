@@ -1,5 +1,18 @@
 # CfP — PKI Consortium PQC Conference, Amsterdam
 
+> ## ❌ NOT SUBMITTING — decided 2026-09-06
+>
+> Speakers must attend in person and self-fund travel; remote presentation is
+> explicitly not permitted. Travel to the Netherlands is not possible for
+> Sadjad in this window, so the proposal is not viable regardless of its
+> merits.
+>
+> **The abstract below is kept**, not because this event might change its
+> terms, but because it is the tightest 324-word statement of the project's
+> three findings that exists. It is reusable for any remote-friendly venue, and
+> it is a good skeleton for a talk, a README rewrite, or a conference that
+> streams speakers.
+
 **Verified 2026-09-06 against the live submission form at <https://pkic.org/call>.**
 
 ## Two things to decide before submitting
