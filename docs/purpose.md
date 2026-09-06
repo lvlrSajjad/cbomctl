@@ -11,14 +11,14 @@ From CBOMkit's published Keycloak CBOM: 56 components, 22 of asset type
 | observation | count | consequence |
 |---|---|---|
 | `cryptoFunctions` absent entirely | 6 / 22 | it cannot be the only signal |
-| `cryptoFunctions: [keygen]` and nothing else | 12 occurrences | `keygen` is **purpose-neutral** — generating a key says nothing about what the key does |
+| `cryptoFunctions: [keygen]` and nothing else | 11 / 22 | `keygen` is **purpose-neutral** — generating a key says nothing about what the key does. It appears in 12 components; in 11 it is the only function recorded |
 | `primitive: other` | 4 | includes `AES` and `HMACSHA2` |
-| `primitive: pke` on EC keys | 5 | `EC-secp256r1/384r1/521r1`, which in Keycloak are ECDSA and ECDH |
+| `primitive: pke` on EC keys | 4 | `EC`, `EC-secp256r1/384r1/521r1`, which in Keycloak are ECDSA and ECDH. A fifth component is tagged `pke` — RSA-2048, the canonical ambiguous case |
 
 Two consequences invalidate the obvious implementation.
 
 **Trusting `primitive` produces confident wrong answers.** Mapping
-`pke → encryption` reports five Keycloak EC keys as harvest-now-decrypt-later
+`pke → encryption` reports four Keycloak EC keys as harvest-now-decrypt-later
 exposures that they are not.
 
 **`cryptoFunctions` is mostly `keygen`**, the most common value in the sample

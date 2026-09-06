@@ -5,6 +5,20 @@ Semantic versioning. Policy-pack versions move independently — see
 
 ## [Unreleased]
 
+### Fixed
+- **Two fixture statistics in `docs/purpose.md` were off by one**, both on the
+  page whose argument is that the tool does not guess. `cryptoFunctions:
+  [keygen]` and nothing else is 11 of 22 components, not 12 — `keygen` appears
+  in 12, but in one of those it is not the only function. And 4 EC keys carry
+  `primitive: pke`, not 5; the fifth `pke` component is RSA-2048, which is the
+  canonical ambiguous case rather than an EC key. Both numbers were echoed in
+  `docs/DESIGN.md` §5 and corrected there too.
+
+  The load-bearing claims all held exactly: 56 components, 22 of asset type
+  `algorithm`, 6 with no `cryptoFunctions`, 4 tagged `primitive: other`, and
+  **8 of 22 unresolved — 36%, "more than a third"**, which is the line the
+  README and the Show HN draft lean on.
+
 ### Added
 - The command checker now reads **prose, not just fences**. Any `` `--flag` ``
   written anywhere in the swept files must be one the CLI has, or must appear

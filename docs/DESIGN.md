@@ -169,9 +169,9 @@ output and CycloneDX's `valid-cryptography-full-1.6.json`. From Keycloak
 | `cryptoFunctions` absent | 6 / 22 | cannot be the only signal |
 | `cryptoFunctions: [keygen]` only | 12 | `keygen` is **purpose-neutral** |
 | `primitive: other` | 4 | includes `AES` and `HMACSHA2` |
-| `primitive: pke` on EC keys | 5 | in Keycloak these are ECDSA/ECDH, not encryption |
+| `primitive: pke` on EC keys | 4 | in Keycloak these are ECDSA/ECDH, not encryption |
 
-Mapping `pke → encryption` would report five Keycloak EC keys as HNDL exposures
+Mapping `pke → encryption` would report four Keycloak EC keys as HNDL exposures
 they are not. This is not a CBOMkit defect — static analysis of a call site
 genuinely cannot always tell what a key is for.
 
