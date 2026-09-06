@@ -9,14 +9,24 @@ consecutive clauses and gives no reason. The pack records `rationale: unstated`.
 The articles do the same — "the order does not say why, but the obvious reading
 is…" rather than asserting the reasoning as the source's own.
 
-**All seven packs are verified**, so nothing is blocked on sourcing. The
-remaining gate is publication order: every article's demo invokes `cbomctl`, so
-none publishes before the repository is public.
+**All seven packs are verified** and `pip install cbomctl` works, so nothing is
+blocked.
 
-Suggested order: **article 2 first** — it makes no claim about the tool being
-novel, it is the piece most likely to be linked by people who care about being
-right, and it establishes the sourcing discipline. Then article 1 as the launch
-post, with the Show HN. Article 3 a week later.
+**Where these go.** The docs site is the canonical home — a URL we control and
+can correct, which matters because these cite a draft standard whose dates may
+move. Everything else syndicates back to it:
+
+| where | what |
+|---|---|
+| [the docs site](https://lvlrsajjad.github.io/cbomctl/writing/) | full text, canonical |
+| dev.to | full text with `canonical_url` set to the docs site |
+| LinkedIn | ~150 words plus the link, not the full text |
+
+Not Hacker News for articles 2 and 3 — HN gets one shot, and that is the Show HN
+with article 1. Not Medium.
+
+**Order:** article 2 is published. Article 1 next, with the Show HN the same day
+and the article live first so the comment can link it. Article 3 a week later.
 
 ---
 
@@ -66,7 +76,15 @@ process. Nor that nobody else evaluates multiple jurisdictions:
 [open-quantum-secure](https://github.com/jimbo111/open-quantum-secure) ships
 seven frameworks and documents the divergence in its README. Link it.
 
-## 2. "RSA-2048 and RSA-3072 have different futures" — ✅ [drafted](02-rsa-2048-and-rsa-3072.md)
+## 2. "RSA-2048 and RSA-3072 have different futures" — ✅ **published**
+
+Lives at [`docs/writing/rsa-2048-and-rsa-3072.md`](../docs/writing/rsa-2048-and-rsa-3072.md)
+and is served at
+<https://lvlrsajjad.github.io/cbomctl/writing/rsa-2048-and-rsa-3072/>.
+
+That URL is canonical. Syndicated copies point back to it, because the article
+describes a **draft** standard and will need correcting when IR 8547 finalises —
+this is the copy that gets corrected.
 
 Retitled from "Deprecated is not disallowed", and led with the concrete hook.
 NIST IR 8547's Tables 2 and 4 split by security strength:

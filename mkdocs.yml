@@ -53,6 +53,9 @@ nav:
       - EO 14412 (US): policy-packs/us-eo14412.md
       - NIST IR 8547 (US, draft): policy-packs/nist-ir8547.md
       - CNSA 2.0 (NSA): policy-packs/cnsa-2.0.md
+  - Writing:
+      - Overview: writing/index.md
+      - RSA-2048 and RSA-3072: writing/rsa-2048-and-rsa-3072.md
   - CI integration: ci.md
   - Sources and open questions: policy-sources.md
   - Design: DESIGN.md
