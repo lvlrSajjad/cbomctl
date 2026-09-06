@@ -87,10 +87,11 @@ git push -f origin v0
 8. **Upstream drafts** — the sbom-tools JSON-contract question is
    [posted, answered and closed](https://github.com/sbom-tool/sbom-tools/issues/362);
    its record is [`upstream/issue-draft.md`](upstream/issue-draft.md). The
-   follow-up it invited — normalized JSON from their CLI — is drafted and
-   **unposted** in
-   [`upstream/normalized-json-from-cli.md`](upstream/normalized-json-from-cli.md);
-   read it before sending. The
+   follow-up it invited — normalized JSON from their CLI — is
+   [posted as #366](https://github.com/sbom-tool/sbom-tools/issues/366) and
+   awaiting a reply; its record is
+   [`upstream/normalized-json-from-cli.md`](upstream/normalized-json-from-cli.md).
+   If they agree a shape, the offer of a PR is on the table. The
    [CycloneDX Tool Center PR](outreach/cyclonedx-tool-center-pr.md) goes out
    once `pip install` works — it does; verified from a clean venv on
    2026-09-06.

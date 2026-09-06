@@ -7,9 +7,9 @@ and answered in full by the maintainer; they documented the outcome in their
 summarised in `src/cbomctl/loader/sbom_tools.py` and in the CHANGELOG entry
 that supersedes our earlier "shape inferred from their structs" disclosure.
 
-The one follow-up it invited — normalized JSON from their CLI — is drafted
-separately in [`normalized-json-from-cli.md`](normalized-json-from-cli.md),
-**unposted**.
+The one follow-up it invited — normalized JSON from their CLI — is
+[`normalized-json-from-cli.md`](normalized-json-from-cli.md), posted as
+[#366](https://github.com/sbom-tool/sbom-tools/issues/366).
 
 **Repo:** <https://github.com/sbom-tool/sbom-tools>
 **Suggested title:** `Is the normalized JSON payload a stable contract for downstream consumers?`

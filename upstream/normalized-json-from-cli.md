@@ -1,10 +1,17 @@
-# DRAFT — GitHub issue for `sbom-tool/sbom-tools`
+# GitHub issue for `sbom-tool/sbom-tools` — posted
 
-**Do not post.** For Sadjad to review and post from his own account.
+**POSTED 2026-09-06** as
+[sbom-tool/sbom-tools#366](https://github.com/sbom-tool/sbom-tools/issues/366),
+from the `lvlrSajjad` account, on your say-so in session. Kept as the record
+of what was asked. The posted body differs from the draft below in two ways:
+the "Notes for Sadjad" section was stripped, and the opening line cites #364
+explicitly — it turned out to be docs-only (`README.md`,
+`docs/PROJECT_BRIEF.md`), so it documented the contract without changing the
+CLI surface, which is what made this request still worth filing.
 
 **Repo:** <https://github.com/sbom-tool/sbom-tools>
-**Suggested title:** `Expose the normalized JSON payload from the CLI`
-**Suggested labels:** `enhancement`
+**Title as posted:** `Expose the normalized JSON payload from the CLI`
+**Labels:** none applied; theirs are not open to non-members.
 
 Invited explicitly by the maintainer in
 [#362](https://github.com/sbom-tool/sbom-tools/issues/362):
@@ -66,12 +73,14 @@ of the two forms above you prefer, or a third.
 
 ## Notes for Sadjad, not for the issue
 
-- Check first whether #364 (the docs PR that closed #362) already added this;
-  the maintainer said they would document the four points, not implement a
-  flag, but confirm before asking.
+*Not part of the posted body.*
+
+- ~~Check first whether #364 already added this~~ — checked before posting.
+  Docs only: `README.md` and `docs/PROJECT_BRIEF.md`. No CLI change.
 - Our own use of this is genuinely marginal — raw CycloneDX is the primary
   path, the adapter is opt-in, and the maintainer's advice was to parse raw
   CycloneDX for exactly this job. The honest framing is "this would help
   cross-tool composition generally", not "we are blocked".
-- If you post it, `upstream/issue-draft.md` is the precedent for tone: one
-  small concrete ask, sourced from their code, no compliance claims attached.
+- `upstream/issue-draft.md` was the precedent for tone, and this followed it:
+  one small concrete ask, sourced from their code, no compliance claims
+  attached, and an explicit statement of what is *not* being asked for.
