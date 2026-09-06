@@ -20,7 +20,9 @@ jobs:
       - uses: cbomkit/cbomkit-action@main
         with: { output: cbom.json }
 
-      - uses: lvlrSajjad/cbomctl@v0.1.0
+      # v0 is a moving major tag: patch fixes arrive, breaking changes do not.
+      # Pin an exact release (v0.1.2) instead if you want the tool frozen.
+      - uses: lvlrSajjad/cbomctl@v0
         with:
           cbom: cbom.json
           jurisdictions: bsi-de,anssi-fr,asd-au
