@@ -83,6 +83,32 @@ jobs:
           raise SystemExit(1 if failed else 0)
           PY
 
+      # The Tool Center entry is validated offline against a vendored copy of
+      # CycloneDX's tool schema, so `pytest -q` works on a laptop with no
+      # network. Upstream can still move under us, and the entry is about to be
+      # submitted to them -- so the drift is checked here, where a failure
+      # names the schema rather than the entry.
+      - name: The vendored Tool Center schema still matches upstream
+        run: |
+          python - <<'PY'
+          import json, pathlib, urllib.request
+          url = ("https://raw.githubusercontent.com/CycloneDX/tool-center"
+                 "/main/schemas/tool.schema.json")
+          local = pathlib.Path("tests/fixtures/schemas/"
+                               "tool-center-v2.tool.schema.json")
+          with urllib.request.urlopen(url) as r:
+              upstream = json.load(r)
+          if json.loads(local.read_text()) == upstream:
+              print("ok     vendored copy matches CycloneDX/tool-center@main")
+              raise SystemExit(0)
+          print("FAIL   CycloneDX/tool-center changed schemas/tool.schema.json.")
+          print("       Re-vendor it, re-run tests/test_tool_center_entry.py, and")
+          print("       update the provenance note in tests/fixtures/PROVENANCE.md:")
+          print(f"         curl -sS -o {local} \\")
+          print(f"           {url}")
+          raise SystemExit(1)
+          PY
+
   dogfood:
     # Run the action on our own fixtures. `continue-on-error` because the
     # conflict fixture is *designed* to fail — a green run here would mean the

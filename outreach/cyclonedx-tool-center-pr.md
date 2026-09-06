@@ -9,14 +9,30 @@ things people can use, and this is now one of them.
 Contributions must be relevant to SBOM/xBOM generation, analysis or consumption;
 metadata must be accurate and current. They offer
 [MetaConfigurator](https://www.metaconfigurator.org?schema=https://raw.githubusercontent.com/CycloneDX/tool-center/refs/heads/main/schemas/tool.schema.json)
-as an alternative to hand-editing — the hand-written file below was validated
-against `schemas/tool.schema.json` (specVersion 2.0) on 2026-09-06, so either
-route works.
+as an alternative to hand-editing — the hand-written file below validates
+against `schemas/tool.schema.json` (specVersion 2.0), so either route works.
+
+**The entry below is checked, not merely checked once.**
+`tests/test_tool_center_entry.py` extracts the JSON fence from this file and
+validates it against a vendored copy of their schema
+(`tests/fixtures/schemas/tool-center-v2.tool.schema.json`) on every `pytest`
+run, offline. The first validation was by hand against a copy in `.research/`,
+which is gitignored — so nothing could repeat it, and this file has been edited
+since. `ci.yml` separately diffs the vendored copy against their `main`, so if
+they change the schema before this PR is opened, that is a named failure rather
+than a surprise in their `validate_tools` workflow.
+
+The schema is at
+`https://raw.githubusercontent.com/CycloneDX/tool-center/main/schemas/tool.schema.json`
+— the obvious raw path, which does resolve; an earlier note in this repo said
+it 404s, and it does not. It is also served, minified and identical once
+parsed, at its own `$id`, `https://cyclonedx.org/schema/tool-center-v2.tool.schema.json`.
 
 **`tool.description` has a `maxLength` of 250.** The first draft of this file
 ran to 312 characters and would have been bounced by their `validate_tools`
-workflow. Re-run the validator after any edit to that field; do not trust the
-prose in this document over the schema.
+workflow. That bound is read from the schema by the test, not trusted from this
+sentence — and `scripts/check_stats.py` fails if this sentence and the schema
+ever disagree.
 
 **Branch:** `add-cbomctl` · **File:** `tools/cbomctl.json`
 
