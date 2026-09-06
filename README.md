@@ -10,31 +10,60 @@ independent checkboxes — and no tool will show you the collision.
 `cbomctl` takes a CBOM from any generator, runs it against several national PQC
 policies at once, and reports the matrix and the conflicts.
 
-> ⚠️ **Pre-release.** All seven policy packs have now been read from their
-> primary sources — every rule cites a section or page. Still not compliance
-> advice: read the sources yourself before acting on a verdict.
-> from an unverified rule carries a visible banner naming the packs involved.
-> See [docs/policy-sources.md](docs/policy-sources.md). Not compliance advice.
+> ⚠️ **Pre-release.** All seven policy packs are read from their primary
+> sources — every rule cites the section or page it came from. The machinery for
+> unverified rules stays in place for the next pack that has not been checked:
+> any verdict derived from one carries a visible banner naming the packs
+> involved. Read the sources yourself before acting on a verdict — they are
+> listed in [docs/policy-sources.md](docs/policy-sources.md). Not compliance
+> advice.
 
-<!-- badges: PyPI, CI, license -->
+[![PyPI](https://img.shields.io/pypi/v/cbomctl)](https://pypi.org/project/cbomctl/)
+[![CI](https://github.com/lvlrSajjad/cbomctl/actions/workflows/ci.yml/badge.svg)](https://github.com/lvlrSajjad/cbomctl/actions/workflows/ci.yml)
+[![License](https://img.shields.io/badge/license-Apache--2.0-blue)](LICENSE)
 
 ## What it looks like
 
 ```bash
-$ cbomctl verdict app-cbom.json --jurisdictions bsi-de,anssi-fr,asd-au,cnsa-2.0
+cbomctl verdict app-cbom.json --jurisdictions bsi-de,anssi-fr,asd-au,cnsa-2.0
+```
 
-ASSET                          bsi-de    anssi-fr  asd-au    cnsa-2.0
-X25519MLKEM768 (key-agree)     PASS      PASS      WARN      FAIL
-ECDH secp256r1 (key-agree)     FAIL      FAIL      FAIL      FAIL
-RSA-2048 (ambiguous)           INDET     INDET     INDET     INDET
+<!-- cbomctl: verdict tests/fixtures/conflict-hybrid.json -j bsi-de,anssi-fr,asd-au,cnsa-2.0 | head -34 -->
+```
+ASSET           PURPOSE        bsi-de    anssi-fr  asd-au    cnsa-2.0
+───────────────────────────────────────────────────────────────────────
+ECDH            key-agreement  WARN      WARN      WARN      FAIL        ⚠ c1
+                └ bsi-de · disallowed 2031-12-31
+                └ anssi-fr · complete 2030-12-31
+                └ asd-au · disallowed 2030-12-31 · complete 2030-12-31
+                └ cnsa-2.0 · disallowed 2030-12-31 · exclusive_use 2031-12-31
+                └ src/payments/legacy.go:12
+X25519MLKEM768  key-agreement  PASS      PASS      WARN      FAIL        ⚠ c2,c3
+                └ asd-au · deprecated 2030-12-31
+                └ src/payments/tls.go:88
+ML-DSA-65       signature      WARN      WARN      WARN      FAIL        ⚠ c4,c5
+                └ asd-au · deprecated 2030-12-31
+                └ src/payments/sign.go:7
+RSA-2048        ambiguous      INDET     INDET     INDET     INDET
+                └ unresolved: purpose-ambiguous (primitive:pke)
+                └ as key transport → critical · as signature → medium
+                └ Declare the purpose in cbomctl.yaml, or regenerate the CBOM with a generator that records
+                  cryptoFunctions.
+                └ src/payments/keys.go:41
 
-CONFLICTS (1)
-c1  X25519MLKEM768 — no single construction satisfies all four.
-    bsi-de, anssi-fr  hybrid recommended        (guideline_recommendation)
-    asd-au            hybrid not recommended    (guideline_recommendation)
-    cnsa-2.0          requires ML-KEM-1024      (agency_requirement, NSS only)
-    Closest satisfies-all: hybrid X25519 + ML-KEM-1024 — clears bsi-de,
-    anssi-fr and cnsa-2.0, at a documented cost under asd-au.
+CONFLICTS (5)
+  c1  [construction]  ECDH
+      anssi-fr, bsi-de recommend a hybrid construction for key-agreement; asd-au recommend
+      against it; cnsa-2.0 does not permit one outside named interoperability exceptions.
+      cnsa-2.0 does not permit a hybrid construction outside named interoperability exceptions,
+      while anssi-fr, bsi-de recommend one. **No single configuration satisfies all selected
+      jurisdictions.** You will need different builds, or to drop a jurisdiction from scope.
+      asd-au would permit a hybrid but recommends against it, so even dropping cnsa-2.0 leaves a
+      documented cost. This is a business decision, not a technical one.
+      ⚖ This conflict depends on a contested encoding. Under the alternative reading (cnsa-2.0
+      silent), a hybrid construction would satisfy all selected jurisdictions, at a documented
+      cost. The argument and the evidence for the encoding used are in the `cnsa-2.0` rule's
+      interpretation note (`cbomctl policies show cnsa-2.0`).
 ```
 
 `WARN` rather than `FAIL` for ASD is deliberate: the ISM *recommends against*

@@ -34,7 +34,11 @@ MARKER = re.compile(
     r"```(?P<lang>[a-z]*)\n(?P<body>.*?)```",
     re.S,
 )
-SEARCH = [ROOT / "articles", ROOT / "docs", ROOT / "outreach"]
+#: README.md is listed by name, not by walking ROOT: a bare ROOT.rglob would
+#: sweep .research/, virtualenvs and every vendored tree. It is here because
+#: it was the one file outside the checked tree, and its demo block drifted
+#: into fiction unnoticed while every article stayed honest.
+SEARCH = [ROOT / "README.md", ROOT / "articles", ROOT / "docs", ROOT / "outreach"]
 
 
 def run(cmd: str) -> str:
@@ -86,7 +90,8 @@ def main() -> int:
     check = "--check" in sys.argv
     ok, seen = True, 0
     for base in SEARCH:
-        for path in sorted(base.rglob("*.md")):
+        paths = [base] if base.is_file() else sorted(base.rglob("*.md"))
+        for path in paths:
             if MARKER.search(path.read_text()):
                 seen += 1
                 ok &= process(path, check)
