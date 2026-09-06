@@ -24,6 +24,7 @@ jobs:
         run: |
           python scripts/gen_pack_docs.py --check
           python scripts/gen_article_blocks.py --check
+          python scripts/gen_syndication.py --check
 
       - run: mkdocs build --strict
 

@@ -7,26 +7,43 @@ search engines and readers land on that one.
 
 ## dev.to
 
-Paste the article body. In the dev.to editor's frontmatter:
+**Do not hand-convert.** The paste-ready file is generated:
 
-```yaml
----
-title: RSA-2048 and RSA-3072 have different futures
-published: true
-canonical_url: https://lvlrsajjad.github.io/cbomctl/writing/rsa-2048-and-rsa-3072/
-tags: security, cryptography, postquantum, compliance
----
+```bash
+python3 scripts/gen_syndication.py
+cat outreach/devto/rsa-2048-and-rsa-3072.md | pbcopy
 ```
 
-`canonical_url` is the load-bearing line. Without it dev.to outranks your own
-site for your own writing, and readers land on the copy you will forget to fix.
+It already has the frontmatter, converts the MkDocs `!!! info` admonition into a
+blockquote (dev.to does not render admonitions), strips the code-block
+generation markers, drops the duplicate H1, and appends an "originally
+published at" footer. CI fails if it drifts from the canonical article.
 
-Drop the MkDocs `!!! info` admonition — it will not render there. Replace it
-with a plain blockquote:
+### Posting it
 
-> Published 2026-09-06. This describes NIST IR 8547 **ipd** — the initial public
-> draft of November 2024 — as it stood on that date. Its dates are proposed. If
-> a final IR 8547 has published since, check it.
+dev.to is a single **post**, not a thread. From <https://dev.to>:
+
+1. **Create Post** (top right).
+2. Switch the editor to markdown-with-frontmatter if it opens in the rich
+   editor — there is a **⚙ / "Switch to Markdown"** toggle. The frontmatter
+   block only works in markdown mode.
+3. Select all in the editor, delete, and paste the whole file including the
+   `---` frontmatter.
+4. **Save draft**, then **Preview**. The file ships `published: false`
+   deliberately, so saving cannot publish it by accident.
+5. Check in preview: the title renders once, the code block keeps its column
+   alignment, and the tables render. If a table looks broken, dev.to wants a
+   blank line before it.
+6. Change `published: false` to `published: true` and hit **Publish**.
+
+### The one line that matters
+
+`canonical_url`. Without it dev.to outranks your own site for your own writing,
+and readers land on the copy you will forget to correct — which for an article
+about a *draft* standard is the whole problem.
+
+Verify after publishing: view source on the dev.to page and confirm
+`<link rel="canonical" href="https://lvlrsajjad.github.io/...">` points home.
 
 ## LinkedIn
 

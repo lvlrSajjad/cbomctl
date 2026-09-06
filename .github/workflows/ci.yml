@@ -40,6 +40,7 @@ jobs:
         run: |
           python scripts/gen_pack_docs.py --check
           python scripts/gen_article_blocks.py --check
+          python scripts/gen_syndication.py --check
 
   cbom-schema-conformance:
     # Hand-built fixtures must stay valid CycloneDX, or they stop proving
