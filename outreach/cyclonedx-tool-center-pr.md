@@ -1,16 +1,22 @@
 # PR draft — CycloneDX Tool Center listing
 
-**DRAFT — do not open until cbomctl is public and installable.** The Tool
-Center lists things people can use; submitting a repository that doesn't exist
-yet would be listing vapour.
+**Ready to open.** The gate — repository public and `pip install cbomctl`
+working — cleared on 2026-09-06 with the 0.1.1 release. The Tool Center lists
+things people can use, and this is now one of them.
 
 **Repo:** <https://github.com/CycloneDX/tool-center>
 **Process** (read from their README): open a PR adding a file under `tools/`.
 Contributions must be relevant to SBOM/xBOM generation, analysis or consumption;
 metadata must be accurate and current. They offer
 [MetaConfigurator](https://www.metaconfigurator.org?schema=https://raw.githubusercontent.com/CycloneDX/tool-center/refs/heads/main/schemas/tool.schema.json)
-as an alternative to hand-editing — the hand-written file below validates
-against `schemas/tool.schema.json` (specVersion 2.0), so either route works.
+as an alternative to hand-editing — the hand-written file below was validated
+against `schemas/tool.schema.json` (specVersion 2.0) on 2026-09-06, so either
+route works.
+
+**`tool.description` has a `maxLength` of 250.** The first draft of this file
+ran to 312 characters and would have been bounced by their `validate_tools`
+workflow. Re-run the validator after any edit to that field; do not trust the
+prose in this document over the schema.
 
 **Branch:** `add-cbomctl` · **File:** `tools/cbomctl.json`
 
@@ -28,9 +34,9 @@ is precisely what this tool does, and it is a less crowded slot than
   "tool": {
     "name": "cbomctl",
     "publisher": "Sadjad Asadi",
-    "description": "Evaluates a CycloneDX CBOM against multiple national post-quantum cryptography policies at once (BSI, ANSSI, ASD, CNSA 2.0, EO 14412, EU roadmap) and reports where their verdicts contradict each other. Every rule carries a primary source, a verification date, and an explicit classification of its binding force.",
+    "description": "Evaluates a CycloneDX CBOM against seven national post-quantum policies at once (BSI, ANSSI, ASD, CNSA 2.0, EO 14412, EU roadmap, NIST IR 8547) and reports where their verdicts contradict. Every rule cites a primary source and a verification date.",
     "repository_url": "https://github.com/lvlrSajjad/cbomctl",
-    "website_url": "https://github.com/lvlrSajjad/cbomctl",
+    "website_url": "https://lvlrsajjad.github.io/cbomctl/",
     "capabilities": ["CBOM"],
     "availability": ["OPEN_SOURCE", "OSI_APPROVED"],
     "functions": ["ANALYSIS"],
@@ -50,7 +56,9 @@ is precisely what this tool does, and it is a less crowded slot than
 `supportedLanguages` is deliberately empty: it means source languages a tool
 analyses, and this one reads CBOMs rather than code. `lifecycle` is
 `POST-BUILD` / `OPERATIONS` because it consumes an existing CBOM rather than
-producing one during a build.
+producing one during a build. `website_url` points at the docs site rather than
+repeating `repository_url`, because the docs site is where the policy sources
+and their verification dates are published.
 
 ## PR title
 
