@@ -52,7 +52,25 @@ cat outreach/devto/rsa-2048-and-rsa-3072.body.md | pbcopy   # unverified: writes
 
 ### Afterwards
 
-View source on the published dev.to page and confirm:
+Record the published URL in `ARTICLES` in `scripts/gen_syndication.py` under
+`devto`, then run:
+
+```bash
+python3 scripts/check_published.py
+```
+
+That fetches the live post through dev.to's public read API and diffs
+`body_markdown` against the local `…body.md`, byte for byte — plus the title,
+the four tags, and the canonical URL, which is the field that silently does not
+save. It runs in `./scripts/check.sh`. An article with no `devto` URL is
+reported as unpublished rather than passed over, so recording the URL is the
+step that turns the post into something checkable.
+
+Both articles were live and byte-identical when the checker was written. The
+one transform to expect: dev.to's editor saves a bare opening fence as
+` ```plaintext `, and the checker accounts for exactly that and nothing else.
+
+A published post can also be read by eye — view source and confirm:
 
 ```html
 <link rel="canonical" href="https://lvlrsajjad.github.io/cbomctl/writing/rsa-2048-and-rsa-3072/">
@@ -62,6 +80,20 @@ If that is missing, the canonical field did not save — reopen Advanced Post
 options and check.
 
 ## LinkedIn
+
+!!! warning "Nothing can read a published LinkedIn post back"
+    dev.to serves `body_markdown` to anonymous clients, so
+    `scripts/check_published.py` can diff what is live against what is in the
+    repo. **LinkedIn has no equivalent.** Reading member posts needs
+    `r_member_social`, which is gated behind an authenticated app and a partner
+    review, and the public page does not serve the post text to an anonymous
+    fetch.
+
+    So once this is pasted, the copy on LinkedIn is unchecked and stays
+    unchecked. A correction to the article will not reach it, and nothing in
+    this repository will notice. That is the reason the post ends with a link
+    to the canonical copy rather than restating the argument: the version that
+    can be corrected is the one to send people to.
 
 Ready to paste, plain text, no markdown — LinkedIn renders `**bold**` and
 `[links](url)` literally:

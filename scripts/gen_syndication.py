@@ -28,6 +28,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 SITE = "https://lvlrsajjad.github.io/cbomctl"
 
+#: `devto` is the URL of the live post, recorded once it exists.
+#:
+#: It is here rather than discovered because "which of these is published" is a
+#: fact, and a checker that guessed it would report a clean run for an article
+#: nobody had posted. `scripts/check_published.py` reads this key, fetches the
+#: published body through dev.to's public read API and diffs it against
+#: `out`; an entry with `devto: None` is reported unpublished, not passed over.
 ARTICLES = [
     {
         "src": ROOT / "docs" / "writing" / "everyone-agrees-on-the-risk.md",
@@ -36,6 +43,8 @@ ARTICLES = [
         "slug": "writing/everyone-agrees-on-the-risk",
         "title": "Everyone agrees on the risk. They disagree on the price.",
         "tags": "security, cryptography, postquantum, compliance",
+        "devto": ("https://dev.to/lvlrsajjad/"
+                  "everyone-agrees-on-the-risk-they-disagree-on-the-price-44fl"),
     },
     {
         "src": ROOT / "docs" / "writing" / "rsa-2048-and-rsa-3072.md",
@@ -44,6 +53,8 @@ ARTICLES = [
         "slug": "writing/rsa-2048-and-rsa-3072",
         "title": "RSA-2048 and RSA-3072 have different futures",
         "tags": "security, cryptography, postquantum, compliance",
+        "devto": ("https://dev.to/lvlrsajjad/"
+                  "rsa-2048-and-rsa-3072-have-different-futures-2ipc"),
     },
 ]
 

@@ -132,6 +132,20 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: cbomctl-sarif, path: cbomctl.sarif }
 
+  published-copies:
+    # Diff the live dev.to articles against `outreach/devto/`. Not on every PR:
+    # a published copy drifts when someone corrects an article and does not
+    # re-paste it, which is a human-timescale event, and a red X on an
+    # unrelated PR is the wrong way to say it. `./scripts/check.sh` runs it
+    # locally, which is where it matters -- just before publishing the next one.
+    if: github.event_name == 'schedule' || github.event_name == 'push'
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: python scripts/check_published.py
+
   policy-staleness:
     if: github.event_name == 'schedule'
     runs-on: ubuntu-latest
