@@ -194,13 +194,37 @@ app.add_typer(policies, name="policies")
 @policies.command("list")
 def policies_list() -> None:
     """List packs and their verification state."""
-    for pid in available():
-        p = load_pack(pid)
+    packs = [load_pack(pid) for pid in available()]
+    for p in packs:
         unverified = len(p.unverified_rules)
         state = "VERIFIED" if not unverified else f"{unverified}/{len(p.rules)} UNVERIFIED"
         typer.echo(f"{p.id:<14} {state:<18} {p.name}")
-    typer.echo("\nNo pack is verified. Rules were assembled from secondary "
-               "reporting; see docs/policy-sources.md.")
+
+    # Computed, never asserted. A hardcoded sentence about verification state
+    # survived into v0.1.0 unchanged from when it was true, and printed a flat
+    # contradiction two lines below seven rows reading VERIFIED.
+    stale = [p for p in packs if not p.is_verified]
+    contested = [f"{p.id}/{r.id}" for p in packs for r in p.rules
+                 if r.interpretation is Interpretation.CONTESTED]
+    drafts = sorted({p.id for p in packs for r in p.rules if r.is_draft})
+
+    typer.echo("")
+    if stale:
+        typer.secho(
+            f"{len(stale)} of {len(packs)} packs contain rules not read from a "
+            f"primary source: {', '.join(p.id for p in stale)}. "
+            f"See docs/policy-sources.md.", fg=typer.colors.YELLOW)
+    else:
+        typer.echo(f"All {len(packs)} packs are read from primary sources; every "
+                   f"rule cites the section or page it came from.")
+    if drafts:
+        typer.echo(f"Citing a draft source: {', '.join(drafts)} — those dates are "
+                   f"proposed and may move.")
+    if contested:
+        typer.echo(f"Contested encoding: {', '.join(contested)} — "
+                   f"`cbomctl policies show` explains the judgement and the "
+                   f"alternative reading.")
+    typer.echo("Not compliance advice. Read the sources before acting on a verdict.")
 
 
 @policies.command("show")

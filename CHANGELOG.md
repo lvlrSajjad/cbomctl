@@ -3,7 +3,21 @@
 Semantic versioning. Policy-pack versions move independently — see
 [`policy-packs/CHANGELOG.md`](policy-packs/CHANGELOG.md).
 
-## [Unreleased] — 0.1.0
+## [0.1.1] — unreleased
+
+### Fixed
+- `cbomctl policies list` printed "No pack is verified. Rules were assembled
+  from secondary reporting" — a sentence written when that was true, left
+  unchanged when it stopped being true, and shipped in 0.1.0 two lines below
+  seven rows reading `VERIFIED`. The summary is now derived from the packs and
+  additionally reports which packs cite a draft source and which carry a
+  contested encoding. A test forbids hardcoding any claim about verification
+  state in the CLI, and another asserts the summary matches the packs.
+
+  Caught by installing 0.1.0 from PyPI in a clean venv and reading the output,
+  which is the only check that runs under the conditions a stranger has.
+
+## [0.1.0] — released 2026-09-06
 
 First working version. **All seven policy packs are read from primary sources**
 — every rule cites the section or page it came from, names its verifier and

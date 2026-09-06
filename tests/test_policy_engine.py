@@ -520,3 +520,43 @@ class TestContestedInterpretation:
         cell = evaluate(load_pack("cnsa-2.0"), hybrid)
         refs = [r for r in cell.rules if r.rule_id == "cnsa2-hybrid-not-permitted"]
         assert refs and refs[0].interpretation is Interpretation.CONTESTED
+
+
+class TestCliSummaryIsComputed:
+    """`policies list` shipped a hardcoded "No pack is verified" line into a
+    release where all seven were. Any claim about verification state must be
+    derived from the packs, never written down."""
+
+    def test_no_hardcoded_verification_claim_in_the_cli(self):
+        import pathlib
+
+        src = (pathlib.Path(__file__).parents[1] / "src" / "cbomctl" / "cli.py").read_text()
+        for phrase in ("No pack is verified",
+                       "all packs are verified",
+                       "assembled from secondary reporting"):
+            assert phrase not in src, (
+                f"cli.py hardcodes {phrase!r}; derive it from the packs instead")
+
+    def test_summary_matches_reality(self):
+        from typer.testing import CliRunner
+
+        from cbomctl.cli import app
+
+        out = CliRunner().invoke(app, ["policies", "list"]).output
+        unverified = [p for p in ALL_PACKS if not load_pack(p).is_verified]
+        if unverified:
+            assert "not read from a primary source" in out
+            for pid in unverified:
+                assert pid in out
+        else:
+            assert "read from primary sources" in out
+            assert "No pack is verified" not in out
+
+    def test_summary_surfaces_drafts_and_contested_encodings(self):
+        from typer.testing import CliRunner
+
+        from cbomctl.cli import app
+
+        out = CliRunner().invoke(app, ["policies", "list"]).output
+        assert "nist-ir8547" in out and "proposed and may move" in out
+        assert "cnsa2-hybrid-not-permitted" in out
