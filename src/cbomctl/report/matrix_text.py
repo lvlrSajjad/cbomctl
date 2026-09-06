@@ -2,10 +2,26 @@
 
 from __future__ import annotations
 
+import shutil
+import textwrap
+
 from cbomctl.models import Conflict, Verdict
 from cbomctl.verdict.matrix import Matrix
 
 _BANNER_W = 74
+
+#: Prose in the conflicts section is wrapped. Without this a conflict note is
+#: emitted as a single line -- the four-jurisdiction case reaches 439
+#: characters -- which a terminal soft-wraps into an unreadable block and a
+#: <pre> in a browser does not wrap at all.
+_MIN_W, _MAX_W = 60, 100
+
+
+def _wrap(text: str, indent: str) -> list[str]:
+    """Wrap prose to the terminal width, clamped to something readable."""
+    width = shutil.get_terminal_size(fallback=(100, 24)).columns
+    width = max(_MIN_W, min(_MAX_W, width)) - len(indent) - 4
+    return [indent + line for line in textwrap.wrap(text, width=width)] or [indent.rstrip()]
 
 
 def _banner(packs: list[str]) -> str:
@@ -88,20 +104,23 @@ def render(matrix: Matrix, conflicts: list[Conflict]) -> str:
         if row.locations:
             detail.append(row.locations[0])
         for d in detail:
-            out.append(f"{'':<{name_w}}└ {d}")
+            wrapped = _wrap(d, "")
+            out.append(f"{'':<{name_w}}└ {wrapped[0]}")
+            for cont in wrapped[1:]:
+                out.append(f"{'':<{name_w}}  {cont}")
 
     if conflicts:
         out.append("")
         out.append(f"CONFLICTS ({len(conflicts)})")
         for c in conflicts:
             out.append(f"  {c.id}  [{c.kind}]  {c.display}")
-            out.append(f"      {c.summary}")
+            out += _wrap(c.summary, "      ")
             if c.satisfies_all:
-                out.append(f"      satisfies all: {c.satisfies_all}")
+                out += _wrap(f"satisfies all: {c.satisfies_all}", "      ")
             if c.cost_note:
-                out.append(f"      {c.cost_note}")
+                out += _wrap(c.cost_note, "      ")
             if c.alternative_reading:
-                out.append(f"      ⚖ {c.alternative_reading}")
+                out += _wrap(f"⚖ {c.alternative_reading}", "      ")
     else:
         out.append("")
         out.append("CONFLICTS (0) — the selected jurisdictions do not disagree "
@@ -109,9 +128,10 @@ def render(matrix: Matrix, conflicts: list[Conflict]) -> str:
 
     a = matrix.assumptions
     out.append("")
-    out.append(f"Assumptions: CRQC {a['crqc_year']} ({a['crqc_note']}) · "
-               f"migration {a['migration_years']}y · "
-               f"system_category {a['system_category'] or 'undeclared'}")
+    out += _wrap(
+        f"Assumptions: CRQC {a['crqc_year']} ({a['crqc_note']}) · "
+        f"migration {a['migration_years']}y · "
+        f"system_category {a['system_category'] or 'undeclared'}", "")
 
     counts: dict[str, int] = {}
     for row in matrix.rows:

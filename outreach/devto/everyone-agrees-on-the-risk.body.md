@@ -108,20 +108,20 @@ RSA-2048        ambiguous      INDET       INDET       INDET       INDET       I
                 └ eu-roadmap · transition_start 2026-12-31
                 └ unresolved: purpose-ambiguous (primitive:pke)
                 └ as key transport → critical · as signature → medium
-                └ Declare the purpose in cbomctl.yaml, or regenerate the CBOM with a generator that records cryptoFunctions.
+                └ Declare the purpose in cbomctl.yaml, or regenerate the CBOM with a generator that records
+                  cryptoFunctions.
                 └ src/payments/keys.go:41
 
 CONFLICTS (6)
   c1  [construction]  ECDH
-      anssi-fr, bsi-de, eu-roadmap recommend a hybrid construction for key-agreement; asd-au recommend against it; cnsa-2.0 does not permit one outside named interoperability exceptions.
-      cnsa-2.0 does not permit a hybrid construction outside named interoperability exceptions, while anssi-fr, bsi-de, eu-roadmap recommend one. **No single configuration satisfies all selected jurisdictions.** You will need different builds, or to drop a jurisdiction from scope. asd-au would permit a hybrid but recommends against it, so even dropping cnsa-2.0 leaves a documented cost. This is a business decision, not a technical one.
-      ⚖ This conflict depends on a contested encoding. Under the alternative reading (cnsa-2.0 silent), a hybrid construction would satisfy all selected jurisdictions, at a documented cost. The argument and the evidence for the encoding used are in the `cnsa-2.0` rule's interpretation note (`cbomctl policies show cnsa-2.0`).
-  c2  [deadline]  ECDH
-      eu-roadmap requires this by 2026-12-31; bsi-de allows until 2031-12-31.
-      satisfies all: meet the earlier date (2026-12-31)
-      eu-roadmap governs in practice — the later deadline provides no relief if you are bound by both.
-  c3  [construction]  X25519MLKEM768
-      anssi-fr, bsi-de, eu-roadmap recommend a hybrid construction for key-agreement; asd-au recommend against it; cnsa-2.0 does not permit one outside named interoperability exceptions.
+      anssi-fr, bsi-de, eu-roadmap recommend a hybrid construction for key-agreement; asd-au
+      recommend against it; cnsa-2.0 does not permit one outside named interoperability
+      exceptions.
+      cnsa-2.0 does not permit a hybrid construction outside named interoperability exceptions,
+      while anssi-fr, bsi-de, eu-roadmap recommend one. **No single configuration satisfies all
+      selected jurisdictions.** You will need different builds, or to drop a jurisdiction from
+      scope. asd-au would permit a hybrid but recommends against it, so even dropping cnsa-2.0
+      leaves a documented cost. This is a business decision, not a technical one.
 ```
 
 Two distinct collisions on one asset. The construction conflict has **no**

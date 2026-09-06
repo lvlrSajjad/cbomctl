@@ -324,3 +324,43 @@ class TestContestedConflicts:
         assert "alternative reading" in matrix_text.render(matrix, conflicts)
         doc = json.loads(json_out.render(matrix, conflicts))
         assert any(c["alternative_reading"] for c in doc["conflicts"])
+
+
+class TestTextOutputWraps:
+    """Conflict prose used to be emitted as a single line — the
+    four-jurisdiction case reached 439 characters. A terminal soft-wraps that
+    into an unreadable block, and a <pre> in a browser does not wrap it at all,
+    so a pasted demo scrolled sideways off the page."""
+
+    def _render(self, jurisdictions, columns=100):
+        import os
+
+        assets, _ = read_assets(FIXTURES / "conflict-hybrid.json")
+        packs = [load_pack(j) for j in jurisdictions]
+        matrix = build(assets, packs, Config(system_category="web-cloud"),
+                       today=TODAY)
+        prev = os.environ.get("COLUMNS")
+        os.environ["COLUMNS"] = str(columns)
+        try:
+            return matrix_text.render(matrix, detect(matrix, packs))
+        finally:
+            if prev is None:
+                os.environ.pop("COLUMNS", None)
+            else:
+                os.environ["COLUMNS"] = prev
+
+    def test_no_line_runs_away(self):
+        out = self._render(["bsi-de", "anssi-fr", "eu-roadmap", "asd-au", "cnsa-2.0"])
+        longest = max(len(line) for line in out.split("\n"))
+        assert longest <= 120, f"longest line is {longest} chars"
+
+    def test_conflict_prose_is_wrapped_not_truncated(self):
+        """Wrapping must not lose words."""
+        out = self._render(["bsi-de", "cnsa-2.0"])
+        flat = " ".join(out.split())
+        assert "No single configuration satisfies all selected jurisdictions" in flat
+        assert "This is a business decision, not a technical one." in flat
+
+    def test_narrow_terminals_still_readable(self):
+        out = self._render(["bsi-de", "cnsa-2.0"], columns=60)
+        assert max(len(line) for line in out.split("\n")) <= 120
