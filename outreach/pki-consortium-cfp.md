@@ -1,51 +1,85 @@
-# CfP abstract — PKI Consortium PQC Conference
+# CfP — PKI Consortium PQC Conference, Amsterdam
 
-**DRAFT — do not submit until the policy packs are verified.** The talk asserts
-what four authorities say; giving it on unverified sources would be indefensible
-in that room.
+**Verified 2026-09-06 against the live submission form at <https://pkic.org/call>.**
 
-- **Event:** PKI Consortium Post-Quantum Cryptography Conference, Amsterdam,
-  December 1–3 2026
-- **Verify before submitting:** CfP deadline, submission portal, format
-  (talk length, slots), and whether the event is vendor-neutral by policy — the
-  PKI Consortium generally is, which suits a talk with no product pitch in it.
-- **Proposed title:** *Contradictory by design: what to do when Germany, France
-  and Australia disagree about hybrid PQC*
-- **Length:** ~300 words
+## Two things to decide before submitting
+
+**Speakers must attend in person.** The form's terms, verbatim:
+
+> "I confirm that I will attend the conference in person and acknowledge that
+> **remote presentations are not permitted**."
+
+The *event* is hybrid — plenary and technical tracks are livestreamed and
+recorded for attendees — but that does not extend to speakers. And:
+
+> "I acknowledge that I am responsible for all expenses related to travel,
+> accommodation, and personal subsistence."
+
+So: Amsterdam, 1–3 December 2026, self-funded, in person or not at all.
+
+**The CFP is still open.** The May announcement said "submissions are open
+through June 30, 2026", but that date has passed and the form is live with no
+closure notice, the event page still links "Submit your proposal →", and the
+agenda notes that "session titles and confirmed speakers are updated
+progressively as the program is finalized". So it is effectively rolling, and:
+
+> "Early submissions have a significantly higher chance of selection." … "When
+> two proposals are substantially similar, prioritization will go to the one
+> submitted first."
+
+Translation: you can submit today, and today is better than next week.
+
+## The constraint that shaped this abstract
+
+> "No commercial or promotional talks. Product demos, hidden marketing
+> messages, and self-promotional statements are not allowed."
+> "Experience-led content. Prioritize real implementation experience over
+> theory-only content."
+
+The earlier draft opened with "This talk presents a deterministic, fully cited
+policy engine…", which is a product pitch however open-source the product is.
+Rewritten below to lead with the findings and treat the tool as the method —
+which is also the honest shape, since the findings came from reading the
+documents, not from writing the code.
+
+- **Proposed title:** *Everyone agrees on the risk. They disagree on the price:
+  what reading seven national PQC policies actually turned up*
+- **Format:** presentation, or lightning talk if they prefer
+- **Length:** ~330 words
 
 ---
 
 ## Abstract
 
-Post-quantum guidance has diverged internationally, and the usual framing —
-that the authorities disagree — is wrong in an interesting way. Germany's BSI
-and France's ANSSI recommend hybrid key establishment, and both extend it to
-signatures on the grounds that ML-DSA and SLH-DSA are young; ANSSI cites the
-classical break of Rainbow directly. Australia's ASD recommends against
-hybrids — while explicitly granting the same premise, that a classical
-algorithm alongside a post-quantum one hedges against an implementation flaw or
-a new attack. ASD simply prices complexity and overhead higher, and adds that
-once a CRQC exists the classical half contributes nothing. Same risk model,
-different weights, opposite conclusions.
+I set out to encode seven national post-quantum policies into machine-readable
+rules — BSI, ANSSI, ASD, CNSA 2.0, EO 14412, NIST IR 8547 and the EU roadmap —
+and read all seven primary documents to do it. Most of what I thought I knew
+going in came from secondary summaries, and a useful amount of it was wrong.
 
-That distinction matters to anyone shipping into more than one market, and most
-tooling erases it. PASS/FAIL cannot express "discouraged but permitted" — the
-wording that decides whether any single configuration satisfies every
-jurisdiction. Tools also routinely report guidance as mandate. BSI TR-02102-1 is
-a technical guideline; ANSSI's "mandatory hybridation" applies only inside its
-security-visa process; NIST IR 8547 is an initial public draft whose 2030 dates
-are proposed and reach only 112-bit security strength.
+Three findings worth an audience.
 
-This talk presents a deterministic, fully cited policy engine that evaluates one
-CycloneDX CBOM against several national policies at once and reports where their
-requirements collide, why, and what target satisfies all of them — or that none
-does. Every rule carries its primary source, the section read, a verification
-date, and its binding force. All seven jurisdictions were verified by reading
-the source documents; where one is a draft or ambiguous, the tool says so in
-every output rather than resolving it quietly.
+**The authorities are not disagreeing about cryptography.** The received story
+is that Europe favours hybrid key establishment and the anglophone agencies do
+not. But ASD's ISM grants the European premise in the same paragraph where it
+declines to follow it — hybrids do hedge against an implementation flaw or a
+new attack — and then prices complexity and overhead higher. The NSA states the
+cost side as an empirical claim: more products fail from implementation and
+configuration errors than from failures in the underlying algorithms. It is a
+bet on which failure mode is likelier, and Rainbow and SIKE are evidence for
+one side while every TLS CVE is evidence for the other.
 
-We will also cover what the engine refuses to do. In real CBOM output, more than
-a third of algorithm components carry no usable indication of what a key is
-for, and the gap between "key transport" and "signature" spans the entire
-severity range. Those are reported unresolved, with the range they would span if
-guessed. Tool and policy packs are open source and separable.
+**"Deprecated" is not "disallowed", and the dates are not what people quote.**
+NIST IR 8547 scopes its 2030 deprecation to 112 bits of security strength, not
+to an algorithm — so RSA-2048 is deprecated after 2030 and RSA-3072 is not.
+Also, it remains an initial public draft.
+
+**Guidance is mostly not mandate, and tooling flattens that.** BSI TR-02102-1
+recommends. ANSSI's "mandatory hybridation" binds only inside its security-visa
+process. The EU roadmap is a Recommendation. Reporting any of those as a
+failing control misinforms the person acting on it.
+
+I will show what the documents say, where two of them cannot both be satisfied
+by one configuration, and where the encoding required a judgement call I had to
+write down rather than resolve. The engine and the cited rule sets are open
+source and separable; the talk is about what the sources say, not about the
+tool.
