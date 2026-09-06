@@ -3,6 +3,18 @@
 Semantic versioning. Policy-pack versions move independently — see
 [`policy-packs/CHANGELOG.md`](policy-packs/CHANGELOG.md).
 
+## [0.1.3] — released 2026-09-06
+
+No change to the Python package; `cbomctl` 0.1.3 and 0.1.2 are identical. The
+release exists so a tag carries an `action.yml` that GitHub will publish.
+
+### Fixed
+- The action's `description` was 135 characters. GitHub Marketplace requires
+  fewer than 125 and only says so on the release publish form, after the tag is
+  cut — so the constraint is now asserted in `tests/test_action_metadata.py`,
+  along with the other metadata the Marketplace requires (name, description,
+  `branding.icon`, `branding.color`).
+
 ## [0.1.2] — released 2026-09-06
 
 ### Fixed

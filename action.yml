@@ -1,7 +1,9 @@
 name: cbomctl
+# GitHub Marketplace rejects a description of 125 characters or more. This one
+# is 114; tests/test_action_metadata.py holds the line.
 description: >-
   Evaluate a CycloneDX CBOM against several national post-quantum policies at
-  once and report where their verdicts contradict each other.
+  once and report where they contradict.
 branding: { icon: shield, color: purple }
 
 inputs:
