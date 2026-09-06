@@ -17,9 +17,13 @@ jobs:
       - uses: actions/checkout@v4
 
       # Bring a CBOM from whatever generator you use. CBOMkit-action takes no
-      # `with:` inputs — it is configured by environment variables and writes
-      # the consolidated CBOM to `cbom.json` in the workspace. Read their
-      # README before copying this; it is the half of this file we cannot run.
+      # `with:` inputs — it is configured by environment variables, and writes
+      # the consolidated CBOM to `cbom/cbom.json`: the directory comes from
+      # `CBOMKIT_OUTPUT_DIR`, which defaults to `cbom`, and the consolidated
+      # file inside it is `cbom.json`. Set `CBOMKIT_OUTPUT_DIR` if you want it
+      # somewhere else. Their step also exports `outputs.pattern`
+      # (`<dir>/cbom*.json`), which is what to hand to upload-artifact if you
+      # want the per-module CBOMs as well.
       - uses: cbomkit/cbomkit-action@main
         id: cbom
         env:
@@ -29,7 +33,7 @@ jobs:
       # Pin an exact release (v0.1.4) instead if you want the tool frozen.
       - uses: lvlrSajjad/cbomctl@v0
         with:
-          cbom: cbom.json
+          cbom: cbom/cbom.json
           jurisdictions: bsi-de,anssi-fr,asd-au
           config: cbomctl.yaml
           format: sarif
@@ -44,13 +48,27 @@ The action always prints the matrix to the job log, even when the
 machine-readable report goes to a file — the matrix is the part a human reads.
 
 !!! note "How much of this workflow is checked"
-    `scripts/check_commands.py` resolves the `cbomctl` step on every run: it
-    asserts that `@v0` is a tag that exists and that every `with:` key is an
-    input `action.yml` actually declares. It cannot execute a GitHub workflow,
-    so the CBOMkit step is transcribed from
-    [their README](https://github.com/cbomkit/cbomkit-action) and read against
-    their `action.yml` — not run. Until 2026-09-06 this page passed
-    `with: { output: cbom.json }` to an action that declares no inputs at all.
+    `scripts/check_commands.py` resolves **every** step on every run, ours and
+    theirs. For `lvlrSajjad/cbomctl` it asserts that `@v0` is a tag this
+    repository has and that each `with:` key is an input `action.yml` declares.
+    For `cbomkit/cbomkit-action`, `actions/checkout` and
+    `github/codeql-action/upload-sarif` it fetches their own `action.yml` at
+    the ref named above and checks the same thing — and because a Docker action
+    declares no inputs at all, the `env:` names are checked against
+    [CBOMkit-action's README](https://github.com/cbomkit/cbomkit-action) at
+    that ref. An action the checker does not know how to resolve is reported
+    unchecked by name rather than passed over.
+
+    Until 2026-09-06 this page passed `with: { output: cbom.json }` to an
+    action that declares no inputs at all. That was fixed by hand, and then
+    nothing could re-check it; now something does.
+
+    **What is still not checked:** that the workflow runs. Nothing here starts
+    a container or scans a repository, so `cbom/cbom.json` is read from
+    CBOMkit-action's `Main.java` (`CBOMKIT_OUTPUT_DIR`, default `cbom`) and
+    their README, on 2026-09-06 — transcribed, not observed. The reasoning for
+    not building a scheduled job that would run it is in
+    [`docs/roadmap.md`](roadmap.md#running-the-cbomkit-half-of-docscimd).
 
 ## Exit codes
 
@@ -79,8 +97,9 @@ for and a config file can.
 
 **`--require-verified-policy`** refuses to run at all against a pack containing
 rules that have not been read from a primary source. If you are using the output
-for anything that resembles a compliance claim, turn this on; it currently
-excludes `cnsa-2.0`.
+for anything that resembles a compliance claim, turn this on. It currently
+excludes nothing — every shipped rule is verified — which is exactly when it is
+cheapest to switch on and keep on.
 
 ## SARIF
 

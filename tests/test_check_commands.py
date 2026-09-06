@@ -270,3 +270,94 @@ def test_every_swept_document_passes(doc):
         import shutil
         shutil.rmtree(cwd, ignore_errors=True)
     assert ok, "\n".join(f"{v} {w} {d}" for v, w, d in report if v == "FAIL")
+
+
+def test_an_input_a_third_party_action_does_not_declare_is_rejected(tmp_path):
+    """The 0.1.4 fix by hand, now a check.
+
+    `docs/ci.md` passed `with: { output: cbom.json }` to `cbomkit-action`,
+    which declares no inputs at all. It was corrected by reading their
+    `action.yml` and then went straight back to being unchecked, because
+    nothing in this file could reach somebody else's repository. It can now.
+    """
+    ok, report = run_on(tmp_path, "ci.md", """# C
+
+```yaml
+steps:
+  - uses: cbomkit/cbomkit-action@main
+    with:
+      output: cbom.json
+```
+""")
+    if "unreachable" in report:
+        pytest.skip("github.com unreachable; the check reports SKIP by design")
+    assert not ok
+    assert "declares none at all" in report
+
+
+def test_an_env_var_the_third_party_action_does_not_document_is_rejected(tmp_path):
+    """A docker action declares no inputs, so `action.yml` cannot catch a
+    mistyped `env:` key. Their README documents the names, and that is the
+    artifact to check against."""
+    ok, report = run_on(tmp_path, "ci.md", """# C
+
+```yaml
+steps:
+  - uses: cbomkit/cbomkit-action@main
+    env:
+      CBOMKIT_LANGUAGE: java
+```
+""")
+    if "unreachable" in report:
+        pytest.skip("github.com unreachable; the check reports SKIP by design")
+    assert not ok
+    assert "not documented in" in report
+
+
+def test_a_third_party_ref_that_does_not_exist_is_rejected(tmp_path):
+    ok, report = run_on(tmp_path, "ci.md", """# C
+
+```yaml
+steps:
+  - uses: cbomkit/cbomkit-action@v99.99.99
+    env:
+      CBOMKIT_LANGUAGES: java
+```
+""")
+    if "unreachable" in report:
+        pytest.skip("github.com unreachable; the check reports SKIP by design")
+    assert not ok
+    assert "has no action.yml" in report
+
+
+def test_an_unregistered_third_party_action_is_reported_unchecked(tmp_path):
+    """Not a failure — a visible hole. Adding an action to a documented
+    workflow should be a decision someone reads, not a silent gap."""
+    ok, report = run_on(tmp_path, "ci.md", """# C
+
+```yaml
+steps:
+  - uses: some-org/some-action@v1
+    with:
+      whatever: 1
+```
+""")
+    assert ok, report
+    assert "add it to THIRD_PARTY_ACTIONS" in report
+
+
+def test_the_documented_workflow_resolves_every_action_it_names(tmp_path):
+    """`docs/ci.md` itself, end to end: our action and all three of theirs."""
+    doc = ROOT / "docs" / "ci.md"
+    report: list[tuple[str, str, str]] = []
+    ok = True
+    cwd = cc.scratch()
+    try:
+        for b in cc.blocks(doc):
+            if b.lang in ("yaml", "yml"):
+                ok &= cc.check_block(b, cwd, report)
+    finally:
+        import shutil
+        shutil.rmtree(cwd, ignore_errors=True)
+    assert ok, "\n".join(f"{v} {w} {d}" for v, w, d in report if v == "FAIL")
+    assert "cbomkit/cbomkit-action" in "\n".join(d for _, _, d in report)

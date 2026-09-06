@@ -54,3 +54,39 @@ verdict is the thing this one exists to replace.
 **Anything that makes an unverified rule look verified.** The banner mechanism,
 the `status` field and `--require-verified-policy` are load-bearing. Cleaner
 output is not a reason to weaken them.
+
+### Running the CBOMkit half of `docs/ci.md`
+
+**Considered on 2026-09-06 and not built.** The idea was a scheduled CI job
+that materialises the workflow snippet on [the CI page](ci.md) into a real
+workflow file and executes it against a small fixture repository, so the
+CBOMkit step is exercised rather than transcribed. Three reasons it is not
+worth its weight:
+
+**It would not run the documented snippet.** A workflow cannot execute a
+workflow file it has just written; you would have to commit the generated file
+to a branch and dispatch it, or inline its steps into the scheduled job. Inlined
+steps are a transcription of the page — which is the gap being closed, reopened
+one layer down. Committing the file means the thing that runs is an artifact
+that has to be kept byte-identical to the page, which is another check, on top
+of the one that was supposed to replace a check.
+
+**It would mostly test somebody else's tool.** `cbomkit/cbomkit-action@main` is
+an unpinned ref that pulls `ghcr.io/cbomkit/cbomkit-action:edge` and runs a Java
+scanner over source. A red run would usually mean their edge image moved, which
+tells us nothing about whether our page is right, and a scheduled job whose
+failures are usually not ours is a job people learn to ignore.
+
+**The claim the page actually makes is checkable without running anything.** It
+claims their action takes no `with:` inputs and reads the environment variables
+named. Both are facts in files — their `action.yml` and their README — and
+`scripts/check_commands.py` now fetches both at the ref the page names and
+checks them on every run, for their action as well as ours. That is the check
+that would have caught the 0.1.4 bug (`with: { output: cbom.json }` passed to an
+action declaring no inputs), and it caught a second one when it was written: the
+consolidated CBOM lands at `cbom/cbom.json`, not `cbom.json`.
+
+What remains unchecked is narrow and stated on the page: that the workflow runs
+end to end, and that the output path read from their `Main.java` is the path the
+container produces. If someone runs it, a note saying so is worth more than the
+job.

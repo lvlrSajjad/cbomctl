@@ -447,18 +447,98 @@ def check_output(b: Block, cwd: Path, report: list) -> bool:
     return False
 
 
+#: Actions in the docs whose `action.yml` is fetched from their own repository
+#: at the ref the snippet names, so `with:` keys are checked against what the
+#: action really declares. `docs/ci.md` used to pass `with: { output: cbom.json }`
+#: to CBOMkit's action, which declares no inputs at all; that half of the page
+#: was corrected by hand and then went back to being unchecked. Fetching is the
+#: only way to check somebody else's action, and it is why an entry here is
+#: SKIPped rather than failed when the network is unreachable.
+#:
+#: An action *not* listed here is reported unchecked with its name, so adding
+#: one to a snippet is a visible decision rather than a silent hole.
+THIRD_PARTY_ACTIONS = {
+    "actions/checkout",
+    "actions/upload-artifact",
+    "cbomkit/cbomkit-action",
+    "github/codeql-action/upload-sarif",
+}
+
+#: Docker actions take no `with:` inputs; they are configured by environment
+#: variables, which `action.yml` does not declare. What can still be checked is
+#: that the name we tell a reader to set is one the action documents. Value:
+#: the path in the action's repo that documents them.
+ACTION_ENV_DOCS = {
+    "cbomkit/cbomkit-action": "README.md",
+}
+
+_action_cache: dict[str, str | None] = {}
+
+
+def fetch_raw(repo: str, ref: str, path: str) -> str | None:
+    """A file from a GitHub repo at a ref, or None if it cannot be reached."""
+    key = f"{repo}@{ref}/{path}"
+    if key in _action_cache:
+        return _action_cache[key]
+    url = f"https://raw.githubusercontent.com/{repo}/{ref}/{path}"
+    text: str | None = None
+    try:
+        with urllib.request.urlopen(url, timeout=15) as fh:
+            text = fh.read().decode()
+    except urllib.error.HTTPError as exc:
+        text = "" if exc.code == 404 else None
+    except Exception:
+        # Same laptop-versus-package distinction `pypi_has` makes: a python.org
+        # build with no CA bundle cannot verify github.com, and that is a fact
+        # about this machine.
+        proc = subprocess.run(
+            ["curl", "-sS", "--max-time", "20", "-w", "\n%{http_code}", url],
+            capture_output=True, text=True)
+        body, _, code = proc.stdout.rpartition("\n")
+        text = body if code.strip() == "200" else ("" if code.strip() == "404"
+                                                   else None)
+    _action_cache[key] = text
+    return text
+
+
+def declared_inputs(action_yml: str) -> set[str]:
+    """Input names in an `action.yml`. Empty for an action declaring none."""
+    try:
+        import yaml
+        doc = yaml.safe_load(action_yml) or {}
+        return set((doc.get("inputs") or {}).keys())
+    except Exception:
+        return set()
+
+
 def check_workflow(b: Block, report: list) -> bool:
-    """A CI snippet that names our action must name inputs the action has."""
-    text = "\n".join(b.body)
-    if "lvlrSajjad/cbomctl@" not in text:
-        return True
+    """Every action a CI snippet names must take the inputs the snippet passes.
 
-    action = (ROOT / "action.yml").read_text()
-    inputs_block = action.split("\ninputs:", 1)[1].split("\noutputs:", 1)[0]
-    declared = set(re.findall(r"^  ([\w-]+):$", inputs_block, re.M))
-
+    Both halves, not just ours. The half this file could not reach was named on
+    the page as transcribed-not-run, and that annotation was doing the work a
+    check should have been doing: their `action.yml` is a file, it is fetchable,
+    and reading it is the whole of what "read against their action.yml" meant.
+    """
     ok = True
-    ref = re.search(r"lvlrSajjad/cbomctl@(\S+)", text).group(1)
+    seen = False
+    for line in b.body:
+        m = re.search(r"uses:\s*([A-Za-z0-9._/-]+)@(\S+)", line)
+        if not m:
+            continue
+        seen = True
+        repo_path, ref = m.group(1), m.group(2)
+        if repo_path == "lvlrSajjad/cbomctl":
+            ok &= check_our_action(b, ref, report)
+        else:
+            ok &= check_third_party_action(b, repo_path, ref, report)
+    if not seen:
+        return True
+    return ok
+
+
+def check_our_action(b: Block, ref: str, report: list) -> bool:
+    declared = declared_inputs((ROOT / "action.yml").read_text())
+    ok = True
     known = subprocess.run(["git", "tag"], capture_output=True, text=True,
                            cwd=ROOT).stdout.split()
     if not known:
@@ -471,7 +551,7 @@ def check_workflow(b: Block, report: list) -> bool:
         report.append(("FAIL", b.where, f"`@{ref}` is not a tag in this repo"))
         ok = False
 
-    used = with_keys(b.body, f"lvlrSajjad/cbomctl@{ref}")
+    used = mapping_keys(b.body, f"lvlrSajjad/cbomctl@{ref}", "with")
     for key in used:
         if key not in declared:
             report.append(("FAIL", b.where, f"`with: {key}` is not an action input"))
@@ -482,27 +562,96 @@ def check_workflow(b: Block, report: list) -> bool:
     return ok
 
 
-def with_keys(body: list[str], uses: str) -> list[str]:
-    """Keys of the `with:` mapping on the step that `uses` the given action."""
+def check_third_party_action(b: Block, repo_path: str, ref: str,
+                             report: list) -> bool:
+    used = mapping_keys(b.body, f"{repo_path}@{ref}", "with")
+    env = mapping_keys(b.body, f"{repo_path}@{ref}", "env")
+
+    if repo_path not in THIRD_PARTY_ACTIONS:
+        report.append(("SKIP", b.where, (
+            f"`{repo_path}@{ref}` is not resolved — add it to "
+            f"THIRD_PARTY_ACTIONS to check the inputs this page passes it")))
+        return True
+
+    repo = "/".join(repo_path.split("/")[:2])
+    subdir = "/".join(repo_path.split("/")[2:])
+    prefix = f"{subdir}/" if subdir else ""
+    action_yml = fetch_raw(repo, ref, f"{prefix}action.yml")
+    if action_yml == "":
+        action_yml = fetch_raw(repo, ref, f"{prefix}action.yaml")
+    if action_yml is None:
+        report.append(("SKIP", b.where, (
+            f"`{repo_path}@{ref}` — github.com unreachable, inputs "
+            f"{sorted(used)} not verified")))
+        return True
+    if action_yml == "":
+        report.append(("FAIL", b.where, (
+            f"`{repo_path}@{ref}` has no action.yml — the ref is wrong, or the "
+            f"action moved")))
+        return False
+
+    ok = True
+    declared = declared_inputs(action_yml)
+    for key in used:
+        if key not in declared:
+            report.append(("FAIL", b.where, (
+                f"`with: {key}` is not an input of `{repo_path}@{ref}`"
+                + (f"; it declares none at all" if not declared else
+                   f"; it declares {sorted(declared)}"))))
+            ok = False
+
+    if env:
+        doc_path = ACTION_ENV_DOCS.get(repo_path)
+        docs = fetch_raw(repo, ref, doc_path) if doc_path else None
+        if not doc_path:
+            report.append(("SKIP", b.where, (
+                f"`env:` {sorted(env)} on `{repo_path}@{ref}` — nothing in the "
+                f"action declares environment variables; add the file that "
+                f"documents them to ACTION_ENV_DOCS to check the names")))
+        elif docs is None:
+            report.append(("SKIP", b.where, (
+                f"`env:` {sorted(env)} — {repo}/{doc_path} unreachable")))
+        else:
+            for key in env:
+                # Whole-word: `CBOMKIT_LANGUAGE` is a substring of the real
+                # `CBOMKIT_LANGUAGES`, and a substring match would pass it.
+                if not re.search(rf"\b{re.escape(key)}\b", docs):
+                    report.append(("FAIL", b.where, (
+                        f"`env: {key}` is not documented in "
+                        f"{repo}/{doc_path} at `{ref}`")))
+                    ok = False
+    if ok:
+        report.append(("CHECKED", b.where, (
+            f"`{repo_path}@{ref}` — with {sorted(used)} declared, env "
+            f"{sorted(env)} documented" if (used or env) else
+            f"`{repo_path}@{ref}` resolves and is passed nothing")))
+    return ok
+
+
+def mapping_keys(body: list[str], uses: str, block: str) -> list[str]:
+    """Keys of the `with:` (or `env:`) mapping on the step that `uses` this."""
     keys: list[str] = []
-    step_indent = None
     for i, line in enumerate(body):
         if uses not in line:
             continue
         step_indent = len(line) - len(line.lstrip())
+        inside = False
         for rest in body[i + 1:]:
             if not rest.strip():
                 continue
             indent = len(rest) - len(rest.lstrip())
             if indent <= step_indent and rest.lstrip().startswith("- "):
                 break                                   # next step
-            m = re.match(r"^\s*with:\s*\{(.*)\}\s*$", rest)
+            m = re.match(rf"^\s*{block}:\s*\{{(.*)\}}\s*$", rest)
             if m:                                       # inline `with: { a: b }`
                 keys += re.findall(r"([\w-]+)\s*:", m.group(1))
                 continue
-            if re.match(r"^\s*with:\s*$", rest):
+            if re.match(rf"^\s*{block}:\s*$", rest):
+                inside = True
                 continue
-            if indent > step_indent + 2:
+            if re.match(r"^\s*[\w-]+:\s*$", rest) and indent <= step_indent + 2:
+                inside = False                          # a sibling of `with:`
+            if inside and indent > step_indent + 2:
                 m = re.match(r"^\s*([\w-]+):", rest)
                 if m:
                     keys.append(m.group(1))
