@@ -74,6 +74,16 @@ def render(article: dict) -> str:
     body = re.sub(r"\A\s*# .*\n", "", body, count=1)
     body = admonition_to_quote(body).strip()
 
+    # dev.to parses front-matter whenever the content starts with `---`, and
+    # its current editor then errors because it has no front-matter mode. An
+    # article opening with a horizontal rule would reintroduce that failure
+    # silently, so refuse to emit one.
+    if body.lstrip().startswith("---"):
+        raise SystemExit(
+            f"{article['src'].name}: body starts with '---', which dev.to will "
+            f"try to parse as front-matter. Put a heading or paragraph first."
+        )
+
     canonical = f"{SITE}/{article['slug']}/"
     footer = (
         f"\n\n---\n\n*Originally published at [{canonical}]({canonical}), which "
