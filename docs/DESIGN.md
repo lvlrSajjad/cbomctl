@@ -1,6 +1,6 @@
 # cbomctl — Design
 
-> **Status:** shipped as 0.1.3. This document is the design as built;
+> **Status:** shipped as 0.1.4. This document is the design as built;
 > where it describes intent rather than code it says so. Regulatory claims
 > are tracked in [`policy-sources.md`](policy-sources.md); **all seven packs
 > are now verified from primary sources**, and the unverified-rule machinery
@@ -368,7 +368,7 @@ cbomctl policies list | show <id>
 the deterministic core already produced — a separate extra
 (`pip install cbomctl[llm]`, declared in `pyproject.toml`), consuming the
 finished report object, unable to reach a scoring or policy path, and
-watermarked. As of 0.1.3 neither the flag nor the module exists; the extra is
+watermarked. As of 0.1.4 neither the flag nor the module exists; the extra is
 a placeholder. This paragraph is intent, not description.
 
 ## 12. Repository layout

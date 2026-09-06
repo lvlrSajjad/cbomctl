@@ -3,7 +3,11 @@
 Semantic versioning. Policy-pack versions move independently — see
 [`policy-packs/CHANGELOG.md`](policy-packs/CHANGELOG.md).
 
-## [Unreleased]
+## [0.1.4] — released 2026-09-06
+
+The docs said things nobody had run. Four releases of `docs/quickstart.md`
+carried a pipeline that could not work, and the mechanism meant to prevent
+exactly that only ever checked half of what the prose claims.
 
 ### Fixed
 - **`docs/quickstart.md` told readers to run a pipeline that could never have
@@ -206,7 +210,7 @@ checked, and are exercised by a synthetic test fixture.
   NSA's position is a separate rule so the matrix keeps an anchor.
 - The `sbom-tools` adapter's payload shape is inferred from their Rust struct
   definitions, not captured from a run. Its fixture is labelled constructed.
-  **Superseded** — see [Unreleased]; upstream answered and the shape is confirmed.
+  **Superseded in 0.1.4** — upstream answered; the shape is confirmed.
 - cdxgen is unverified as a CBOM producer; a code search of their repository
   finds no `cryptoProperties` handling.
 - `security_level` selectors always evaluate to INDETERMINATE — there is no

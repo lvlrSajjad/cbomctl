@@ -26,7 +26,7 @@ jobs:
           CBOMKIT_LANGUAGES: java, python
 
       # v0 is a moving major tag: patch fixes arrive, breaking changes do not.
-      # Pin an exact release (v0.1.3) instead if you want the tool frozen.
+      # Pin an exact release (v0.1.4) instead if you want the tool frozen.
       - uses: lvlrSajjad/cbomctl@v0
         with:
           cbom: cbom.json

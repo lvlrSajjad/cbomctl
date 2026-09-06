@@ -45,8 +45,8 @@ The repository is already public and `main` is pushed. Releasing is the tag:
      `pyproject.toml` — release.yml enforces that and will fail if it does not. -->
 ```bash
 ./scripts/check.sh                     # must be green
-git tag -a v0.1.3 -m "v0.1.3 — an action.yml the Marketplace will accept"
-git push origin v0.1.3
+git tag -a v0.1.4 -m "v0.1.4 — the docs said things nobody had run"
+git push origin v0.1.4
 ```
 
 The tag triggers `release.yml`, which refuses to publish unless the suite
@@ -62,7 +62,7 @@ tag would fail its version gate by construction:
      in CI; the tag it moves is checked by scripts/check_commands.py, which
      fails if docs/ci.md names a ref this repository does not have. -->
 ```bash
-git tag -f v0 v0.1.3
+git tag -f v0 v0.1.4
 git push -f origin v0
 ```
 
