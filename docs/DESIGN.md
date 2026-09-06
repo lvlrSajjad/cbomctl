@@ -167,7 +167,7 @@ output and CycloneDX's `valid-cryptography-full-1.6.json`. From Keycloak
 | observation | count | consequence |
 |---|---|---|
 | `cryptoFunctions` absent | 6 / 22 | cannot be the only signal |
-| `cryptoFunctions: [keygen]` only | 12 | `keygen` is **purpose-neutral** |
+| `cryptoFunctions: [keygen]` only | 11 | `keygen` is **purpose-neutral**; it appears in 12, alone in 11 |
 | `primitive: other` | 4 | includes `AES` and `HMACSHA2` |
 | `primitive: pke` on EC keys | 4 | in Keycloak these are ECDSA/ECDH, not encryption |
 
@@ -338,9 +338,11 @@ fields are `binding` (statute … guideline_recommendation) and `hybrid`
 host.
 
 v0.1 packs: `bsi-de`, `anssi-fr`, `asd-au`, `cnsa-2.0`, `us-eo14412`,
-`eu-roadmap`. **None is verified.** `--require-verified-policy` refuses to run
-against an unverified rule; otherwise a banner prints. Rules citing a draft
-source print "draft" in every output.
+`eu-roadmap`, `nist-ir8547` — 7 of them, all verified against primary sources.
+`--require-verified-policy` refuses to run against an unverified rule; there is
+none today, and the flag stays for the next one. Otherwise a banner prints.
+Rules citing a draft source print "draft" in every output — `nist-ir8547` does,
+and will until IR 8547 leaves initial public draft.
 
 CNSA 2.0 categories are declared as `system_category` in `cbomctl.yaml`; when
 absent the verdict is `INDET`, never informational. The January 2027 acquisition

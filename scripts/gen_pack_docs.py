@@ -151,8 +151,8 @@ def index() -> str:
         "| `not_recommended` | discouraged, still permitted | ASD — a "
         "satisfies-all target still exists, at a cost |",
         "| `not_permitted_except_interop` | not permitted outside named "
-        "exceptions | NSA (pending verification) — **no** single construction "
-        "satisfies everyone |", "",
+        "exceptions | NSA — **no** single construction satisfies "
+        "everyone |", "",
         "That middle step is what makes compromise possible and the third is "
         "what removes it. A tool reporting only PASS/FAIL cannot express the "
         "difference.", "",

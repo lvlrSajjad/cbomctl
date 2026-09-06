@@ -49,6 +49,12 @@ jobs:
         if: matrix.python-version == '3.12'
         run: python scripts/check_commands.py --check
 
+      # Every number the prose states about a fixture, a pack or the code is
+      # derived from the thing it describes. Offline; no fixture is fetched.
+      - name: Claimed numbers derive from what they describe
+        if: matrix.python-version == '3.12'
+        run: python scripts/check_stats.py
+
   cbom-schema-conformance:
     # Hand-built fixtures must stay valid CycloneDX, or they stop proving
     # anything about real input.

@@ -18,6 +18,7 @@ step "tests"                python3 -m pytest tests/ -q
 step "pack docs current"    python3 scripts/gen_pack_docs.py --check
 step "article blocks current" python3 scripts/gen_article_blocks.py --check
 step "documented commands run" python3 scripts/check_commands.py --check
+step "claimed numbers derive"  python3 scripts/check_stats.py
 step "syndicated copies current" python3 scripts/gen_syndication.py --check
 step "published copies match"  python3 scripts/check_published.py
 step "docs build (strict)"  python3 -m mkdocs build --strict -d /tmp/cbomctl-site

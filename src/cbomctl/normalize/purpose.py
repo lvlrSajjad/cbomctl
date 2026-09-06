@@ -3,11 +3,11 @@
 Grounded in real generator output, not in the schema. In CBOMkit's published
 Keycloak CBOM, of 22 algorithm components: 6 carry no ``cryptoFunctions`` at
 all; ``keygen`` appears 12 times and says nothing about what a key is *for*;
-``AES`` and ``HMACSHA2`` are tagged ``primitive: other``; and five EC keys that
+``AES`` and ``HMACSHA2`` are tagged ``primitive: other``; and four EC keys that
 are ECDSA/ECDH in that codebase are tagged ``primitive: pke``.
 
 So the two obvious implementations are both wrong. Trusting ``primitive``
-reports five Keycloak EC keys as harvest-now-decrypt-later exposures they are
+reports four Keycloak EC keys as harvest-now-decrypt-later exposures they are
 not. Trusting ``cryptoFunctions`` because it is present resolves most assets
 from a value that carries no purpose information.
 

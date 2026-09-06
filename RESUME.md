@@ -1,5 +1,19 @@
 # Session state — ready to release, nothing pushed
 
+> **Snapshot, superseded. Not a description of the repository today.**
+>
+> This was written at v0.1.0 with 30 commits and no remote. Everything it calls
+> pending has happened: the repo is public, 0.1.4 is on PyPI, the docs site is
+> live, and both dev.to articles are published. Its counts (339 tests, the
+> article word counts, the `articles/01-` and `articles/02-` filenames, which
+> now live in `docs/writing/`) describe that moment and nothing derives them,
+> which is why this banner is here instead of a checker.
+>
+> For the current state: [`CHANGELOG.md`](CHANGELOG.md) and
+> [`docs/roadmap.md`](docs/roadmap.md). The pack table below is still accurate —
+> `scripts/check_stats.py` fails if the packs stop matching what
+> `policy-packs/README.md` and `docs/policy-sources.md` say about them.
+
 `~/Coding/ME/pqc-audit` · branch `main` · **30 commits, no remote** · `cbomctl` v0.1.0
 
 ## Status: everything is done except the irreversible parts

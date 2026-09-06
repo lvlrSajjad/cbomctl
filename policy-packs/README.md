@@ -16,11 +16,15 @@ cryptographic assets. If you want to build something else on them, take them.
 
 ## Status
 
-> **No pack is verified yet.** Every rule currently ships as
-> `status: needs_verification`, meaning its content was assembled from secondary
-> reporting and has not been read from the primary source. Consumers should
-> surface that state to their users. `cbomctl` prints a banner and
-> `--require-verified-policy` refuses to run.
+> **All seven packs are verified against primary sources**, and 0 rules across
+> 7 packs ship `status: needs_verification`. Every rule cites the section it
+> was read from, names its verifier and pins the edition; the log is in
+> [`../docs/policy-sources.md`](../docs/policy-sources.md).
+>
+> The unverified machinery stays in place for the next rule that is not read
+> yet: a rule shipping `status: needs_verification` makes `cbomctl` print a
+> banner, and `--require-verified-policy` refuses to run against it at all.
+> Consumers building on these packs should surface that state the same way.
 
 ## The two fields that matter most
 
@@ -117,17 +121,26 @@ recorded in `docs/policy-sources.md` for traceability, never as `source_url`.
 
 | pack | authority | scope | hybrid: key est. | hybrid: signatures |
 |---|---|---|---|---|
-| `bsi-de` | BSI (Germany) | technical guideline | `recommended` | **unverified** |
+| `bsi-de` | BSI (Germany) | technical guideline | `recommended` | `recommended` |
 | `anssi-fr` | ANSSI (France) | guidance + certification | `recommended` | `recommended`* |
 | `asd-au` | ASD/ACSC (Australia) | ISM, Australian government | `not_recommended` | `not_recommended` |
 | `cnsa-2.0` | NSA (US) | National Security Systems only | `silent` | `silent` |
 | `us-eo14412` | Executive Order 14412 | US federal HVAs / high-impact, excl. NSS | `silent` | `silent` |
 | `eu-roadmap` | NIS Cooperation Group | EU Member State planning horizon | `silent` | `silent` |
+| `nist-ir8547` | NIST (US) | IR 8547 initial public draft — dates are *proposed* | `silent` | `silent` |
 
 `*` ANSSI's signature stance is `rationale: algorithm_maturity`, not HNDL — see
-[`../docs/policy-sources.md`](../docs/policy-sources.md) F4. BSI's 2026-01
-signature-hybrid language is the specific thing to check when verifying that
-pack; do not assume it mirrors its key-agreement stance.
+[`../docs/policy-sources.md`](../docs/policy-sources.md) F4. BSI reaches the
+same stance on signatures by the same reasoning, in a separate rule
+(`bsi-hybrid-signatures`) — the two were read independently, because a pack's
+key-agreement stance does not imply its signature stance.
+
+This table collapses several purpose-scoped rules into one cell per pack, and
+that collapse is a reading, not a fact the packs state — `anssi-fr` carries both
+`recommended` and, inside the certification scope, `required`; `cnsa-2.0`
+carries both `silent` and `not_permitted_except_interop`. It is therefore the
+one table here that `scripts/check_stats.py` does not derive; see the note in
+that file.
 
 ## Versioning
 

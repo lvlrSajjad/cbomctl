@@ -5,7 +5,97 @@ Semantic versioning. Policy-pack versions move independently — see
 
 ## [Unreleased]
 
+### Added
+- **`scripts/check_stats.py`, and it runs in `check.sh` and in CI.** Every
+  number the prose states about a fixture, a policy pack, the loader or a
+  vendored schema is derived from the thing it describes — 55 claims across
+  40 sites as this was written, in the docs, the README, the outreach
+  drafts, `PROVENANCE.md` and one module docstring in `src/`. Running it for the first time found three stale
+  numbers that a hand pass a day earlier had missed.
+
+  **Parsing the prose, not generating it** — argued at length in the file's
+  docstring. These numbers live in sentences, not only in table cells: "it
+  appears in 12 components; in 11 it is the only function recorded" carries the
+  argument of the page, and four of the six stale claims standing that morning
+  were in prose a generator cannot reach, one of them a docstring in `src/`.
+  The known weakness of parsing — reword the sentence and the check silently
+  stops applying — is closed by making a claim site mandatory: **a pattern that
+  matches nothing fails**, with the same weight as a wrong number.
+
+  Fixture claims are derived from the fixture JSON and cbomctl's claims through
+  the loader, deliberately kept apart, so a normalizer bug cannot rewrite the
+  description of the input it was meant to normalize.
+
+- **`scripts/check_published.py`** diffs the **live** dev.to articles against
+  `outreach/devto/`. `gen_syndication.py --check` pinned those files to
+  `docs/writing/` and stopped at the edge of the repository; between the file
+  and the copy a reader sees sits a paste into a browser, which is where 206
+  characters were once mangled into Mac Roman and where a later correction can
+  simply not be made. dev.to serves `body_markdown` to anonymous clients, so
+  the gap is closeable: both articles are live under `lvlrsajjad`, both were
+  byte-identical, and the published URLs are now recorded in `ARTICLES` so an
+  unrecorded article is reported unpublished rather than passed over. Title,
+  the four tags and the canonical URL are checked too — that last field is the
+  one that silently does not save.
+
+- **`tests/test_tool_center_entry.py`** validates the Tool Center submission in
+  `outreach/cyclonedx-tool-center-pr.md` against their schema on every `pytest`
+  run. The schema is **vendored** to `tests/fixtures/schemas/`, so the check
+  works offline like the rest of the suite; `ci.yml` separately diffs the
+  vendored copy against `CycloneDX/tool-center@main`, so upstream movement
+  fails by naming the schema rather than our entry. It was previously validated
+  once by hand against a copy in gitignored `.research/`, and the file has been
+  edited since.
+
+  The schema is at the obvious raw path,
+  `raw.githubusercontent.com/CycloneDX/tool-center/main/schemas/tool.schema.json`
+  — a note in this repo said that 404s, and it does not.
+
+- The command checker now reads **prose, not just fences**. Any `` `--flag` ``
+  written anywhere in the swept files must be one the CLI has, or must appear
+  in `FOREIGN_FLAGS` naming the tool it belongs to. `--strict-unknown` sat in
+  `docs/DESIGN.md` three times and not once inside a fence, so the 0.1.4
+  checker would still have missed all three. Today's six foreign flags all
+  belong to `open-quantum-secure` or are declared future work; none was fiction.
+- `.github/ISSUE_TEMPLATE/` is swept too — `bug.md` hands the reporter a
+  `cbomctl verdict ...` blank, now marked `illustrative` rather than looking
+  like something that runs.
+
+- **`check_commands.py` now resolves third-party actions.** Every `uses:` in a
+  documented workflow is checked against that action's own `action.yml`,
+  fetched at the ref the page names — not just ours. Because a Docker action
+  declares no inputs at all, `env:` names are checked against the action
+  repository's README at the same ref. An action the checker cannot resolve is
+  reported unchecked by name.
+
 ### Fixed
+- **`docs/ci.md` told readers CBOMkit writes `cbom.json` to the workspace root.**
+  It writes `cbom/cbom.json`: the directory comes from `CBOMKIT_OUTPUT_DIR`,
+  which their `Main.java` defaults to `cbom`. The next step then passed
+  `cbom: cbom.json` to our action, so the documented workflow would have failed
+  at the first step that mattered. This is the second error found on that half
+  of the page — the first, `with: { output: cbom.json }` against an action that
+  declares no inputs, was fixed by hand in 0.1.4 and then went straight back to
+  being unchecked.
+
+- **`policy-packs/README.md` said "No pack is verified yet"**, nine months after
+  all seven were verified from primary sources, in the file a downstream
+  consumer of the packs reads first. Its pack table also omitted `nist-ir8547`
+  entirely and marked BSI's signature-hybrid stance **unverified**, when
+  `bsi-hybrid-signatures` exists, is verified and says `recommended`.
+
+- **`docs/DESIGN.md` §9 said the same thing** — "v0.1 packs: … **None is
+  verified.**", six packs listed of seven — and its §5 table still had
+  `cryptoFunctions: [keygen]` only as 12, which `76ca56f` corrected everywhere
+  except there. `docs/ci.md` said `--require-verified-policy` "currently
+  excludes `cnsa-2.0`"; it excludes nothing. `scripts/gen_pack_docs.py` emitted
+  "NSA (pending verification)" into the generated pack index.
+
+- **`tests/fixtures/PROVENANCE.md` and the `normalize/purpose.py` docstring**
+  both still said five EC keys carry `primitive: pke`. Four do; the fifth `pke`
+  component is RSA-2048. Same off-by-one as `76ca56f`, in the two places that
+  pass had not looked.
+
 - **Two fixture statistics in `docs/purpose.md` were off by one**, both on the
   page whose argument is that the tool does not guess. `cryptoFunctions:
   [keygen]` and nothing else is 11 of 22 components, not 12 — `keygen` appears
@@ -19,21 +109,30 @@ Semantic versioning. Policy-pack versions move independently — see
   **8 of 22 unresolved — 36%, "more than a third"**, which is the line the
   README and the Show HN draft lean on.
 
-### Added
-- The command checker now reads **prose, not just fences**. Any `` `--flag` ``
-  written anywhere in the swept files must be one the CLI has, or must appear
-  in `FOREIGN_FLAGS` naming the tool it belongs to. `--strict-unknown` sat in
-  `docs/DESIGN.md` three times and not once inside a fence, so the 0.1.4
-  checker would still have missed all three. Today's six foreign flags all
-  belong to `open-quantum-secure` or are declared future work; none was fiction.
-- `.github/ISSUE_TEMPLATE/` is swept too — `bug.md` hands the reporter a
-  `cbomctl verdict ...` blank, now marked `illustrative` rather than looking
-  like something that runs.
-
 ### Changed
 - The routing from a fence to its check is one function, `check_block`, called
   by both the script and its tests. It was duplicated in three places, which
   would have let the thing that proves the checker works drift from the checker.
+- `RESUME.md` carries a banner saying it is a superseded v0.1.0 snapshot. Its
+  counts, and two article filenames that have since moved to `docs/writing/`,
+  describe that moment; nothing derives them, and now nothing reads them as
+  current either.
+
+### Decided against
+- **A scheduled CI job that runs the CBOMkit half of `docs/ci.md`.** Reasoning
+  in [`docs/roadmap.md`](docs/roadmap.md), short version: a workflow cannot
+  execute a workflow file it just wrote, so you either inline the steps — a
+  transcription of the page, which is the gap reopened one layer down — or
+  commit a generated file that then needs its own check. It would mostly test
+  an unpinned `:edge` Docker image, so its red runs would usually not be about
+  us. And the claim the page actually makes is a fact in two of their files,
+  which `check_commands.py` now fetches and checks on every run.
+- **Deriving the pack-stance table in `policy-packs/README.md`.** One cell per
+  pack collapses several purpose-scoped rules — `anssi-fr` carries both
+  `recommended` and, inside certification scope, `required` — and picking a
+  winner is a reading the packs do not state. Inventing one in a checker would
+  put a second, unversioned opinion beside the pack's. The table says so, and
+  `check_stats.py` leaves it alone.
 
 ## [0.1.4] — released 2026-09-06
 
