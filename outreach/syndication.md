@@ -7,43 +7,49 @@ search engines and readers land on that one.
 
 ## dev.to
 
-**Do not hand-convert.** The paste-ready file is generated:
+**The current dev.to editor has no markdown/frontmatter mode.** Title, tags and
+canonical URL are separate fields; the body box takes plain markdown. A
+frontmatter block pasted into the body renders as literal text.
+
+(An older v1 editor with frontmatter still exists behind
+Settings → Customization → Editor Version. Not worth switching — the fields
+work fine.)
+
+Two generated files, so nothing is hand-converted:
 
 ```bash
 python3 scripts/gen_syndication.py
-cat outreach/devto/rsa-2048-and-rsa-3072.md | pbcopy
+cat outreach/devto/rsa-2048-and-rsa-3072.fields.md    # what to type in the fields
+cat outreach/devto/rsa-2048-and-rsa-3072.body.md | pbcopy   # what goes in the body
 ```
 
-It already has the frontmatter, converts the MkDocs `!!! info` admonition into a
-blockquote (dev.to does not render admonitions), strips the code-block
-generation markers, drops the duplicate H1, and appends an "originally
-published at" footer. CI fails if it drifts from the canonical article.
+### Steps
 
-### Posting it
+1. <https://dev.to/new>
+2. **Post Title** — from the fields file.
+3. **Add up to 4 tags…** — `security cryptography postquantum compliance`.
+4. **Post Content** — paste `…body.md` whole. It has no frontmatter and no H1,
+   because the title field supplies the heading and a second one would
+   duplicate it.
+5. **Advanced Post options** (button under the editor) → the field with
+   placeholder `https://yoursite.com/post-title` → paste the canonical URL →
+   **Done**.
+6. **Save** (not Publish) → **Preview**.
+7. In preview, check three things: the title appears once, the terminal code
+   block keeps its column alignment, and the tables render. If a table looks
+   broken, dev.to wants a blank line before it.
+8. **Publish**.
 
-dev.to is a single **post**, not a thread. From <https://dev.to>:
+### Afterwards
 
-1. **Create Post** (top right).
-2. Switch the editor to markdown-with-frontmatter if it opens in the rich
-   editor — there is a **⚙ / "Switch to Markdown"** toggle. The frontmatter
-   block only works in markdown mode.
-3. Select all in the editor, delete, and paste the whole file including the
-   `---` frontmatter.
-4. **Save draft**, then **Preview**. The file ships `published: false`
-   deliberately, so saving cannot publish it by accident.
-5. Check in preview: the title renders once, the code block keeps its column
-   alignment, and the tables render. If a table looks broken, dev.to wants a
-   blank line before it.
-6. Change `published: false` to `published: true` and hit **Publish**.
+View source on the published dev.to page and confirm:
 
-### The one line that matters
+```html
+<link rel="canonical" href="https://lvlrsajjad.github.io/cbomctl/writing/rsa-2048-and-rsa-3072/">
+```
 
-`canonical_url`. Without it dev.to outranks your own site for your own writing,
-and readers land on the copy you will forget to correct — which for an article
-about a *draft* standard is the whole problem.
-
-Verify after publishing: view source on the dev.to page and confirm
-`<link rel="canonical" href="https://lvlrsajjad.github.io/...">` points home.
+If that is missing, the canonical field did not save — reopen Advanced Post
+options and check.
 
 ## LinkedIn
 

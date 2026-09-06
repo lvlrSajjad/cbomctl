@@ -1,10 +1,3 @@
----
-title: RSA-2048 and RSA-3072 have different futures
-published: false
-canonical_url: https://lvlrsajjad.github.io/cbomctl/writing/rsa-2048-and-rsa-3072/
-tags: security, cryptography, postquantum, compliance
----
-
 > **Published 2026-09-06**
 >
 > This describes **NIST IR 8547 ipd** — the initial public draft of November
