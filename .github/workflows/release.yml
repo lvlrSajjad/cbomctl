@@ -2,7 +2,9 @@ name: Release
 
 on:
   push:
-    tags: ["v*"]
+    # v*.*.* only. A moving major tag (v0) must not start a release run —
+    # it would fail the tag/pyproject version gate by construction.
+    tags: ["v*.*.*"]
 
 permissions:
   contents: read

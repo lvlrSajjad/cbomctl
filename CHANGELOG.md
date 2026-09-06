@@ -3,7 +3,22 @@
 Semantic versioning. Policy-pack versions move independently — see
 [`policy-packs/CHANGELOG.md`](policy-packs/CHANGELOG.md).
 
-## [0.1.1] — unreleased
+## [0.1.2] — released 2026-09-06
+
+### Fixed
+- Conflict prose in the terminal matrix was emitted as one unwrapped line — the
+  longest ran to 439 characters. A terminal soft-wraps that into a block with no
+  indent structure and a browser `<pre>` does not wrap it at all, so the demo
+  block scrolled sideways off the published article page. Conflict summaries,
+  cost notes, alternative-reading notes, per-asset detail lines and the
+  assumptions footer now wrap to the terminal width, clamped to 60–100 columns.
+  Longest line drops to 107. Tests assert no line exceeds 120 characters at
+  either 100 or 60 columns, and that wrapping loses no words.
+
+  Found by reading the published dev.to page rather than the local output —
+  the same class of check that caught the 0.1.1 bug.
+
+## [0.1.1] — released 2026-09-06
 
 ### Fixed
 - `cbomctl policies list` printed "No pack is verified. Rules were assembled
