@@ -91,10 +91,25 @@ reclassification, a removed rule — is **major**, never a patch.
 ## Running things
 
 ```bash
+./scripts/check.sh     # everything CI runs, with honest exit codes
+```
+
+Use that rather than hand-rolling the checks. It exists because a
+`mkdocs build --strict 2>/dev/null && echo ok` once reported a green docs build
+that CI then failed, and because `pytest -q` was broken in a fresh clone for
+weeks without anyone who had already installed the package noticing.
+
+To work on the tool itself:
+
+```bash
 pip install -e '.[test]'
 pytest -q
 cbomctl verdict tests/fixtures/conflict-hybrid.json -c cbomctl.yaml.example
 ```
+
+`pytest` also works without installing anything — `pyproject.toml` puts `src`
+on the path. If you change that, CI has a job that runs the suite without the
+package installed, and it will tell you.
 
 ## Commits
 

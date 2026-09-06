@@ -44,3 +44,8 @@ include = ["src/", "policy-packs/", "tests/", "docs/", "README.md", "LICENSE", "
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# So `pytest` works in a fresh checkout without `pip install -e .` first.
+# Without it the suite only ran for people who already had the package
+# installed or who happened to export PYTHONPATH -- which is everyone who
+# built it and nobody who just cloned it.
+pythonpath = ["src"]
