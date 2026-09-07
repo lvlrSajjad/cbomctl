@@ -131,6 +131,37 @@ def derive() -> dict[str, int]:
         r"<!--.*?-->", "", re.sub(r"\A---\n.*?\n---\n", "", article, count=1,
                                  flags=re.S), flags=re.S), flags=re.S)
 
+    # `outreach/show-hn.md` states the length of its own first comment. On HN
+    # the first comment is the thing people read, and the draft's advice about
+    # it depends on the length — so it is derived from the section rather than
+    # remembered. It said 186 words and the section was 193: written by hand,
+    # never counted, and the launch artifact nobody had checked.
+    show_hn = (ROOT / "outreach" / "show-hn.md").read_text().split("\n")
+    _heads = [i for i, l in enumerate(show_hn)
+              if l.startswith("## First comment")]
+    if not _heads:
+        raise SystemExit("check_stats: outreach/show-hn.md has no "
+                         "`## First comment` heading to measure")
+    _start = _heads[0]
+    _rule = [i for i, l in enumerate(show_hn[_start + 1:], _start + 1)
+             if l.strip() == "---"]
+    first_comment = "\n".join(
+        show_hn[_start + 1:_rule[0] if _rule else len(show_hn)]).strip()
+
+    # `outreach/pki-consortium-cfp.md` states the length of the abstract it
+    # submits. Written "~330" and the section is 322 — inside the tilde, so the
+    # sentence is not wrong; it is pinned the way the 1,500-word article claim
+    # is, so it cannot drift out of the tilde unnoticed before submission.
+    cfp = (ROOT / "outreach" / "pki-consortium-cfp.md").read_text().split("\n")
+    _abs = [i for i, l in enumerate(cfp) if l.strip() == "## Abstract"]
+    if not _abs:
+        raise SystemExit("check_stats: outreach/pki-consortium-cfp.md has no "
+                         "`## Abstract` heading to measure")
+    _rest = cfp[_abs[0] + 1:]
+    _stop = next((i for i, l in enumerate(_rest)
+                  if l.startswith("## ") or l.strip() == "---"), len(_rest))
+    cfp_abstract = "\n".join(_rest[:_stop]).strip()
+
     crypto_imports = sum(
         len(re.findall(
             rf"^[ \t]*(?:import|from)[ \t]+(?:{'|'.join(CRYPTO_MODULES)})\b",
@@ -170,6 +201,8 @@ def derive() -> dict[str, int]:
 
         # --- the syndicated copies ---
         "linkedin.rsa_words": len(linkedin.split()),
+        "showhn.first_comment_words": len(first_comment.split()),
+        "cfp.abstract_words": len(cfp_abstract.split()),
         "article.rsa_words": len(prose.split()),
 
         # --- the tool's own imports ---
@@ -305,6 +338,13 @@ CLAIMS = [
     Claim("outreach/show-hn.md",
           r'"(\d+) of (\d+) components',
           "keycloak.unresolved", "keycloak.algorithms"),
+    Claim("outreach/show-hn.md",
+          r"## First comment \((\d+) words\)",
+          "showhn.first_comment_words"),
+    Claim("outreach/pki-consortium-cfp.md",
+          r"\*\*Length:\*\* ~330 words",
+          holds=lambda S: 297 <= S["cfp.abstract_words"] <= 363,
+          says="the abstract is within 10% of the ~330 words claimed"),
 
     # ---- docs/DESIGN.md §5 and §13 ----
     Claim("docs/DESIGN.md", r"\((\d+) algorithm components\):",

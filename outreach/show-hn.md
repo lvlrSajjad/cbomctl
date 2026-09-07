@@ -19,7 +19,7 @@ title-caser produces, so writing it that way avoids an edit.
 
 ---
 
-## First comment (186 words)
+## First comment (193 words)
 
 I got interested in this after noticing that BSI, ANSSI and the EU roadmap all
 recommend hybrid post-quantum key exchange, Australia's ASD recommends against

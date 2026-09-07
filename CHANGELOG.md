@@ -28,6 +28,15 @@ Semantic versioning. Policy-pack versions move independently — see
   empty string rather than failing. This is the `aa7e3d0` gap in a different
   file — a checker whose list of places to look omitted a real surface.
 
+- **The Show HN draft claimed its first comment was 186 words; it is 193.**
+  Hand-written, never counted — and `RESUME.md` had said 193 all along, so the
+  two files had contradicted each other for four releases. It is the launch
+  artifact, and the number was the one thing on the page nobody had checked.
+  `check_stats.py` derives it from the section now, alongside the length of
+  the PKI Consortium CfP abstract (written "~330", actually 322 — inside the
+  tilde, pinned to ±10% the way the 1,500-word article claim is, so it cannot
+  drift out of it before submission).
+
 - **The flag check was a substring test, so it could not see
   `--jurisdiction`.** `--jurisdictions` is in `--help`, so the singular — the
   likelier of the two typos — passed in prose *and* in fenced commands. Found
