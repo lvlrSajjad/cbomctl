@@ -39,6 +39,20 @@ files must be one the CLI has, or must be listed in FOREIGN_FLAGS with the tool
 it belongs to. Fences alone would have missed all three appearances of
 `--strict-unknown`.
 
+`action.yml` is checked as a command surface, not just as metadata. It builds a
+`cbomctl` argv and runs it, and nothing read that argv: `check_our_action`
+checks the inputs a *docs snippet* passes, and CI's `dogfood` job runs the
+action down one path only (`format: sarif`, `output:` set, both booleans
+false), so the `--strict` and `--fail-on-warn` branches were composed by
+nothing, anywhere. Its subcommand, flags and `inputs.` references are checked
+against the CLI and against the action's own declarations, and then the argv
+with every option turned on is executed. Exit 2 — the action's documented
+usage-error code — is the failure; a policy verdict is not.
+
+Flag matching is boundary-aware (`cli_has`). It was a substring test, which
+passed `--jurisdiction` because `--jurisdictions` is in the help — so the
+singular, the likelier typo, was the one thing the check could not see.
+
 `pip install <name>` is resolved against the PyPI index — that is the whole of
 what the line claims. Installing into a clean venv and running the console
 script is a release step (`RELEASE.md`), not something to do on every commit;
@@ -374,7 +388,7 @@ def check_prose_flags(path: Path, cwd: Path, report: list, help_text: str) -> bo
     ok = True
     for m in re.finditer(r"`(--[a-z][a-z0-9-]*)", path.read_text()):
         flag = m.group(1)
-        if flag in FOREIGN_FLAGS or flag in help_text:
+        if flag in FOREIGN_FLAGS or cli_has(flag, help_text):
             continue
         line = path.read_text()[:m.start()].count("\n") + 1
         report.append(("FAIL", f"{shown(path)}:{line}", (
@@ -382,6 +396,17 @@ def check_prose_flags(path: Path, cwd: Path, report: list, help_text: str) -> bo
             f"tool or is future work, add it to FOREIGN_FLAGS with its owner")))
         ok = False
     return ok
+
+
+def cli_has(flag: str, help_text: str) -> bool:
+    """Does `--help` offer exactly this flag, and not merely start with it?
+
+    A plain substring test passes `--jurisdiction` because `--jurisdictions`
+    is in the help — so the singular, which is the likelier typo of the two,
+    was the one thing this check could not see. Found by injecting it into
+    `action.yml` and into a scratch page under `docs/`: both passed.
+    """
+    return re.search(rf"{re.escape(flag)}(?![A-Za-z0-9-])", help_text) is not None
 
 
 def cli_help(cwd: Path) -> str:
@@ -687,6 +712,117 @@ def check_block(b: Block, cwd: Path, report: list) -> bool:
     return True
 
 
+#: `action.yml` ships a command too, and until now nothing read it. The
+#: action's composite step builds a `cbomctl` argv and runs it; what was
+#: checked was the *declared inputs* (`check_our_action`, against the snippet
+#: in `docs/ci.md`) and never the argv itself. CI's `dogfood` job does run the
+#: action, but down one path only — `format: sarif` with `output:` set, and
+#: both booleans left false. The `--strict` and `--fail-on-warn` branches are
+#: executed by nothing, anywhere.
+#:
+#: That was verified by injecting `--jurisdiction` and `--fail-on-warn-typo`
+#: into `action.yml`: `check_commands.py --check` exited 0 and all 450 tests
+#: passed. The first would have broken every user of the action, the second
+#: only the user who set `strict:` or `fail-on-warn:` — silently, because no
+#: run here or in CI ever composes that argv.
+#:
+#: This is the README gap in a different file. `aa7e3d0` fixed a checker whose
+#: file list omitted a real prose surface; this one's file list omitted a real
+#: *command* surface. An argv a reader never sees but every action user
+#: executes is exactly as much of a claim as a fenced command.
+#:
+#: Flags on a line that is neither building nor invoking `cbomctl` belong to
+#: something else — `pip install --quiet` — and are left alone.
+ACTION_ARGV = re.compile(r"args\+?=\(|(?:^|\s)cbomctl\s")
+
+
+def action_argv(doc: dict) -> tuple[set[str], set[str], set[str]]:
+    """Subcommands, flags and `inputs.` names the action's shell body uses."""
+    subs: set[str] = set()
+    flags: set[str] = set()
+    used: set[str] = set()
+    for step in (doc.get("runs") or {}).get("steps") or []:
+        body = step.get("run") or ""
+        for line in body.split("\n"):
+            # An undeclared `inputs.x` is not an error in Actions — it expands
+            # to the empty string. So it is read from every line, not just the
+            # cbomctl ones, and checked against what the action declares.
+            used.update(re.findall(r"inputs\.([A-Za-z0-9_-]+)", line))
+            if not ACTION_ARGV.search(line):
+                continue
+            subs.update(re.findall(r"args\+?=\(\s*([a-z][a-z0-9-]*)", line))
+            flags.update(re.findall(r"(--[a-z][a-z0-9-]+)", line))
+    return subs, flags, used
+
+
+def check_action_argv(cwd: Path, report: list, help_text: str,
+                      path: Path | None = None) -> bool:
+    """The argv `action.yml` hands cbomctl must name real things, and run.
+
+    Names are checked against `--help`, and then the argv the action composes
+    with *every* option set is executed — the combination `dogfood` never
+    reaches. A wrong flag there is a usage error (exit 2), which is the one
+    exit code the action's own contract says means the invocation, not the
+    CBOM, was wrong.
+    """
+    path = path or ROOT / "action.yml"
+    text = path.read_text()
+    where = str(shown(path))
+    try:
+        import yaml
+        doc = yaml.safe_load(text) or {}
+    except Exception as exc:
+        report.append(("FAIL", where, f"does not parse as YAML: {exc}"))
+        return False
+
+    declared = declared_inputs(text)
+    subs, flags, used = action_argv(doc)
+    top = run_cbomctl(["--help"], cwd).stdout
+    ok = True
+
+    for sub in sorted(subs):
+        if sub not in top:
+            report.append(("FAIL", where,
+                           f"`{sub}` is not a cbomctl subcommand"))
+            ok = False
+    for flag in sorted(flags):
+        if not cli_has(flag, help_text):
+            report.append(("FAIL", where, (
+                f"`{flag}` is not a flag cbomctl has — action.yml hands it to "
+                f"every user of this action")))
+            ok = False
+    for name in sorted(used - declared):
+        report.append(("FAIL", where, (
+            f"`inputs.{name}` is not a declared input; Actions expands it to "
+            f"the empty string rather than failing")))
+        ok = False
+    if not ok:
+        return False
+
+    # Compose the argv the way the step does, with every option turned on, and
+    # run it. Defaults come from `action.yml` itself so the check follows the
+    # action rather than a copy of it.
+    inputs = doc.get("inputs") or {}
+    default = lambda k, fb: str((inputs.get(k) or {}).get("default") or fb)
+    argv = ["verdict", "app-cbom.json",
+            "--jurisdictions", default("jurisdictions", "bsi-de"),
+            "--format", default("format", "sarif"),
+            "--config", "cbomctl.yaml", "--strict", "--fail-on-warn"]
+    proc = run_cbomctl(argv, cwd)
+    if proc.returncode == 2:
+        report.append(("FAIL", where, (
+            f"the argv this action composes is a usage error (exit 2): "
+            f"`cbomctl {' '.join(argv)}` — {proc.stderr.strip().splitlines()[-1:]}")))
+        return False
+    report.append(("RAN", where, (
+        f"`cbomctl {' '.join(argv)}` → exit {proc.returncode} — the every-option "
+        f"argv, which `dogfood` never composes")))
+    report.append(("CHECKED", where, (
+        f"subcommand {sorted(subs)}, flags {sorted(flags)} and inputs "
+        f"{sorted(used)} all exist")))
+    return True
+
+
 def main() -> int:
     check = "--check" in sys.argv
     cwd = scratch()
@@ -703,6 +839,7 @@ def main() -> int:
             ok &= check_prose_flags(path, cwd, report, help_text)
             for b in blocks(path):
                 ok &= check_block(b, cwd, report)
+        ok &= check_action_argv(cwd, report, help_text)
     finally:
         shutil.rmtree(cwd, ignore_errors=True)
 

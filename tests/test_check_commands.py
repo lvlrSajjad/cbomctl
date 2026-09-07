@@ -361,3 +361,131 @@ def test_the_documented_workflow_resolves_every_action_it_names(tmp_path):
         shutil.rmtree(cwd, ignore_errors=True)
     assert ok, "\n".join(f"{v} {w} {d}" for v, w, d in report if v == "FAIL")
     assert "cbomkit/cbomkit-action" in "\n".join(d for _, _, d in report)
+
+
+# --- action.yml's own argv -------------------------------------------------
+#
+# `action.yml` builds a `cbomctl` command line and runs it. Nothing read that
+# argv until now: `check_our_action` checks the *inputs* a docs snippet passes,
+# and CI's `dogfood` job runs the action down one path only — `format: sarif`
+# with `output:` set, both booleans false. So the `--strict` and
+# `--fail-on-warn` branches were composed by nothing, anywhere, and a typo in
+# either shipped green.
+#
+# Verified before writing the checker, by injecting `--jurisdiction` and
+# `--fail-on-warn-typo` into `action.yml`: `check_commands.py --check` exited 0
+# and all 450 tests passed.
+
+
+def run_on_action(tmp_path: Path, text: str) -> tuple[bool, str]:
+    """Point the argv check at one throwaway `action.yml`."""
+    doc = tmp_path / "action.yml"
+    doc.write_text(text)
+    cwd = cc.scratch()
+    report: list[tuple[str, str, str]] = []
+    try:
+        help_text = cc.cli_help(cwd)
+        ok = cc.check_action_argv(cwd, report, help_text, path=doc)
+    finally:
+        import shutil
+        shutil.rmtree(cwd, ignore_errors=True)
+    return ok, "\n".join(f"{v} {w} {d}" for v, w, d in report)
+
+
+def _action(argv_line: str, inputs: str = "") -> str:
+    """A minimal composite action whose step builds `argv_line`."""
+    template = """name: t
+description: t
+inputs:
+  cbom: { description: c, required: true }
+  jurisdictions: { description: j, required: false, default: bsi-de }
+  format: { description: f, required: false, default: sarif }
+__INPUTS__
+runs:
+  using: composite
+  steps:
+    - shell: bash
+      run: pip install --quiet .
+    - shell: bash
+      run: |
+        __ARGV__
+        cbomctl "$ARGS"
+"""
+    return template.replace("__ARGV__", argv_line).replace("__INPUTS__", inputs)
+
+
+def test_the_real_action_argv_runs():
+    """The shipped action.yml, executed with every option turned on."""
+    cwd = cc.scratch()
+    report: list[tuple[str, str, str]] = []
+    try:
+        ok = cc.check_action_argv(cwd, report, cc.cli_help(cwd))
+    finally:
+        import shutil
+        shutil.rmtree(cwd, ignore_errors=True)
+    assert ok, "\n".join(f"{v} {w} {d}" for v, w, d in report if v == "FAIL")
+    assert any(v == "RAN" for v, _, _ in report), "the argv was never executed"
+
+
+def test_a_flag_action_yml_hands_cbomctl_that_does_not_exist_is_rejected(tmp_path):
+    ok, report = run_on_action(tmp_path, _action(
+        'args=(verdict "x" --jurisdictions "y" --fail-on-warn-typo)'))
+    assert not ok
+    assert "--fail-on-warn-typo" in report
+
+
+def test_a_flag_that_is_only_a_prefix_of_a_real_flag_is_rejected(tmp_path):
+    """`--jurisdiction` is contained in `--jurisdictions`.
+
+    The check was a substring test, so the singular — the likelier typo of the
+    two — was the one thing it could not see. It is the whole reason
+    `cli_has` exists.
+    """
+    ok, report = run_on_action(tmp_path, _action(
+        'args=(verdict "x" --jurisdiction "y")'))
+    assert not ok
+    assert "--jurisdiction" in report
+
+
+def test_a_prefix_flag_in_prose_is_rejected_too(tmp_path):
+    """The same substring hole was in the prose sweep."""
+    cwd = cc.scratch()
+    doc = tmp_path / "d.md"
+    doc.write_text("# D\n\nPass `--jurisdiction` to pick packs.\n")
+    report: list[tuple[str, str, str]] = []
+    try:
+        ok = cc.check_prose_flags(doc, cwd, report, cc.cli_help(cwd))
+    finally:
+        import shutil
+        shutil.rmtree(cwd, ignore_errors=True)
+    assert not ok, "\n".join(f"{v} {w} {d}" for v, w, d in report)
+
+
+def test_a_real_flag_is_still_accepted_by_the_boundary_check():
+    """`cli_has` must not have made the check reject everything."""
+    cwd = cc.scratch()
+    try:
+        help_text = cc.cli_help(cwd)
+        for flag in ("--jurisdictions", "--strict", "--fail-on-warn",
+                     "--format", "--config", "--crqc-year"):
+            assert cc.cli_has(flag, help_text), flag
+        assert not cc.cli_has("--jurisdiction", help_text)
+        assert not cc.cli_has("--strict-unknown", help_text)
+    finally:
+        import shutil
+        shutil.rmtree(cwd, ignore_errors=True)
+
+
+def test_a_subcommand_action_yml_does_not_have_is_rejected(tmp_path):
+    ok, report = run_on_action(tmp_path, _action(
+        'args=(veridct "x" --jurisdictions "y")'))
+    assert not ok
+    assert "veridct" in report
+
+
+def test_an_undeclared_action_input_is_rejected(tmp_path):
+    """Actions expands an undeclared `inputs.x` to "" rather than failing."""
+    ok, report = run_on_action(tmp_path, _action(
+        'args=(verdict "${{ inputs.cbomfile }}" --jurisdictions "y")'))
+    assert not ok
+    assert "cbomfile" in report

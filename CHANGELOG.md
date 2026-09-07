@@ -5,6 +5,35 @@ Semantic versioning. Policy-pack versions move independently — see
 
 ## [Unreleased]
 
+### Fixed
+- **`action.yml` builds a `cbomctl` command line, and nothing read it.** The
+  action's composite step composes an argv and runs it. What was checked was
+  the *declared inputs* — `check_our_action`, against the snippet in
+  `docs/ci.md` — never the argv itself. CI's `dogfood` job does run the
+  action, but down one path only: `format: sarif` with `output:` set and both
+  booleans left false. The `--strict` and `--fail-on-warn` branches were
+  composed by nothing, in CI or locally.
+
+  Confirmed by injecting `--jurisdiction` and `--fail-on-warn-typo` into
+  `action.yml`: `check_commands.py --check` exited 0 and all 450 tests passed.
+  The first would have broken every user of the action; the second only the
+  user who set `strict:` or `fail-on-warn:`, silently, because no run anywhere
+  composed that argv. The shipped file was correct — this is a gap in the
+  checking, not a bug that shipped.
+
+  `check_commands.py` now checks `action.yml` as a command surface: its
+  subcommand, flags and `inputs.` references against the CLI and the action's
+  own declarations, and then it *executes* the argv with every option turned
+  on. An undeclared `inputs.x` is included because Actions expands it to the
+  empty string rather than failing. This is the `aa7e3d0` gap in a different
+  file — a checker whose list of places to look omitted a real surface.
+
+- **The flag check was a substring test, so it could not see
+  `--jurisdiction`.** `--jurisdictions` is in `--help`, so the singular — the
+  likelier of the two typos — passed in prose *and* in fenced commands. Found
+  by injecting it into a scratch page under `docs/`. Matching is boundary-aware
+  now (`cli_has`), and the three tests covering it fail if it is reverted.
+
 ### Added
 - **cbomctl publishes an SBOM of itself.** `scripts/gen_sbom.sh` builds a
   CycloneDX document from a clean install of the wheel; `ci.yml` uploads one
