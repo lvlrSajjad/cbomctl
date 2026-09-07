@@ -113,8 +113,10 @@ jurisdiction's answer to believe, that is this tool.
   algorithm components carry no usable purpose signal — more than a third.
   Those are reported as unresolved, with the range they would span if guessed.
 - **It does not give compliance advice.** It reports what a rule set says, with
-  the primary source and verification date attached. Every rule today is
-  unverified.
+  the primary source and verification date attached. All 40 rules shipped today
+  are verified against that source; the machinery for rules that are not stays
+  in place — such a rule ships `status: needs_verification`, and every verdict
+  derived from it carries a banner.
 - **It does not treat guidance as law.** See `binding`, above.
 - **It does not know when a CRQC arrives.** 2035 is a planning assumption
   matching the NIST/NSM-10 horizon, not a prediction. `--crqc-year` changes it;
@@ -135,10 +137,6 @@ semantically versioned artifact with its own schema and changelog, so another
 tool can consume them without `cbomctl`. Every rule carries a primary-source
 URL, a `last_verified` date, a `binding` classification, and a `hybrid` stance.
 
-| pack | state |
-|---|---|
-| pack | state |
-|---|---|
 | pack | state |
 |---|---|
 | `bsi-de` | ✅ TR-02102-1 v2026-01 §2.1, §5.3.4 |

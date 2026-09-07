@@ -51,8 +51,8 @@ Semantic versioning. Policy-pack versions move independently — see
   release asset.
 - **`scripts/check_stats.py`, and it runs in `check.sh` and in CI.** Every
   number the prose states about a fixture, a policy pack, the loader or a
-  vendored schema is derived from the thing it describes — 57 claims across
-  42 sites as this was written, in the docs, the README, the outreach
+  vendored schema is derived from the thing it describes — 59 claims across
+  43 sites as this was written, in the docs, the README, the outreach
   drafts, `PROVENANCE.md` and one module docstring in `src/`. Running it for the first time found three stale
   numbers that a hand pass a day earlier had missed.
 
@@ -120,6 +120,30 @@ Semantic versioning. Policy-pack versions move independently — see
   of the page — the first, `with: { output: cbom.json }` against an action that
   declares no inputs, was fixed by hand in 0.1.4 and then went straight back to
   being unchecked.
+
+- **The README's front page said "Every rule today is unverified."** The exact
+  inverse of the truth: 7 packs, all 7 verified, 40 rules, none of them
+  shipping `status: needs_verification`, one contested. It sat nineteen lines
+  below the pre-release banner asserting that all seven packs are read from
+  their primary sources, and contradicted `docs/ci.md`'s
+  "`--require-verified-policy` currently excludes nothing" as well. The
+  bullet's own point — that the tool does not give compliance advice — was
+  never in doubt, and survives; only the verification sentence was wrong, and
+  it was the only part of the passage nothing derived. The banner above it was
+  pinned to `packs.verified` and could not go stale; this sentence was three
+  lines of unchecked prose, which is the whole reason it outlived nine months
+  of the state it described being false. Its replacement is pinned to
+  `packs.rules` and holds `packs.unverified_rules` at 0, so a rule added,
+  dropped, or moved back to `needs_verification` fails the build. The
+  unverified-rule machinery is untouched: it is what the next pack that has not
+  been read will use.
+
+- **The policy-pack table on the README front page carried its header row three
+  times.** `| pack | state |` and its `|---|---|` separator, repeated twice
+  more before the seven data rows, which GitHub renders as two literal junk
+  rows at the top of the front page's most-read table. Nothing generates that
+  table — `gen_pack_docs.py` writes only `docs/policy-packs/` — so it was a
+  hand-editing accident with nothing standing between it and the reader.
 
 - **`policy-packs/README.md` said "No pack is verified yet"**, nine months after
   all seven were verified from primary sources, in the file a downstream

@@ -391,6 +391,19 @@ CLAIMS = [
     Claim("README.md",
           r"All (\w+) policy packs are read from their primary",
           "packs.verified"),
+    # The "does not give compliance advice" bullet, which for nine months said
+    # the exact inverse — "Every rule today is unverified" — on the front page,
+    # while the banner nineteen lines above it said all seven packs were read
+    # from their sources. Both halves are pinned: the count, so a rule added or
+    # dropped fails here, and `unverified_rules`, so a *verified* rule replaced
+    # by an unread one fails even though the count did not move.
+    Claim("README.md",
+          r"All (\d+) rules shipped today\n"
+          r"  are verified against that source",
+          "packs.rules",
+          holds=lambda S: S["packs.unverified_rules"] == 0,
+          says="no shipped rule carries `status: needs_verification`, so the "
+               "bullet may claim every one of them is verified"),
     Claim("docs/DESIGN.md",
           r"\*\*all (\w+) packs\n> are now verified from primary sources\*\*",
           "packs.verified"),
