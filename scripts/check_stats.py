@@ -73,6 +73,15 @@ WORDS = {
 }
 
 
+#: The modules a tool that performed cryptography would have to reach for.
+#: `README.md` and `scripts/gen_sbom.sh` both argue that cbomctl ships an SBOM
+#: of itself and *not* a CBOM of itself, and the whole argument rests on this
+#: list being absent from `src/`. If one of them is ever imported, a CBOM of
+#: cbomctl stops being an empty document and both passages need rewriting --
+#: so the sentence is derived from the tree, not remembered about it.
+CRYPTO_MODULES = ("hashlib", "hmac", "secrets", "ssl", "cryptography")
+
+
 def to_int(text: str) -> int | None:
     text = text.strip().lower().replace(",", "")
     if text.isdigit():
@@ -122,6 +131,12 @@ def derive() -> dict[str, int]:
         r"<!--.*?-->", "", re.sub(r"\A---\n.*?\n---\n", "", article, count=1,
                                  flags=re.S), flags=re.S), flags=re.S)
 
+    crypto_imports = sum(
+        len(re.findall(
+            rf"^[ \t]*(?:import|from)[ \t]+(?:{'|'.join(CRYPTO_MODULES)})\b",
+            p.read_text(), re.M))
+        for p in sorted((ROOT / "src").rglob("*.py")))
+
     tool_center = json.loads(
         (FIXTURES / "schemas" / "tool-center-v2.tool.schema.json").read_text())
 
@@ -156,6 +171,9 @@ def derive() -> dict[str, int]:
         # --- the syndicated copies ---
         "linkedin.rsa_words": len(linkedin.split()),
         "article.rsa_words": len(prose.split()),
+
+        # --- the tool's own imports ---
+        "src.crypto_imports": crypto_imports,
 
         # --- the third-party schema the Tool Center entry is submitted against ---
         "toolcenter.description_maxlength":
@@ -379,6 +397,25 @@ CLAIMS = [
     Claim("docs/DESIGN.md",
           r"`eu-roadmap`, `nist-ir8547` — (\d+) of them, all verified",
           "packs.count"),
+
+    # ---- why cbomctl publishes an SBOM of itself and not a CBOM of itself ----
+    # Both passages say the same thing about `src/`, because both are read by
+    # someone deciding whether to believe the document. Neither is a number in
+    # the prose, which is exactly why they would have gone stale silently: an
+    # import added in a future release falsifies two paragraphs and a release
+    # asset's description at once.
+    Claim("README.md",
+          r"No module in `src/` imports\n"
+          r"`hashlib`, `hmac`, `secrets`, `ssl` or `cryptography`",
+          holds=lambda S: S["src.crypto_imports"] == 0,
+          says="nothing in src/ imports hashlib, hmac, secrets, ssl or "
+               "cryptography, so a CBOM of cbomctl would be empty"),
+    Claim("scripts/gen_sbom.sh",
+          r"Nothing under `src/` imports\n"
+          r"# `hashlib`, `hmac`, `secrets`, `ssl` or `cryptography`",
+          holds=lambda S: S["src.crypto_imports"] == 0,
+          says="nothing in src/ imports hashlib, hmac, secrets, ssl or "
+               "cryptography, so a CBOM of cbomctl would be empty"),
 ]
 
 

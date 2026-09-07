@@ -138,6 +138,39 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: cbomctl-sarif, path: cbomctl.sarif }
 
+  sbom:
+    # cbomctl reads other people's bills of materials and shipped none of its
+    # own, which is a strange thing for a supply-chain-adjacent tool to ask of
+    # people. `scripts/gen_sbom.sh` builds one; the generator choice, the
+    # lifecycle type it produces and what the document deliberately does not
+    # assert are argued at length in that file. This job and `release.yml`
+    # both call it, so the document users download cannot drift from the one
+    # CI proves buildable.
+    #
+    # Safe on the weekly schedule: no secret, no tag, no fixture, nothing but
+    # PyPI. Worth running there for its own reason, too -- `pyproject.toml`
+    # declares ranges, so a weekly resolution of an unchanged commit can come
+    # back different. Nothing diffs two runs automatically. The output is
+    # reproducible so that if you do, a difference is a real change and not a
+    # new timestamp.
+    #
+    # The artifact is named for the commit it describes, and the document
+    # repeats that commit in `cbomctl:source-commit`, because a build SBOM of
+    # `main` is not the SBOM of a release: it states the version in
+    # `pyproject.toml`, which may already be published with a different
+    # resolution. The one users get is the asset `release.yml` attaches at the
+    # tag.
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: { python-version: "3.12" }
+      - run: ./scripts/gen_sbom.sh sbom/cbomctl.cdx.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cbomctl-sbom-${{ github.sha }}
+          path: sbom/cbomctl.cdx.json
+
   published-copies:
     # Diff the live dev.to articles against `outreach/devto/`. Not on every PR:
     # a published copy drifts when someone corrects an article and does not

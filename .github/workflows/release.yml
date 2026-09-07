@@ -73,6 +73,21 @@ jobs:
       - uses: actions/upload-artifact@v4
         with: { name: dist, path: dist/ }
 
+      # Here, and not in a job of its own, because the document describes the
+      # wheel this job just built rather than a second build of it -- the
+      # target is the artifact in `dist/`. Same script `ci.yml` runs, which is
+      # where a broken generator fails before a tag is ever pushed. The
+      # generator choice and the lifecycle type it produces are argued in the
+      # script.
+      - name: SBOM of the wheel being published
+        run: ./scripts/gen_sbom.sh "sbom/cbomctl-${GITHUB_REF_NAME#v}.cdx.json" dist/*.whl
+
+      # A separate artifact, deliberately: `pypa/gh-action-pypi-publish`
+      # uploads everything it finds in `dist/`, and an SBOM is not a
+      # distribution.
+      - uses: actions/upload-artifact@v4
+        with: { name: sbom, path: sbom/ }
+
   pypi:
     needs: build
     runs-on: ubuntu-latest
@@ -94,9 +109,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/download-artifact@v4
         with: { name: dist, path: dist/ }
+      - uses: actions/download-artifact@v4
+        with: { name: sbom, path: sbom/ }
       - uses: softprops/action-gh-release@v2
         with:
-          files: dist/*
+          files: |
+            dist/*
+            sbom/*.cdx.json
           generate_release_notes: true
           body: |
             See [CHANGELOG.md](CHANGELOG.md) and
@@ -105,3 +124,10 @@ jobs:
             All seven policy packs are read from primary sources. Every rule
             cites the section or page it was read from. This is not compliance
             advice — read the sources before acting on a verdict.
+
+            `cbomctl-<version>.cdx.json` is a CycloneDX **build** SBOM of the
+            wheel published here: the versions this project's dependency
+            ranges resolved to during that build. It is not a CBOM — cbomctl
+            performs no cryptography, so a CBOM of it would be empty — and it
+            carries no component hashes, so it is not evidence of what your
+            own install resolved.

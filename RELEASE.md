@@ -53,6 +53,13 @@ The tag triggers `release.yml`, which refuses to publish unless the suite
 passes, the tag matches `pyproject.toml`, every rule cites an allowlisted
 primary source, and the wheel contains all seven packs.
 
+The release gets one asset the tag does not produce by hand:
+`cbomctl-<version>.cdx.json`, a CycloneDX build SBOM of the wheel being
+published, generated in the `build` job by `scripts/gen_sbom.sh`. Its own
+argument for what it does and does not assert is in that script; `check.sh`
+builds it too, so a dependency change that breaks the generator fails
+pre-flight rather than mid-release.
+
 Then move the major tag, so `uses: lvlrSajjad/cbomctl@v0` — the form
 [docs/ci.md](docs/ci.md) hands to readers — points at the release just cut.
 `release.yml` deliberately ignores `v0` (`tags: ["v*.*.*"]`), because a moving

@@ -6,10 +6,53 @@ Semantic versioning. Policy-pack versions move independently — see
 ## [Unreleased]
 
 ### Added
+- **cbomctl publishes an SBOM of itself.** `scripts/gen_sbom.sh` builds a
+  CycloneDX document from a clean install of the wheel; `ci.yml` uploads one
+  on every run including the weekly schedule, and `release.yml` attaches
+  `cbomctl-<version>.cdx.json` to the GitHub release, generated in the `build`
+  job from the wheel that job just built rather than from a second build of
+  it. A tool that reads other people's bills of materials and published none
+  of its own was asking for a trust it did not extend.
+
+  **An SBOM, and not a CBOM — the distinction is the whole point.** Nothing
+  under `src/` imports `hashlib`, `hmac`, `secrets`, `ssl` or `cryptography`:
+  cbomctl evaluates cryptographic inventories and performs no cryptography, so
+  a CBOM of it would be an empty `components` array with a CycloneDX header on
+  it. That reads as evidence and is not, and generating one would have been
+  the exact failure this repository exists to argue against.
+  `check_stats.py` now derives the import count from the tree, so the two
+  passages that make this argument — in the README and in the script — fail
+  the build if it ever stops being true, rather than becoming quietly false in
+  the release that adds the import.
+
+  **`cyclonedx-py`, not syft.** For a tool whose input format is CycloneDX,
+  writing through that project's own implementation is the coherent choice: if
+  their writer and our reader ever disagree, the place to find out is here.
+  syft is the better tool for the job it is for — one scanner across many
+  ecosystems, containers and binaries especially — and we publish a
+  pure-Python wheel and an sdist. There is no image to scan, so its breadth
+  buys nothing and it would read the same `*.dist-info` directories through a
+  parser it does not own.
+
+  **Stamped `lifecycles: [{phase: build}]`**, because which kind of SBOM a
+  document is decides what it asserts, and one that does not say invites the
+  strongest reading. It is not a source SBOM: `pyproject.toml` declares ranges
+  and this names the versions they resolved to. It is not an analyzed SBOM:
+  nothing inspects the wheel's bytes, and every component is a distribution's
+  own metadata taken at its word. No component carries a hash, so it is not
+  evidence of what anyone else's install resolved — only of what this build
+  did, on one Python, for one platform.
+
+  Output is reproducible: no timestamp, no random serial number, and the
+  commit is stamped into `metadata.properties` instead, so two runs of the
+  same commit are byte-identical and a diff between two artifacts is a real
+  dependency change. Nothing diffs them automatically, and the CI artifact is
+  named for its commit so a build SBOM of `main` is not mistaken for the
+  release asset.
 - **`scripts/check_stats.py`, and it runs in `check.sh` and in CI.** Every
   number the prose states about a fixture, a policy pack, the loader or a
-  vendored schema is derived from the thing it describes — 55 claims across
-  40 sites as this was written, in the docs, the README, the outreach
+  vendored schema is derived from the thing it describes — 57 claims across
+  42 sites as this was written, in the docs, the README, the outreach
   drafts, `PROVENANCE.md` and one module docstring in `src/`. Running it for the first time found three stale
   numbers that a hand pass a day earlier had missed.
 

@@ -23,6 +23,7 @@ step "syndicated copies current" python3 scripts/gen_syndication.py --check
 step "published copies match"  python3 scripts/check_published.py
 step "docs build (strict)"  python3 -m mkdocs build --strict -d /tmp/cbomctl-site
 step "wheel builds"         python3 -m build --wheel -o /tmp/cbomctl-dist .
+step "sbom builds"          ./scripts/gen_sbom.sh /tmp/cbomctl-sbom/cbomctl.cdx.json
 step "packs ship in wheel"  python3 -c "
 import glob, sys, zipfile
 whl = sorted(glob.glob('/tmp/cbomctl-dist/*.whl'))[-1]
