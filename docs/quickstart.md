@@ -95,46 +95,36 @@ disagreed.
 ## Reading `sbom-tools` normalized output
 
 `cbomctl` can read the normalized JSON that
-[`sbom-tools`](https://github.com/sbom-tool/sbom-tools) produces. Two things to
-know before reaching for it.
-
-**It does not come from their CLI.** `sbom-tools view -o json` is a curated
-projection — `name`, `version`, `ecosystem`, `licenses`, `supplier`,
-`dependency_kind`, vulnerability counts and EOL fields — and carries nothing
-derived from `cryptoProperties`. Piping it here finds zero cryptographic
-assets. The normalized payload comes instead from their C ABI
-(`sbom_tools_parse_sbom_path_json` / `..._str_json`) and from the `parse`
-helpers in their Python, Node, Go and Swift bindings. Both points are
-[confirmed by the maintainer](https://github.com/sbom-tool/sbom-tools/issues/362).
-
-So the worked example is two steps, and the first one is theirs:
-
-!!! note "This first step has not been run here"
-    It needs the `sbom-tools` native library built and its in-tree Python
-    binding importable; neither is installable from PyPI. It is transcribed
-    from their binding's README, not captured from a run. The second step
-    below *is* executed on every CI run, against a fixture of that payload.
-
-<!-- unverified: needs the sbom-tools cdylib built and its in-tree `sbomtools`
-     binding importable; not installable from PyPI, so not executed here.
-     Transcribed from the binding README and sbom-tool/sbom-tools#362. -->
-```python
-import json
-from sbomtools import parse_path_json   # sbom-tools' in-tree binding
-
-with open("normalized.json", "w") as fh:
-    json.dump(parse_path_json("app-cbom.cdx.json"), fh)
-```
-
-The second step is ordinary `cbomctl`:
+[`sbom-tools`](https://github.com/sbom-tool/sbom-tools) produces:
 
 ```bash
+sbom-tools convert --to normalized app-cbom.cdx.json -O normalized.json  # unverified: sbom-tools is not installed in CI, and this subcommand is on their main but in no release yet
 cbomctl verdict normalized.json --from sbom-tools
 ```
 
+**`convert --to normalized` is not in a release yet.** It was
+[added at our request](https://github.com/sbom-tool/sbom-tools/issues/366) and
+merged to their `main` on 2026-09-07; v0.2.0, their latest release, predates
+it. Until the next one, build from `main`. The pipeline was run end to end with
+a build of `main` on 2026-09-29, and the second line above runs on every CI
+push against the captured output of that run.
+
+**`sbom-tools view -o json` is not the same thing.** It is a curated
+projection — `name`, `version`, `ecosystem`, `licenses`, `supplier`,
+vulnerability counts and EOL fields — with nothing derived from
+`cryptoProperties`. Piping it here finds zero cryptographic assets.
+
+**What the detour costs.** For every CBOM in this repository's fixtures the
+verdicts and conflicts come out the same as reading the CycloneDX directly,
+but three things are lost on the way through: source locations (their parser
+does not keep `evidence.occurrences`), the difference between an absent and an
+explicit-`unknown` `primitive`, and CycloneDX 1.6's `curve` field. None of the
+three changed a verdict on our fixtures. The details are in
+`src/cbomctl/loader/sbom_tools.py`.
+
 **Raw CycloneDX remains the supported path** — and it is what the `sbom-tools`
 maintainer recommends for this job as well. Their normalized payload is pinned
-by snapshot tests only at the top level; everything under `crypto_properties`
-may change in any pre-1.0 minor release, announced in their CHANGELOG's upgrade
-notes. Pin their crate version if you depend on it. That is why this adapter is
+by snapshot tests only at the top level; everything under `components` may
+change in any pre-1.0 minor release, announced in their CHANGELOG's upgrade
+notes. Pin their version if you depend on it. That is why this adapter is
 behind a flag.

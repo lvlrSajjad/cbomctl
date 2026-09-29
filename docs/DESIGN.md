@@ -115,14 +115,24 @@ behind a flag, has its own fixture, and creates no dependency —
 wrapper that is not published to PyPI (the `sbomtools` package that *is* on
 PyPI is an unrelated project — do not depend on it).
 
-Upstream [has now answered](https://github.com/sbom-tool/sbom-tools/issues/362).
-The normalized shape is exactly as we read it from their structs, but it is
-reachable only through the C ABI and the language bindings — **not** through
-`sbom-tools view -o json`, which is a curated projection with no crypto fields
-in it at all. Their snapshot tests pin only the top-level keys, there is no
-schema version separate from the crate version, and a breaking JSON change is
-permitted in any pre-1.0 minor release. So the adapter stays behind a flag and
-a consumer of this path should pin their crate version.
+Upstream [answered](https://github.com/sbom-tool/sbom-tools/issues/362) the
+contract question, and then
+[added a CLI route](https://github.com/sbom-tool/sbom-tools/issues/366):
+`sbom-tools convert --to normalized`, on their `main` since 2026-09-07 and in
+no release yet. `sbom-tools view -o json` is a curated projection with no crypto
+fields in it at all, and is not a substitute. Their snapshot tests pin only the
+top-level keys, there is no schema version separate from the crate version, and
+a breaking JSON change is permitted in any pre-1.0 minor release. So the adapter
+stays behind a flag and a consumer of this path should pin their version.
+
+**The shape was not what we read from their structs.** Each `components[]`
+entry is `{canonical_id, component}`, and the `bom-ref` lives at
+`identifiers.format_id`. The adapter read a flat list, passed its tests against
+a fixture built the same wrong way, and read zero assets from the first real
+payload it was given (2026-09-29). The fixture is now captured from their binary,
+and a test pins that verdicts through the adapter equal verdicts from the
+CycloneDX it came from. What the trip loses is listed in
+`loader/sbom_tools.py`.
 
 **Data lifetimes** come from `cbomctl.yaml` or from CycloneDX component
 `properties` (`cbomctl:data_lifetime_years`), so the annotation can live next to
@@ -410,7 +420,8 @@ cbomctl/
 | `purpose-ambiguous.json` | **hand-built**: the RSA-2048 component of `conflict-hybrid.json`, alone |
 | `signatures.json` · `rsa-strength-split.json` | **hand-built**; see `tests/fixtures/PROVENANCE.md` |
 | `conflict-hybrid.json` | **hand-built**: X25519MLKEM768, the four-way conflict case |
-| `sbom-tools-normalized.json` | **constructed** from their Rust struct definitions, not captured — shape since [confirmed upstream](https://github.com/sbom-tool/sbom-tools/issues/362) |
+| `sbom-tools-normalized.json` | **captured** — `sbom-tools convert --to normalized sbom-tools-source.json`, built at their `a393479` |
+| `sbom-tools-source.json` | **hand-built** CycloneDX 1.6 input for the capture above |
 
 Fixtures validate against the official schemas in CI so hand-built files cannot
 drift out of spec.

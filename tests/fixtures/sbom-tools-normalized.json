@@ -1,45 +1,380 @@
 {
-  "format": "CycloneDX",
-  "spec_version": "1.6",
+  "document": {
+    "format": "CycloneDx",
+    "format_version": "1.6",
+    "spec_version": "1.6",
+    "serial_number": null,
+    "doc_version": 1,
+    "created": "1970-01-01T00:00:00Z",
+    "creators": [],
+    "name": "sbom-tools-source",
+    "security_contact": null,
+    "vulnerability_disclosure_url": null,
+    "support_end_date": null,
+    "lifecycle_phase": null,
+    "completeness_declaration": "Unknown",
+    "signature": null,
+    "distribution_classification": null,
+    "citations_count": 0
+  },
   "components": [
     {
-      "bom_ref": "st-ecdh",
-      "name": "ECDH",
-      "component_type": "CryptographicAsset",
-      "crypto_properties": {
-        "asset_type": "Algorithm",
-        "oid": "1.3.132.1.12",
-        "algorithm_properties": {
-          "primitive": "KeyAgree",
-          "crypto_functions": [],
-          "parameter_set_identifier": null,
-          "elliptic_curve": "secg/secp256r1",
-          "classical_security_level": 128
+      "canonical_id": {
+        "value": "sbom-tools-source",
+        "source": "FormatSpecific",
+        "stable": true
+      },
+      "component": {
+        "canonical_id": {
+          "value": "sbom-tools-source",
+          "source": "FormatSpecific",
+          "stable": true
+        },
+        "identifiers": {
+          "purl": null,
+          "cpe": [],
+          "swid": null,
+          "format_id": "sbom-tools-source",
+          "aliases": []
+        },
+        "name": "sbom-tools-source",
+        "version": null,
+        "semver": null,
+        "component_type": "Application",
+        "ecosystem": null,
+        "licenses": {
+          "declared": [],
+          "concluded": null,
+          "evidence": []
+        },
+        "supplier": null,
+        "hashes": [],
+        "external_refs": [],
+        "vulnerabilities": [],
+        "vex_status": null,
+        "content_hash": 4612955628227370541,
+        "extensions": {
+          "properties": [],
+          "annotations": [],
+          "raw": null
+        },
+        "description": null,
+        "copyright": null,
+        "author": null,
+        "group": null,
+        "is_external": false,
+        "version_range": null,
+        "staleness": null,
+        "eol": null,
+        "ml_model": null,
+        "dataset": null
+      }
+    },
+    {
+      "canonical_id": {
+        "value": "st-ecdh",
+        "source": "FormatSpecific",
+        "stable": true
+      },
+      "component": {
+        "canonical_id": {
+          "value": "st-ecdh",
+          "source": "FormatSpecific",
+          "stable": true
+        },
+        "identifiers": {
+          "purl": null,
+          "cpe": [],
+          "swid": null,
+          "format_id": "st-ecdh",
+          "aliases": []
+        },
+        "name": "ECDH",
+        "version": null,
+        "semver": null,
+        "component_type": "Cryptographic",
+        "ecosystem": null,
+        "licenses": {
+          "declared": [],
+          "concluded": null,
+          "evidence": []
+        },
+        "supplier": null,
+        "hashes": [],
+        "external_refs": [],
+        "vulnerabilities": [],
+        "vex_status": null,
+        "content_hash": 7475423306895836022,
+        "extensions": {
+          "properties": [],
+          "annotations": [],
+          "raw": null
+        },
+        "description": null,
+        "copyright": null,
+        "author": null,
+        "group": null,
+        "is_external": false,
+        "version_range": null,
+        "staleness": null,
+        "eol": null,
+        "ml_model": null,
+        "dataset": null,
+        "crypto_properties": {
+          "asset_type": "Algorithm",
+          "oid": "1.3.132.1.12",
+          "algorithm_properties": {
+            "primitive": "KeyAgree",
+            "algorithm_family": null,
+            "parameter_set_identifier": null,
+            "mode": null,
+            "padding": null,
+            "crypto_functions": [],
+            "execution_environment": null,
+            "implementation_platform": null,
+            "certification_level": [],
+            "classical_security_level": 128,
+            "nist_quantum_security_level": null,
+            "elliptic_curve": null
+          },
+          "certificate_properties": null,
+          "related_crypto_material_properties": null,
+          "protocol_properties": null
         }
       }
     },
     {
-      "bom_ref": "st-rsa",
-      "name": "RSA-2048",
-      "component_type": "CryptographicAsset",
-      "crypto_properties": {
-        "asset_type": "Algorithm",
-        "oid": "1.2.840.113549.1.1.1",
-        "algorithm_properties": {
-          "primitive": "Pke",
-          "crypto_functions": ["Keygen"],
-          "parameter_set_identifier": "2048"
+      "canonical_id": {
+        "value": "st-rsa",
+        "source": "FormatSpecific",
+        "stable": true
+      },
+      "component": {
+        "canonical_id": {
+          "value": "st-rsa",
+          "source": "FormatSpecific",
+          "stable": true
+        },
+        "identifiers": {
+          "purl": null,
+          "cpe": [],
+          "swid": null,
+          "format_id": "st-rsa",
+          "aliases": []
+        },
+        "name": "RSA-2048",
+        "version": null,
+        "semver": null,
+        "component_type": "Cryptographic",
+        "ecosystem": null,
+        "licenses": {
+          "declared": [],
+          "concluded": null,
+          "evidence": []
+        },
+        "supplier": null,
+        "hashes": [],
+        "external_refs": [],
+        "vulnerabilities": [],
+        "vex_status": null,
+        "content_hash": 4143464950184690832,
+        "extensions": {
+          "properties": [],
+          "annotations": [],
+          "raw": null
+        },
+        "description": null,
+        "copyright": null,
+        "author": null,
+        "group": null,
+        "is_external": false,
+        "version_range": null,
+        "staleness": null,
+        "eol": null,
+        "ml_model": null,
+        "dataset": null,
+        "crypto_properties": {
+          "asset_type": "Algorithm",
+          "oid": "1.2.840.113549.1.1.1",
+          "algorithm_properties": {
+            "primitive": "Pke",
+            "algorithm_family": null,
+            "parameter_set_identifier": "2048",
+            "mode": null,
+            "padding": null,
+            "crypto_functions": [
+              "Keygen"
+            ],
+            "execution_environment": null,
+            "implementation_platform": null,
+            "certification_level": [],
+            "classical_security_level": null,
+            "nist_quantum_security_level": null,
+            "elliptic_curve": null
+          },
+          "certificate_properties": null,
+          "related_crypto_material_properties": null,
+          "protocol_properties": null
         }
       }
     },
     {
-      "bom_ref": "st-unknown",
-      "name": "CustomKDF",
-      "component_type": "CryptographicAsset",
-      "crypto_properties": {
-        "asset_type": "Algorithm",
-        "algorithm_properties": { "primitive": "Unknown", "crypto_functions": [] }
+      "canonical_id": {
+        "value": "st-unknown",
+        "source": "FormatSpecific",
+        "stable": true
+      },
+      "component": {
+        "canonical_id": {
+          "value": "st-unknown",
+          "source": "FormatSpecific",
+          "stable": true
+        },
+        "identifiers": {
+          "purl": null,
+          "cpe": [],
+          "swid": null,
+          "format_id": "st-unknown",
+          "aliases": []
+        },
+        "name": "CustomKDF",
+        "version": null,
+        "semver": null,
+        "component_type": "Cryptographic",
+        "ecosystem": null,
+        "licenses": {
+          "declared": [],
+          "concluded": null,
+          "evidence": []
+        },
+        "supplier": null,
+        "hashes": [],
+        "external_refs": [],
+        "vulnerabilities": [],
+        "vex_status": null,
+        "content_hash": 10668408816184530817,
+        "extensions": {
+          "properties": [],
+          "annotations": [],
+          "raw": null
+        },
+        "description": null,
+        "copyright": null,
+        "author": null,
+        "group": null,
+        "is_external": false,
+        "version_range": null,
+        "staleness": null,
+        "eol": null,
+        "ml_model": null,
+        "dataset": null,
+        "crypto_properties": {
+          "asset_type": "Algorithm",
+          "oid": null,
+          "algorithm_properties": {
+            "primitive": "Unknown",
+            "algorithm_family": null,
+            "parameter_set_identifier": null,
+            "mode": null,
+            "padding": null,
+            "crypto_functions": [],
+            "execution_environment": null,
+            "implementation_platform": null,
+            "certification_level": [],
+            "classical_security_level": null,
+            "nist_quantum_security_level": null,
+            "elliptic_curve": null
+          },
+          "certificate_properties": null,
+          "related_crypto_material_properties": null,
+          "protocol_properties": null
+        }
+      }
+    },
+    {
+      "canonical_id": {
+        "value": "st-absent",
+        "source": "FormatSpecific",
+        "stable": true
+      },
+      "component": {
+        "canonical_id": {
+          "value": "st-absent",
+          "source": "FormatSpecific",
+          "stable": true
+        },
+        "identifiers": {
+          "purl": null,
+          "cpe": [],
+          "swid": null,
+          "format_id": "st-absent",
+          "aliases": []
+        },
+        "name": "HouseKDF",
+        "version": null,
+        "semver": null,
+        "component_type": "Cryptographic",
+        "ecosystem": null,
+        "licenses": {
+          "declared": [],
+          "concluded": null,
+          "evidence": []
+        },
+        "supplier": null,
+        "hashes": [],
+        "external_refs": [],
+        "vulnerabilities": [],
+        "vex_status": null,
+        "content_hash": 3592900295576019164,
+        "extensions": {
+          "properties": [],
+          "annotations": [],
+          "raw": null
+        },
+        "description": null,
+        "copyright": null,
+        "author": null,
+        "group": null,
+        "is_external": false,
+        "version_range": null,
+        "staleness": null,
+        "eol": null,
+        "ml_model": null,
+        "dataset": null,
+        "crypto_properties": {
+          "asset_type": "Algorithm",
+          "oid": null,
+          "algorithm_properties": {
+            "primitive": "Unknown",
+            "algorithm_family": null,
+            "parameter_set_identifier": null,
+            "mode": null,
+            "padding": null,
+            "crypto_functions": [],
+            "execution_environment": null,
+            "implementation_platform": null,
+            "certification_level": [],
+            "classical_security_level": null,
+            "nist_quantum_security_level": null,
+            "elliptic_curve": null
+          },
+          "certificate_properties": null,
+          "related_crypto_material_properties": null,
+          "protocol_properties": null
+        }
       }
     }
-  ]
+  ],
+  "edges": [],
+  "extensions": {
+    "cyclonedx": null,
+    "spdx": null
+  },
+  "content_hash": 15002662015205745814,
+  "primary_component_id": {
+    "value": "sbom-tools-source",
+    "source": "FormatSpecific",
+    "stable": true
+  },
+  "collision_count": 0
 }

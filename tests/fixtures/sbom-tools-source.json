@@ -1,0 +1,56 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.6",
+  "version": 1,
+  "metadata": { "component": { "type": "application", "name": "sbom-tools-source" } },
+  "components": [
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "st-ecdh",
+      "name": "ECDH",
+      "evidence": { "occurrences": [ { "location": "src/kex.go", "line": 12 } ] },
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "oid": "1.3.132.1.12",
+        "algorithmProperties": {
+          "primitive": "key-agree",
+          "curve": "secp256r1",
+          "classicalSecurityLevel": 128
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "st-rsa",
+      "name": "RSA-2048",
+      "evidence": { "occurrences": [ { "location": "src/keys.go", "line": 41 } ] },
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "oid": "1.2.840.113549.1.1.1",
+        "algorithmProperties": {
+          "primitive": "pke",
+          "cryptoFunctions": ["keygen"],
+          "parameterSetIdentifier": "2048"
+        }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "st-unknown",
+      "name": "CustomKDF",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": { "primitive": "unknown" }
+      }
+    },
+    {
+      "type": "cryptographic-asset",
+      "bom-ref": "st-absent",
+      "name": "HouseKDF",
+      "cryptoProperties": {
+        "assetType": "algorithm",
+        "algorithmProperties": {}
+      }
+    }
+  ]
+}

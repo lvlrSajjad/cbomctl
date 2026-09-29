@@ -11,7 +11,7 @@ import pytest
 from cbomctl.config import Config
 from cbomctl.loader import read_assets
 from cbomctl.models import Verdict
-from cbomctl.policy.schema import load_pack
+from cbomctl.policy.schema import available, load_pack
 from cbomctl.report import json_out, markdown, matrix_text, sarif
 from cbomctl.verdict.conflicts import detect
 from cbomctl.verdict.matrix import build
@@ -240,11 +240,23 @@ class TestRealGeneratorOutput:
 
 
 class TestSbomToolsAdapter:
+    """`sbom-tools-normalized.json` is captured from `sbom-tools convert --to
+    normalized sbom-tools-source.json`, so these run against their real output.
+    The adapter's first fixture was constructed from their structs, and the
+    adapter passed every test here while reading zero assets from the real
+    thing: each component arrives wrapped as `{canonical_id, component}`.
+    """
+
     def test_adapter_is_detected_and_reads_crypto_properties(self):
         assets, fmt = read_assets(FIXTURES / "sbom-tools-normalized.json")
         assert fmt == "sbom-tools"
         ecdh = next(a for a in assets if a.raw_name == "ECDH")
         assert ecdh.purpose.value == "key-agreement"
+
+    def test_bom_ref_survives_as_format_id(self):
+        assets, _ = read_assets(FIXTURES / "sbom-tools-normalized.json")
+        assert {a.bom_ref for a in assets} == {
+            "st-ecdh", "st-rsa", "st-unknown", "st-absent"}
 
     def test_adapter_preserves_ambiguity(self):
         assets, _ = read_assets(FIXTURES / "sbom-tools-normalized.json")
@@ -253,10 +265,39 @@ class TestSbomToolsAdapter:
 
     def test_absent_and_explicit_unknown_are_indistinguishable_here(self):
         """Documented loss: their parser collapses both to Unknown. No verdict
-        changes, but the diagnostic is gone."""
+        changes, but the diagnostic is gone. The source declares `unknown` on
+        CustomKDF and no `primitive` at all on HouseKDF."""
+        raw = json.loads((FIXTURES / "sbom-tools-normalized.json").read_text())
+        primitives = {
+            e["component"]["name"]:
+                e["component"]["crypto_properties"]["algorithm_properties"]["primitive"]
+            for e in raw["components"] if e["component"].get("crypto_properties")}
+        assert primitives["CustomKDF"] == primitives["HouseKDF"] == "Unknown"
+
         assets, _ = read_assets(FIXTURES / "sbom-tools-normalized.json")
-        custom = next(a for a in assets if a.raw_name == "CustomKDF")
-        assert custom.purpose.value == "unknown"
+        for name in ("CustomKDF", "HouseKDF"):
+            assert next(a for a in assets if a.raw_name == name).purpose.value == "unknown"
+
+    def test_same_verdicts_as_the_cyclonedx_it_came_from(self):
+        """Through sbom-tools or not, the matrix and the conflicts must agree.
+        Source locations are the one field that does not survive: their parser
+        does not keep `evidence.occurrences`."""
+        packs = [load_pack(p) for p in available()]
+
+        def run(name):
+            assets, _ = read_assets(FIXTURES / name)
+            matrix = build(assets, packs, Config(), today=TODAY)
+            return matrix, detect(matrix, packs)
+
+        direct, direct_conflicts = run("sbom-tools-source.json")
+        via, via_conflicts = run("sbom-tools-normalized.json")
+
+        assert any(r.locations for r in direct.rows)
+        assert not any(r.locations for r in via.rows)
+        strip = lambda m: [r.model_dump(exclude={"locations"}) for r in m.rows]
+        assert strip(via) == strip(direct)
+        assert [c.model_dump() for c in via_conflicts] == [
+            c.model_dump() for c in direct_conflicts]
 
 
 class TestConflictTargetsFitThePurpose:

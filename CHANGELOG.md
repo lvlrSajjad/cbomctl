@@ -6,6 +6,31 @@ Semantic versioning. Policy-pack versions move independently — see
 ## [Unreleased]
 
 ### Fixed
+- **`--from sbom-tools` read zero assets from real `sbom-tools` output.** Every
+  `components[]` entry in their normalized payload is
+  `{canonical_id, component}`, with the `bom-ref` at
+  `identifiers.format_id`; the adapter read a flat list with a top-level
+  `bom_ref`. It had never met real output: its fixture was constructed from
+  their Rust structs, the same wrong way, and "shape confirmed upstream" in
+  the docs meant the field naming, never the nesting. Found on 2026-09-29 by
+  building sbom-tools from `main` and running the pipeline the moment their
+  CLI could produce the payload (`convert --to normalized`, their #367, added
+  at our request in #366 and not yet released). The error was
+  `no cryptographic assets found — is this a CBOM?` on every input.
+
+  `sbom-tools-normalized.json` is now captured from their binary, from a new
+  hand-built `sbom-tools-source.json`, and a test pins that the matrix and
+  conflicts through the adapter equal those from that CycloneDX directly. All
+  five adapter tests fail against the old adapter. By hand, the same held for
+  every fixture against all seven packs, apart from source locations.
+
+  Three losses on that path are now documented rather than discovered: their
+  parser keeps no `evidence.occurrences`, collapses an absent and an explicit
+  `unknown` primitive, and reads only CycloneDX 1.7's `ellipticCurve` — so a
+  1.6 CBOM's `curve` is dropped, including all four in the real CBOMkit
+  Keycloak output. None changed a verdict on our fixtures. The quickstart and
+  DESIGN.md no longer say the payload is unreachable from their CLI.
+
 - **`action.yml` builds a `cbomctl` command line, and nothing read it.** The
   action's composite step composes an argv and runs it. What was checked was
   the *declared inputs* — `check_our_action`, against the snippet in
