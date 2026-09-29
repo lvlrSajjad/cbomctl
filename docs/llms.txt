@@ -1,0 +1,42 @@
+# cbomctl
+
+> Evaluate a CycloneDX CBOM against multiple national post-quantum policies and report where their verdicts contradict.
+
+Install: `pip install cbomctl`. Every policy rule cites the section or page of its primary source; verdicts are not compliance advice.
+
+## Docs
+
+- [Home](https://lvlrSajjad.github.io/cbomctl/)
+- [Quickstart](https://lvlrSajjad.github.io/cbomctl/quickstart/)
+- [CI integration](https://lvlrSajjad.github.io/cbomctl/ci/)
+- [Sources and open questions](https://lvlrSajjad.github.io/cbomctl/policy-sources/)
+- [Design](https://lvlrSajjad.github.io/cbomctl/DESIGN/)
+- [Roadmap](https://lvlrSajjad.github.io/cbomctl/roadmap/)
+
+## Concepts
+
+- [Urgency and assurance](https://lvlrSajjad.github.io/cbomctl/concepts/)
+- [Why purpose is hard](https://lvlrSajjad.github.io/cbomctl/purpose/)
+
+## Policy packs
+
+- [Overview](https://lvlrSajjad.github.io/cbomctl/policy-packs/)
+- [BSI (Germany)](https://lvlrSajjad.github.io/cbomctl/policy-packs/bsi-de/)
+- [ANSSI (France)](https://lvlrSajjad.github.io/cbomctl/policy-packs/anssi-fr/)
+- [ASD (Australia)](https://lvlrSajjad.github.io/cbomctl/policy-packs/asd-au/)
+- [EU roadmap](https://lvlrSajjad.github.io/cbomctl/policy-packs/eu-roadmap/)
+- [EO 14412 (US)](https://lvlrSajjad.github.io/cbomctl/policy-packs/us-eo14412/)
+- [NIST IR 8547 (US, draft)](https://lvlrSajjad.github.io/cbomctl/policy-packs/nist-ir8547/)
+- [CNSA 2.0 (NSA)](https://lvlrSajjad.github.io/cbomctl/policy-packs/cnsa-2.0/)
+
+## Writing
+
+- [Overview](https://lvlrSajjad.github.io/cbomctl/writing/)
+- [Everyone agrees on the risk](https://lvlrSajjad.github.io/cbomctl/writing/everyone-agrees-on-the-risk/)
+- [RSA-2048 and RSA-3072](https://lvlrSajjad.github.io/cbomctl/writing/rsa-2048-and-rsa-3072/)
+
+## Optional
+
+- [Source code](https://github.com/lvlrSajjad/cbomctl)
+- [PyPI package](https://pypi.org/project/cbomctl/)
+- [Changelog](https://github.com/lvlrSajjad/cbomctl/blob/main/CHANGELOG.md)

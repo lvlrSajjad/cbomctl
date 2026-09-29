@@ -16,6 +16,7 @@ step() {
 
 step "tests"                python3 -m pytest tests/ -q
 step "pack docs current"    python3 scripts/gen_pack_docs.py --check
+step "llms.txt current"     python3 scripts/gen_llms_txt.py --check
 step "article blocks current" python3 scripts/gen_article_blocks.py --check
 step "documented commands run" python3 scripts/check_commands.py --check
 step "claimed numbers derive"  python3 scripts/check_stats.py

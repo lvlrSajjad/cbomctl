@@ -44,6 +44,20 @@ Semantic versioning. Policy-pack versions move independently — see
   now (`cli_has`), and the three tests covering it fail if it is reverted.
 
 ### Added
+- **`docs/llms.txt`, generated from the site nav.** An index of the docs an
+  agent can read without crawling rendered pages, served at
+  `<site_url>llms.txt` — a subpath, since a GitHub project page has no domain
+  root to publish to. `scripts/gen_llms_txt.py` derives it from `mkdocs.yml`,
+  so a page added to the nav cannot be missing from it; `ci.yml` and
+  `check.sh` run it with `--check`. Every URL it emits was confirmed against
+  a `mkdocs build --strict` of the site; nothing pins that mapping yet.
+
+- **PyPI metadata that says what the package is.** `Documentation`, `Source`
+  and `Changelog` URLs — PyPI linked neither the docs site nor the changelog —
+  keywords naming the algorithms and bodies the packs cover, and classifiers
+  for `Topic :: Security`, the console environment and the three Python
+  versions CI tests. Reaches PyPI with the next release.
+
 - **cbomctl publishes an SBOM of itself.** `scripts/gen_sbom.sh` builds a
   CycloneDX document from a clean install of the wheel; `ci.yml` uploads one
   on every run including the weekly schedule, and `release.yml` attaches

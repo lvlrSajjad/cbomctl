@@ -10,12 +10,22 @@ readme = "README.md"
 requires-python = ">=3.11"
 license = "Apache-2.0"
 authors = [{ name = "Sadjad Asadi" }]
-keywords = ["cbom", "cyclonedx", "post-quantum", "pqc", "compliance", "sbom"]
+keywords = [
+  "cbom", "cyclonedx", "sbom", "post-quantum", "pqc", "quantum-safe",
+  "compliance", "policy-as-code", "ml-kem", "ml-dsa", "cnsa-2.0",
+  "nist-ir-8547", "bsi", "anssi", "asd",
+]
 classifiers = [
   "Development Status :: 3 - Alpha",
+  "Environment :: Console",
   "Intended Audience :: Developers",
+  "Intended Audience :: Information Technology",
+  "Topic :: Security",
   "Topic :: Security :: Cryptography",
+  "Programming Language :: Python :: 3 :: Only",
   "Programming Language :: Python :: 3.11",
+  "Programming Language :: Python :: 3.12",
+  "Programming Language :: Python :: 3.13",
 ]
 dependencies = ["typer>=0.12", "pydantic>=2.7", "pyyaml>=6.0"]
 
@@ -28,7 +38,10 @@ cbomctl = "cbomctl.cli:app"
 
 [project.urls]
 Homepage = "https://github.com/lvlrSajjad/cbomctl"
+Documentation = "https://lvlrSajjad.github.io/cbomctl/"
+Source = "https://github.com/lvlrSajjad/cbomctl"
 Issues = "https://github.com/lvlrSajjad/cbomctl/issues"
+Changelog = "https://github.com/lvlrSajjad/cbomctl/blob/main/CHANGELOG.md"
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/cbomctl"]
